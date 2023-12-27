@@ -16,31 +16,11 @@ import java.util.Map;
  * Created by liqiang on 15/11/12.
  */
 public class VMInfo {
-    private static final Logger LOG = LoggerFactory.getLogger(VMInfo.class);
     static final long MB = 1024 * 1024;
     static final long GB = 1024 * 1024 * 1024;
+    private static final Logger LOG = LoggerFactory.getLogger(VMInfo.class);
     public static Object lock = new Object();
     private static VMInfo vmInfo;
-
-    /**
-     * @return null or vmInfo. null is something error, job no care it.
-     */
-    public static VMInfo getVmInfo() {
-        if (vmInfo == null) {
-            synchronized (lock) {
-                if (vmInfo == null) {
-                    try {
-                        vmInfo = new VMInfo();
-                    } catch (Exception e) {
-                        LOG.warn("no need care, the fail is ignored : vmInfo init failed " + e.getMessage(), e);
-                    }
-                }
-            }
-
-        }
-        return vmInfo;
-    }
-
     // 数据的MxBean
     private final OperatingSystemMXBean osMXBean;
     private final RuntimeMXBean runtimeMXBean;
@@ -51,12 +31,10 @@ public class VMInfo {
      */
     private final String osInfo;
     private final String jvmInfo;
-
     /**
      * cpu个数
      */
     private final int totalProcessorCount;
-
     /**
      * 机器的各个状态，用于中间打印和统计上报
      */
@@ -68,8 +46,6 @@ public class VMInfo {
     private long lastUpTime = 0;
     //nano
     private long lastProcessCpuTime = 0;
-
-
     private VMInfo() {
         //初始化静态信息
         osMXBean = java.lang.management.ManagementFactory.getOperatingSystemMXBean();
@@ -110,6 +86,43 @@ public class VMInfo {
                 processMomoryStatus.memoryStatusMap.put(pool.getName(), memoryStatus);
             }
         }
+    }
+
+    /**
+     * @return null or vmInfo. null is something error, job no care it.
+     */
+    public static VMInfo getVmInfo() {
+        if (vmInfo == null) {
+            synchronized (lock) {
+                if (vmInfo == null) {
+                    try {
+                        vmInfo = new VMInfo();
+                    } catch (Exception e) {
+                        LOG.warn("no need care, the fail is ignored : vmInfo init failed " + e.getMessage(), e);
+                    }
+                }
+            }
+
+        }
+        return vmInfo;
+    }
+
+    public static boolean isSunOsMBean(OperatingSystemMXBean operatingSystem) {
+        final String className = operatingSystem.getClass().getName();
+
+        return "com.sun.management.UnixOperatingSystem".equals(className);
+    }
+
+    public static long getLongFromOperatingSystem(OperatingSystemMXBean operatingSystem, String methodName) {
+        try {
+            final Method method = operatingSystem.getClass().getMethod(methodName, (Class<?>[]) null);
+            method.setAccessible(true);
+            return (Long) method.invoke(operatingSystem, (Object[]) null);
+        } catch (final Exception e) {
+            LOG.info(String.format("OperatingSystemMXBean %s failed, Exception = %s ", methodName, e.getMessage()));
+        }
+
+        return -1;
     }
 
     public String toString() {
@@ -186,24 +199,6 @@ public class VMInfo {
         } catch (Exception e) {
             LOG.warn("no need care, the fail is ignored : vmInfo getDelta failed " + e.getMessage(), e);
         }
-    }
-
-    public static boolean isSunOsMBean(OperatingSystemMXBean operatingSystem) {
-        final String className = operatingSystem.getClass().getName();
-
-        return "com.sun.management.UnixOperatingSystem".equals(className);
-    }
-
-    public static long getLongFromOperatingSystem(OperatingSystemMXBean operatingSystem, String methodName) {
-        try {
-            final Method method = operatingSystem.getClass().getMethod(methodName, (Class<?>[]) null);
-            method.setAccessible(true);
-            return (Long) method.invoke(operatingSystem, (Object[]) null);
-        } catch (final Exception e) {
-            LOG.info(String.format("OperatingSystemMXBean %s failed, Exception = %s ", methodName, e.getMessage()));
-        }
-
-        return -1;
     }
 
     private class PhyOSStatus {
@@ -286,10 +281,10 @@ public class VMInfo {
                 sb.append("\t\t ");
                 sb.append(String.format("%-20s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s \n",
                         gc.name, gc.curDeltaGCCount, gc.totalGCCount, gc.maxDeltaGCCount, gc.minDeltaGCCount,
-                        String.format("%,.3fs",(float)gc.curDeltaGCTime/1000),
-                        String.format("%,.3fs",(float)gc.totalGCTime/1000),
-                        String.format("%,.3fs",(float)gc.maxDeltaGCTime/1000),
-                        String.format("%,.3fs",(float)gc.minDeltaGCTime/1000)));
+                        String.format("%,.3fs", (float) gc.curDeltaGCTime / 1000),
+                        String.format("%,.3fs", (float) gc.totalGCTime / 1000),
+                        String.format("%,.3fs", (float) gc.maxDeltaGCTime / 1000),
+                        String.format("%,.3fs", (float) gc.minDeltaGCTime / 1000)));
 
             }
             return sb.toString();
@@ -304,9 +299,9 @@ public class VMInfo {
                 sb.append("\t\t ");
                 sb.append(String.format("%-20s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s \n",
                         gc.name, gc.totalGCCount, gc.maxDeltaGCCount, gc.minDeltaGCCount,
-                        String.format("%,.3fs",(float)gc.totalGCTime/1000),
-                        String.format("%,.3fs",(float)gc.maxDeltaGCTime/1000),
-                        String.format("%,.3fs",(float)gc.minDeltaGCTime/1000)));
+                        String.format("%,.3fs", (float) gc.totalGCTime / 1000),
+                        String.format("%,.3fs", (float) gc.maxDeltaGCTime / 1000),
+                        String.format("%,.3fs", (float) gc.minDeltaGCTime / 1000)));
 
             }
             return sb.toString();

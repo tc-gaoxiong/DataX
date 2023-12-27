@@ -20,20 +20,20 @@ public class TransformerInfo {
         return transformer;
     }
 
-    public ClassLoader getClassLoader() {
-        return classLoader;
-    }
-
-    public boolean isNative() {
-        return isNative;
-    }
-
     public void setTransformer(ComplexTransformer transformer) {
         this.transformer = transformer;
     }
 
+    public ClassLoader getClassLoader() {
+        return classLoader;
+    }
+
     public void setClassLoader(ClassLoader classLoader) {
         this.classLoader = classLoader;
+    }
+
+    public boolean isNative() {
+        return isNative;
     }
 
     public void setIsNative(boolean isNative) {

@@ -12,13 +12,13 @@ public class ByteUtils {
     private int kDefaultBufferSize = 0;
     private byte[] buffer;
 
-    public byte[] getBuffer() {
-        return buffer;
-    }
-
     public ByteUtils() {
         buffer = new byte[0];
         size = 0;
+    }
+
+    public byte[] getBuffer() {
+        return buffer;
     }
 
     public long getSize() {
@@ -31,7 +31,7 @@ public class ByteUtils {
 
     public ByteUtils append(byte[] buf) {
 
-        if (buf == null){
+        if (buf == null) {
             return this;
         }
         buffer = Arrays.copyOf(buffer, buffer.length + buf.length);
@@ -40,8 +40,7 @@ public class ByteUtils {
         return this;
     }
 
-    public void clear()
-    {
+    public void clear() {
         buffer = new byte[kDefaultBufferSize];
         size = 0;
     }

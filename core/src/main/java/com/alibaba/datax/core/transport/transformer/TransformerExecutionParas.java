@@ -24,36 +24,36 @@ public class TransformerExecutionParas {
         return columnIndex;
     }
 
-    public String[] getParas() {
-        return paras;
-    }
-
-    public Map<String, Object> gettContext() {
-        return tContext;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public List<String> getExtraPackage() {
-        return extraPackage;
-    }
-
     public void setColumnIndex(Integer columnIndex) {
         this.columnIndex = columnIndex;
+    }
+
+    public String[] getParas() {
+        return paras;
     }
 
     public void setParas(String[] paras) {
         this.paras = paras;
     }
 
+    public Map<String, Object> gettContext() {
+        return tContext;
+    }
+
     public void settContext(Map<String, Object> tContext) {
         this.tContext = tContext;
     }
 
+    public String getCode() {
+        return code;
+    }
+
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public List<String> getExtraPackage() {
+        return extraPackage;
     }
 
     public void setExtraPackage(List<String> extraPackage) {

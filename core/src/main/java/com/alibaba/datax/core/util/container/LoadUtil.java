@@ -23,33 +23,18 @@ import java.util.Map;
  */
 public class LoadUtil {
     private static final String pluginTypeNameFormat = "plugin.%s.%s";
-
-    private LoadUtil() {
-    }
-
-    private enum ContainerType {
-        Job("Job"), Task("Task");
-        private String type;
-
-        private ContainerType(String type) {
-            this.type = type;
-        }
-
-        public String value() {
-            return type;
-        }
-    }
-
     /**
      * 所有插件配置放置在pluginRegisterCenter中，为区别reader、transformer和writer，还能区别
      * 具体pluginName，故使用pluginType.pluginName作为key放置在该map中
      */
     private static Configuration pluginRegisterCenter;
-
     /**
      * jarLoader的缓冲
      */
     private static Map<String, JarLoader> jarLoaderCenter = new HashMap();
+
+    private LoadUtil() {
+    }
 
     /**
      * 设置pluginConfigs，方便后面插件来获取
@@ -198,5 +183,18 @@ public class LoadUtil {
         }
 
         return jarLoader;
+    }
+
+    private enum ContainerType {
+        Job("Job"), Task("Task");
+        private String type;
+
+        private ContainerType(String type) {
+            this.type = type;
+        }
+
+        public String value() {
+            return type;
+        }
     }
 }

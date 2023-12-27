@@ -137,7 +137,7 @@ public final class ListUtil {
 
         return result;
     }
-    
+
     public static Boolean checkIfHasSameValue(List<String> listA, List<String> listB) {
         if (null == listA || listA.isEmpty() || null == listB || listB.isEmpty()) {
             return false;
@@ -151,7 +151,7 @@ public final class ListUtil {
 
         return false;
     }
-    
+
     public static boolean checkIfAllSameValue(List<String> listA, List<String> listB) {
         if (null == listA || listA.isEmpty() || null == listB || listB.isEmpty() || listA.size() != listB.size()) {
             return false;

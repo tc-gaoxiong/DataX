@@ -43,8 +43,8 @@ public class ReplaceTransformer extends Transformer {
             String oriValue = column.asString();
 
             //如果字段为空，跳过replace处理
-            if(oriValue == null){
-                return  record;
+            if (oriValue == null) {
+                return record;
             }
             String newValue;
             if (startIndex > oriValue.length()) {
@@ -59,7 +59,7 @@ public class ReplaceTransformer extends Transformer {
             record.setColumn(columnIndex, new StringColumn(newValue));
 
         } catch (Exception e) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_RUN_EXCEPTION, e.getMessage(),e);
+            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_RUN_EXCEPTION, e.getMessage(), e);
         }
         return record;
     }

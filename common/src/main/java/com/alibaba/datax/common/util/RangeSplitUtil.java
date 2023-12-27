@@ -209,7 +209,7 @@ public final class RangeSplitUtil {
 
     /**
      * List拆分工具函数，主要用于reader插件的split拆分逻辑
-     * */
+     */
     public static <T> List<List<T>> doListSplit(List<T> objects, int adviceNumber) {
         List<List<T>> splitLists = new ArrayList<List<T>>();
         if (null == objects) {

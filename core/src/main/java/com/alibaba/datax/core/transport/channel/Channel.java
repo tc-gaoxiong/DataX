@@ -20,29 +20,17 @@ import java.util.Collection;
 public abstract class Channel {
 
     private static final Logger LOG = LoggerFactory.getLogger(Channel.class);
-
-    protected int taskGroupId;
-
-    protected int capacity;
-
-    protected int byteCapacity;
-
-    protected long byteSpeed; // bps: bytes/s
-
-    protected long recordSpeed; // tps: records/s
-
-    protected long flowControlInterval;
-
-    protected volatile boolean isClosed = false;
-
-    protected Configuration configuration = null;
-
-    protected volatile long waitReaderTime = 0;
-
-    protected volatile long waitWriterTime = 0;
-
     private static Boolean isFirstPrint = true;
-
+    protected int taskGroupId;
+    protected int capacity;
+    protected int byteCapacity;
+    protected long byteSpeed; // bps: bytes/s
+    protected long recordSpeed; // tps: records/s
+    protected long flowControlInterval;
+    protected volatile boolean isClosed = false;
+    protected Configuration configuration = null;
+    protected volatile long waitReaderTime = 0;
+    protected volatile long waitWriterTime = 0;
     private Communication currentCommunication;
 
     private Communication lastCommunication = new Communication();

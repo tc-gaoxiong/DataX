@@ -10,17 +10,9 @@ import java.util.Map;
  */
 public class TransformerExecution {
 
-    private Object[] finalParas;
-
     private final TransformerExecutionParas transformerExecutionParas;
     private final TransformerInfo transformerInfo;
-
-
-    public TransformerExecution(TransformerInfo transformerInfo ,TransformerExecutionParas transformerExecutionParas)  {
-        this.transformerExecutionParas = transformerExecutionParas;
-        this.transformerInfo = transformerInfo;
-    }
-
+    private Object[] finalParas;
     /**
      * 以下是动态统计信息，暂时未用
      */
@@ -28,12 +20,16 @@ public class TransformerExecution {
     private long successRecords = 0;
     private long failedRecords = 0;
     private long filterRecords = 0;
-
     /**
      * 参数采取延迟检查
      */
 
     private boolean isChecked = false;
+
+    public TransformerExecution(TransformerInfo transformerInfo, TransformerExecutionParas transformerExecutionParas) {
+        this.transformerExecutionParas = transformerExecutionParas;
+        this.transformerInfo = transformerInfo;
+    }
 
     public void genFinalParas() {
 
@@ -116,7 +112,7 @@ public class TransformerExecution {
         return transformerInfo.getTransformer();
     }
 
-    public Map<String,Object> gettContext() {
+    public Map<String, Object> gettContext() {
         return transformerExecutionParas.gettContext();
     }
 }

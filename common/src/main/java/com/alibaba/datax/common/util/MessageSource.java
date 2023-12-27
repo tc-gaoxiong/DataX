@@ -1,24 +1,19 @@
 package com.alibaba.datax.common.util;
 
-import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-import java.util.TimeZone;
-
 import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.MessageFormat;
+import java.util.*;
+
 
 public class MessageSource {
     private static final Logger LOG = LoggerFactory.getLogger(MessageSource.class);
-    private static Map<String, ResourceBundle> resourceBundleCache = new HashMap<String, ResourceBundle>();
     public static Locale locale = null;
     public static TimeZone timeZone = null;
+    private static Map<String, ResourceBundle> resourceBundleCache = new HashMap<String, ResourceBundle>();
     private ResourceBundle resourceBundle = null;
 
     private MessageSource(ResourceBundle resourceBundle) {
@@ -26,50 +21,42 @@ public class MessageSource {
     }
 
     /**
-     * @param baseName
-     *            demo: javax.servlet.http.LocalStrings
-     * 
-     * @throws MissingResourceException
-     *             - if no resource bundle for the specified base name can be
-     *             found
-     * */
+     * @param baseName demo: javax.servlet.http.LocalStrings
+     * @throws MissingResourceException - if no resource bundle for the specified base name can be
+     *                                  found
+     */
     public static MessageSource loadResourceBundle(String baseName) {
         return loadResourceBundle(baseName, MessageSource.locale,
                 MessageSource.timeZone);
     }
 
     /**
-     * @param clazz
-     *            根据其获取package name
-     * */
+     * @param clazz 根据其获取package name
+     */
     public static <T> MessageSource loadResourceBundle(Class<T> clazz) {
         return loadResourceBundle(clazz.getPackage().getName());
     }
 
     /**
-     * @param clazz
-     *            根据其获取package name
-     * */
+     * @param clazz 根据其获取package name
+     */
     public static <T> MessageSource loadResourceBundle(Class<T> clazz,
-            Locale locale, TimeZone timeZone) {
+                                                       Locale locale, TimeZone timeZone) {
         return loadResourceBundle(clazz.getPackage().getName(), locale,
                 timeZone);
     }
 
     /**
-     * warn: 
-     *   ok: ResourceBundle.getBundle("xxx.LocalStrings", Locale.getDefault(), LoadUtil.getJarLoader(PluginType.WRITER, "odpswriter"))
-     *   error: ResourceBundle.getBundle("xxx.LocalStrings", Locale.getDefault(), LoadUtil.getJarLoader(PluginType.WRITER, "odpswriter"))
-     * @param baseName
-     *            demo: javax.servlet.http.LocalStrings
-     * 
-     * @throws MissingResourceException
-     *             - if no resource bundle for the specified base name can be
-     *             found
-     *             
-     * */
+     * warn:
+     * ok: ResourceBundle.getBundle("xxx.LocalStrings", Locale.getDefault(), LoadUtil.getJarLoader(PluginType.WRITER, "odpswriter"))
+     * error: ResourceBundle.getBundle("xxx.LocalStrings", Locale.getDefault(), LoadUtil.getJarLoader(PluginType.WRITER, "odpswriter"))
+     *
+     * @param baseName demo: javax.servlet.http.LocalStrings
+     * @throws MissingResourceException - if no resource bundle for the specified base name can be
+     *                                  found
+     */
     public static MessageSource loadResourceBundle(String baseName,
-            Locale locale, TimeZone timeZone) {
+                                                   Locale locale, TimeZone timeZone) {
         ResourceBundle resourceBundle = null;
         if (null == locale) {
             locale = LocaleUtils.toLocale("en_US");
@@ -100,7 +87,7 @@ public class MessageSource {
 
         return new MessageSource(resourceBundle);
     }
-    
+
     public static <T> boolean unloadResourceBundle(Class<T> clazz) {
         String baseName = clazz.getPackage().getName();
         String resourceBaseName = String.format("%s.LocalStrings", baseName);
@@ -111,7 +98,7 @@ public class MessageSource {
             return true;
         }
     }
-    
+
     public static <T> MessageSource reloadResourceBundle(Class<T> clazz) {
         MessageSource.unloadResourceBundle(clazz);
         return MessageSource.loadResourceBundle(clazz);
@@ -161,17 +148,17 @@ public class MessageSource {
 
     public String message(String code, String args1) {
         return this.messageWithDefaultMessage(code, null,
-                new Object[] { args1 });
+                new Object[]{args1});
     }
 
     public String message(String code, String args1, String args2) {
-        return this.messageWithDefaultMessage(code, null, new Object[] { args1,
-                args2 });
+        return this.messageWithDefaultMessage(code, null, new Object[]{args1,
+                args2});
     }
 
     public String message(String code, String args1, String args2, String args3) {
-        return this.messageWithDefaultMessage(code, null, new Object[] { args1,
-                args2, args3 });
+        return this.messageWithDefaultMessage(code, null, new Object[]{args1,
+                args2, args3});
     }
 
     // 上面几个重载可以应对大多数情况, 避免使用这个可以提高性能的
@@ -181,15 +168,14 @@ public class MessageSource {
 
     public String messageWithDefaultMessage(String code, String defaultMessage) {
         return this.messageWithDefaultMessage(code, defaultMessage,
-                new Object[] {});
+                new Object[]{});
     }
 
     /**
-     * @param args
-     *            MessageFormat会依次调用对应对象的toString方法
-     * */
+     * @param args MessageFormat会依次调用对应对象的toString方法
+     */
     public String messageWithDefaultMessage(String code, String defaultMessage,
-            Object... args) {
+                                            Object... args) {
         String messageStr = null;
         try {
             messageStr = this.resourceBundle.getString(code);

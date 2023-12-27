@@ -20,22 +20,35 @@ public class ColumnTypeUtil {
     private static final String RIGHT_BRACKETS = ")";
     private static final String DELIM = ",";
 
-    public static boolean isDecimalType(String typeName){
+    public static boolean isDecimalType(String typeName) {
         return typeName.toLowerCase().startsWith(TYPE_NAME);
     }
 
-    public static DecimalInfo getDecimalInfo(String typeName, DecimalInfo defaultInfo){
-        if(!isDecimalType(typeName)){
+    public static DecimalInfo getDecimalInfo(String typeName, DecimalInfo defaultInfo) {
+        if (!isDecimalType(typeName)) {
             throw new IllegalArgumentException("Unsupported column type:" + typeName);
         }
 
-        if (typeName.contains(LEFT_BRACKETS) && typeName.contains(RIGHT_BRACKETS)){
-            int precision = Integer.parseInt(typeName.substring(typeName.indexOf(LEFT_BRACKETS) + 1,typeName.indexOf(DELIM)).trim());
-            int scale = Integer.parseInt(typeName.substring(typeName.indexOf(DELIM) + 1,typeName.indexOf(RIGHT_BRACKETS)).trim());
+        if (typeName.contains(LEFT_BRACKETS) && typeName.contains(RIGHT_BRACKETS)) {
+            int precision = Integer.parseInt(typeName.substring(typeName.indexOf(LEFT_BRACKETS) + 1, typeName.indexOf(DELIM)).trim());
+            int scale = Integer.parseInt(typeName.substring(typeName.indexOf(DELIM) + 1, typeName.indexOf(RIGHT_BRACKETS)).trim());
             return new DecimalInfo(precision, scale);
         } else {
             return defaultInfo;
         }
+    }
+
+    public static List<ColumnEntry> getListColumnEntry(
+            Configuration configuration, final String path) {
+        List<JSONObject> lists = configuration.getList(path, JSONObject.class);
+        if (lists == null) {
+            return null;
+        }
+        List<ColumnEntry> result = new ArrayList<>();
+        for (final JSONObject object : lists) {
+            result.add(JSON.parseObject(object.toJSONString(), ColumnEntry.class));
+        }
+        return result;
     }
 
     public static class DecimalInfo {
@@ -61,7 +74,7 @@ public class ColumnTypeUtil {
                 return true;
             }
 
-            if (o == null || getClass() != o.getClass()){
+            if (o == null || getClass() != o.getClass()) {
                 return false;
 
             }
@@ -73,18 +86,5 @@ public class ColumnTypeUtil {
         public int hashCode() {
             return Objects.hash(precision, scale);
         }
-    }
-
-    public static List<ColumnEntry> getListColumnEntry(
-            Configuration configuration, final String path) {
-        List<JSONObject> lists = configuration.getList(path, JSONObject.class);
-        if (lists == null) {
-            return null;
-        }
-        List<ColumnEntry> result = new ArrayList<>();
-        for (final JSONObject object : lists) {
-            result.add(JSON.parseObject(object.toJSONString(), ColumnEntry.class));
-        }
-        return result;
     }
 }

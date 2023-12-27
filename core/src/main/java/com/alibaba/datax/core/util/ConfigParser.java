@@ -19,6 +19,7 @@ import java.util.Set;
 
 public final class ConfigParser {
     private static final Logger LOG = LoggerFactory.getLogger(ConfigParser.class);
+
     /**
      * 指定Job配置路径，ConfigParser会解析Job、Plugin、Core全部信息，并以Configuration返回
      */
@@ -44,15 +45,15 @@ public final class ConfigParser {
         pluginList.add(readerPluginName);
         pluginList.add(writerPluginName);
 
-        if(StringUtils.isNotEmpty(preHandlerName)) {
+        if (StringUtils.isNotEmpty(preHandlerName)) {
             pluginList.add(preHandlerName);
         }
-        if(StringUtils.isNotEmpty(postHandlerName)) {
+        if (StringUtils.isNotEmpty(postHandlerName)) {
             pluginList.add(postHandlerName);
         }
         try {
             configuration.merge(parsePluginConfig(new ArrayList<String>(pluginList)), false);
-        }catch (Exception e){
+        } catch (Exception e) {
             //吞掉异常，保持log干净。这里message足够。
             LOG.warn(String.format("插件[%s,%s]加载失败，1s后重试... Exception:%s ", readerPluginName, writerPluginName, e.getMessage()));
             try {
@@ -123,7 +124,7 @@ public final class ConfigParser {
         for (final String each : ConfigParser
                 .getDirAsList(CoreConstant.DATAX_PLUGIN_READER_HOME)) {
             Configuration eachReaderConfig = ConfigParser.parseOnePluginConfig(each, "reader", replicaCheckPluginSet, wantPluginNames);
-            if(eachReaderConfig!=null) {
+            if (eachReaderConfig != null) {
                 configuration.merge(eachReaderConfig, true);
                 complete += 1;
             }
@@ -132,7 +133,7 @@ public final class ConfigParser {
         for (final String each : ConfigParser
                 .getDirAsList(CoreConstant.DATAX_PLUGIN_WRITER_HOME)) {
             Configuration eachWriterConfig = ConfigParser.parseOnePluginConfig(each, "writer", replicaCheckPluginSet, wantPluginNames);
-            if(eachWriterConfig!=null) {
+            if (eachWriterConfig != null) {
                 configuration.merge(eachWriterConfig, true);
                 complete += 1;
             }
@@ -154,7 +155,7 @@ public final class ConfigParser {
 
         String pluginPath = configuration.getString("path");
         String pluginName = configuration.getString("name");
-        if(!pluginSet.contains(pluginName)) {
+        if (!pluginSet.contains(pluginName)) {
             pluginSet.add(pluginName);
         } else {
             throw DataXException.asDataXException(FrameworkErrorCode.PLUGIN_INIT_ERROR, "插件加载失败,存在重复插件:" + filePath);
@@ -168,7 +169,7 @@ public final class ConfigParser {
         boolean isDefaultPath = StringUtils.isBlank(pluginPath);
         if (isDefaultPath) {
             configuration.set("path", path);
-            configuration.set("loadType","jarLoader");
+            configuration.set("loadType", "jarLoader");
         }
 
         Configuration result = Configuration.newDefault();

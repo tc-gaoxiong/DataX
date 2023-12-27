@@ -5,14 +5,15 @@ package com.alibaba.datax.core.util;
  */
 public class ClassSize {
 
-    public static  final int DefaultRecordHead;
-    public static  final int ColumnHead;
+    public static final int DefaultRecordHead;
+    public static final int ColumnHead;
 
     //objectHead的大小
     public static final int REFERENCE;
     public static final int OBJECT;
     public static final int ARRAY;
     public static final int ARRAYLIST;
+
     static {
         //only 64位
         REFERENCE = 8;
@@ -31,12 +32,12 @@ public class ClassSize {
     }
 
     public static int align(int num) {
-        return (int)(align((long)num));
+        return (int) (align((long) num));
     }
 
     public static long align(long num) {
         //The 7 comes from that the alignSize is 8 which is the number of bytes
         //stored and sent together
-        return  ((num + 7) >> 3) << 3;
+        return ((num + 7) >> 3) << 3;
     }
 }

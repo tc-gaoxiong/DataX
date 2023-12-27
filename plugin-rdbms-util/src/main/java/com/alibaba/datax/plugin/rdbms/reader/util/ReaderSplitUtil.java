@@ -66,7 +66,7 @@ public final class ReaderSplitUtil {
                         //原来:如果是单表的，主键切分num=num*2+1
                         // splitPk is null这类的情况的数据量本身就比真实数据量少很多, 和channel大小比率关系时，不建议考虑
                         //eachTableShouldSplittedNumber = eachTableShouldSplittedNumber * 2 + 1;// 不应该加1导致长尾
-                        
+
                         //考虑其他比率数字?(splitPk is null, 忽略此长尾)
                         //eachTableShouldSplittedNumber = eachTableShouldSplittedNumber * 5;
 
@@ -121,27 +121,27 @@ public final class ReaderSplitUtil {
 
         List<Object> conns = queryConfig.getList(Constant.CONN_MARK, Object.class);
 
-        for (int i = 0, len = conns.size(); i < len; i++){
+        for (int i = 0, len = conns.size(); i < len; i++) {
             Configuration connConf = Configuration.from(conns.get(i).toString());
             List<String> querys = new ArrayList<String>();
             List<String> splitPkQuerys = new ArrayList<String>();
-            String connPath = String.format("connection[%d]",i);
+            String connPath = String.format("connection[%d]", i);
             // 说明是配置的 table 方式
             if (isTableMode) {
                 // 已在之前进行了扩展和`处理，可以直接使用
                 List<String> tables = connConf.getList(Key.TABLE, String.class);
                 Validate.isTrue(null != tables && !tables.isEmpty(), "您读取数据库表配置错误.");
                 for (String table : tables) {
-                    querys.add(SingleTableSplitUtil.buildQuerySql(column,table,where));
-                    if (splitPK != null && !splitPK.isEmpty()){
-                        splitPkQuerys.add(SingleTableSplitUtil.genPKSql(splitPK.trim(),table,where));
+                    querys.add(SingleTableSplitUtil.buildQuerySql(column, table, where));
+                    if (splitPK != null && !splitPK.isEmpty()) {
+                        splitPkQuerys.add(SingleTableSplitUtil.genPKSql(splitPK.trim(), table, where));
                     }
                 }
-                if (!splitPkQuerys.isEmpty()){
-                    connConf.set(Key.SPLIT_PK_SQL,splitPkQuerys);
+                if (!splitPkQuerys.isEmpty()) {
+                    connConf.set(Key.SPLIT_PK_SQL, splitPkQuerys);
                 }
-                connConf.set(Key.QUERY_SQL,querys);
-                queryConfig.set(connPath,connConf);
+                connConf.set(Key.QUERY_SQL, querys);
+                queryConfig.set(connPath, connConf);
             } else {
                 // 说明是配置的 querySql 方式
                 List<String> sqls = connConf.getList(Key.QUERY_SQL,
@@ -149,8 +149,8 @@ public final class ReaderSplitUtil {
                 for (String querySql : sqls) {
                     querys.add(querySql);
                 }
-                connConf.set(Key.QUERY_SQL,querys);
-                queryConfig.set(connPath,connConf);
+                connConf.set(Key.QUERY_SQL, querys);
+                queryConfig.set(connPath, connConf);
             }
         }
         return queryConfig;

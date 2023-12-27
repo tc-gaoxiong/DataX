@@ -21,22 +21,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class BufferedRecordTransformerExchanger extends TransformerExchanger implements RecordSender, RecordReceiver {
 
-    private final Channel channel;
-
-    private final Configuration configuration;
-
-    private final List<Record> buffer;
-
-    private int bufferSize;
-
-    protected final int byteCapacity;
-
-    private final AtomicInteger memoryBytes = new AtomicInteger(0);
-
-    private int bufferIndex = 0;
-
     private static Class<? extends Record> RECORD_CLASS;
-
+    protected final int byteCapacity;
+    private final Channel channel;
+    private final Configuration configuration;
+    private final List<Record> buffer;
+    private final AtomicInteger memoryBytes = new AtomicInteger(0);
+    private int bufferSize;
+    private int bufferIndex = 0;
     private volatile boolean shutdown = false;
 
 
@@ -91,7 +83,7 @@ public class BufferedRecordTransformerExchanger extends TransformerExchanger imp
 
         record = doTransformer(record);
 
-        if(record == null){
+        if (record == null) {
             return;
         }
 

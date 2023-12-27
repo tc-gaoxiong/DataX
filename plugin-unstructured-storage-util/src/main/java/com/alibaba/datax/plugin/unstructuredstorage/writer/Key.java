@@ -33,18 +33,18 @@ public class Key {
     public static final String FORMAT = "format";
     // for writers ' data format
     public static final String DATE_FORMAT = "dateFormat";
-    
+
     // csv or plain text
     public static final String FILE_FORMAT = "fileFormat";
-    
+
     // writer headers
     public static final String HEADER = "header";
-    
+
     // writer maxFileSize
     public static final String MAX_FILE_SIZE = "maxFileSize";
 
     public static final String COMMIT_SIZE = "commitSize";
-    
+
     // writer file type suffix, like .txt  .csv
     public static final String SUFFIX = "suffix";
 
@@ -58,7 +58,7 @@ public class Key {
 
     /**
      * 半结构化标示一个Record来源的绝对文件路径名，可以是ftp文件，oss的object等
-     * */
+     */
     public static final String META_KEY_FILE_PATH = "filePath";
 
     /**
@@ -71,7 +71,7 @@ public class Key {
 
     /**
      * 文件同步模式， 如果是copy表示纯文件拷贝
-     * */
+     */
     public static final String SYNC_MODE = "syncMode";
 
     public static final String BYTE_ENCODING = "byteEncoding";

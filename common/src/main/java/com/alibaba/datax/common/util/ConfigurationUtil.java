@@ -1,14 +1,14 @@
 package com.alibaba.datax.common.util;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
-
 public class ConfigurationUtil {
     private static final List<String> SENSITIVE_KEYS = Arrays.asList("password", "accessKey", "securityToken",
-        "AccessKeyId", "AccessKeySecert", "AccessKeySecret", "clientPassword");
+            "AccessKeyId", "AccessKeySecert", "AccessKeySecret", "clientPassword");
 
     public static Configuration filterSensitive(Configuration origin) {
         // shell 任务configuration metric 可能为null。

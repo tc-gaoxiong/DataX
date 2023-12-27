@@ -16,29 +16,25 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Communication extends BaseObject implements Cloneable {
     /**
+     * task给job的信息 *
+     */
+    Map<String, List<String>> message;
+    /**
      * 所有的数值key-value对 *
      */
     private Map<String, Number> counter;
-
     /**
      * 运行状态 *
      */
     private State state;
-
     /**
      * 异常记录 *
      */
     private Throwable throwable;
-
     /**
      * 记录的timestamp *
      */
     private long timestamp;
-
-    /**
-     * task给job的信息 *
-     */
-    Map<String, List<String>> message;
 
     public Communication() {
         this.init();
@@ -64,6 +60,10 @@ public class Communication extends BaseObject implements Cloneable {
         return this.state;
     }
 
+    public synchronized void setState(State state) {
+        setState(state, false);
+    }
+
     public synchronized void setState(State state, boolean isForce) {
         if (!isForce && this.state.equals(State.FAILED)) {
             return;
@@ -72,20 +72,16 @@ public class Communication extends BaseObject implements Cloneable {
         this.state = state;
     }
 
-    public synchronized void setState(State state) {
-        setState(state, false);
-    }
-
     public Throwable getThrowable() {
         return this.throwable;
     }
 
-    public synchronized String getThrowableMessage() {
-        return this.throwable == null ? "" : this.throwable.getMessage();
-    }
-
     public void setThrowable(Throwable throwable) {
         setThrowable(throwable, false);
+    }
+
+    public synchronized String getThrowableMessage() {
+        return this.throwable == null ? "" : this.throwable.getMessage();
     }
 
     public synchronized void setThrowable(Throwable throwable, boolean isForce) {
@@ -272,10 +268,10 @@ public class Communication extends BaseObject implements Cloneable {
         this.setState(retState);
         return retState;
     }
-    
-    public synchronized boolean isFinished(){
-    	return this.state == State.SUCCEEDED || this.state == State.FAILED	
-    			|| this.state == State.KILLED;
+
+    public synchronized boolean isFinished() {
+        return this.state == State.SUCCEEDED || this.state == State.FAILED
+                || this.state == State.KILLED;
     }
-    
+
 }

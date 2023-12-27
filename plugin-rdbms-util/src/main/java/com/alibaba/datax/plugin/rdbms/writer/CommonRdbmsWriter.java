@@ -12,7 +12,6 @@ import com.alibaba.datax.plugin.rdbms.util.DataBaseType;
 import com.alibaba.datax.plugin.rdbms.util.RdbmsException;
 import com.alibaba.datax.plugin.rdbms.writer.util.OriginalConfPretreatmentUtil;
 import com.alibaba.datax.plugin.rdbms.writer.util.WriterUtil;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
@@ -24,14 +23,14 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class CommonRdbmsWriter {
 
     public static class Job {
-        private DataBaseType dataBaseType;
-
         private static final Logger LOG = LoggerFactory
                 .getLogger(Job.class);
+        private DataBaseType dataBaseType;
 
         public Job(DataBaseType dataBaseType) {
             this.dataBaseType = dataBaseType;
@@ -174,10 +173,11 @@ public class CommonRdbmsWriter {
     public static class Task {
         protected static final Logger LOG = LoggerFactory
                 .getLogger(Task.class);
-
-        protected DataBaseType dataBaseType;
         private static final String VALUE_HOLDER = "?";
-
+        // 作为日志显示信息时，需要附带的通用信息。比如信息所对应的数据库连接等信息，针对哪个表做的操作
+        protected static String BASIC_MESSAGE;
+        protected static String INSERT_OR_REPLACE_TEMPLATE;
+        protected DataBaseType dataBaseType;
         protected String username;
         protected String password;
         protected String jdbcUrl;
@@ -189,12 +189,6 @@ public class CommonRdbmsWriter {
         protected int batchByteSize;
         protected int columnNumber = 0;
         protected TaskPluginCollector taskPluginCollector;
-
-        // 作为日志显示信息时，需要附带的通用信息。比如信息所对应的数据库连接等信息，针对哪个表做的操作
-        protected static String BASIC_MESSAGE;
-
-        protected static String INSERT_OR_REPLACE_TEMPLATE;
-
         protected String writeRecordSql;
         protected String writeMode;
         protected boolean emptyAsNull;

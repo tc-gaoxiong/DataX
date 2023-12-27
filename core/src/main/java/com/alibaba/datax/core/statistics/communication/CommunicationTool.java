@@ -31,23 +31,18 @@ public final class CommunicationTool {
     public static final String WRITE_FAILED_BYTES = "writeFailedBytes";
 
     public static final String TOTAL_READ_RECORDS = "totalReadRecords";
-    private static final String TOTAL_READ_BYTES = "totalReadBytes";
-
-    private static final String TOTAL_ERROR_RECORDS = "totalErrorRecords";
-    private static final String TOTAL_ERROR_BYTES = "totalErrorBytes";
-
-    private static final String WRITE_SUCCEED_RECORDS = "writeSucceedRecords";
-    private static final String WRITE_SUCCEED_BYTES = "writeSucceedBytes";
-
     public static final String WAIT_WRITER_TIME = "waitWriterTime";
-
     public static final String WAIT_READER_TIME = "waitReaderTime";
-
     public static final String TRANSFORMER_USED_TIME = "totalTransformerUsedTime";
     public static final String TRANSFORMER_SUCCEED_RECORDS = "totalTransformerSuccessRecords";
     public static final String TRANSFORMER_FAILED_RECORDS = "totalTransformerFailedRecords";
     public static final String TRANSFORMER_FILTER_RECORDS = "totalTransformerFilterRecords";
     public static final String TRANSFORMER_NAME_PREFIX = "usedTimeByTransformer_";
+    private static final String TOTAL_READ_BYTES = "totalReadBytes";
+    private static final String TOTAL_ERROR_RECORDS = "totalErrorRecords";
+    private static final String TOTAL_ERROR_BYTES = "totalErrorBytes";
+    private static final String WRITE_SUCCEED_RECORDS = "writeSucceedRecords";
+    private static final String WRITE_SUCCEED_BYTES = "writeSucceedBytes";
 
     public static Communication getReportCommunication(Communication now, Communication old, int totalStage) {
         Validate.isTrue(now != null && old != null,
@@ -132,7 +127,7 @@ public final class CommunicationTool {
             sb.append(" | ");
             if (communication.getLongCounter(CommunicationTool.TRANSFORMER_USED_TIME) > 0
                     || communication.getLongCounter(CommunicationTool.TRANSFORMER_SUCCEED_RECORDS) > 0
-                    ||communication.getLongCounter(CommunicationTool.TRANSFORMER_FAILED_RECORDS) > 0
+                    || communication.getLongCounter(CommunicationTool.TRANSFORMER_FAILED_RECORDS) > 0
                     || communication.getLongCounter(CommunicationTool.TRANSFORMER_FILTER_RECORDS) > 0) {
                 sb.append("Transfermor Success ");
                 sb.append(String.format("%d records", communication.getLongCounter(CommunicationTool.TRANSFORMER_SUCCEED_RECORDS)));
@@ -263,6 +258,9 @@ public final class CommunicationTool {
         }
 
         static class Pair<K, V> {
+            private K key;
+            private V value;
+
             public Pair(final K key, final V value) {
                 this.key = key;
                 this.value = value;
@@ -275,10 +273,6 @@ public final class CommunicationTool {
             public V getValue() {
                 return value;
             }
-
-            private K key;
-
-            private V value;
         }
     }
 }

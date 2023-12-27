@@ -44,7 +44,7 @@ public class PadTransformer extends Transformer {
             String oriValue = column.asString();
 
             //如果字段为空，作为空字符串处理
-            if(oriValue==null){
+            if (oriValue == null) {
                 oriValue = "";
             }
             String newValue;
@@ -61,7 +61,7 @@ public class PadTransformer extends Transformer {
             record.setColumn(columnIndex, new StringColumn(newValue));
 
         } catch (Exception e) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_RUN_EXCEPTION, e.getMessage(),e);
+            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_RUN_EXCEPTION, e.getMessage(), e);
         }
         return record;
     }
