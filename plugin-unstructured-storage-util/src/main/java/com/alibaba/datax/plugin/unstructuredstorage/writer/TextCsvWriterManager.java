@@ -1,10 +1,5 @@
 package com.alibaba.datax.plugin.unstructuredstorage.writer;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.util.HashMap;
-import java.util.List;
-
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
@@ -14,16 +9,19 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.csvreader.CsvWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.HashMap;
+import java.util.List;
 
 
 public class TextCsvWriterManager {
 
-    public static UnstructuredWriter produceTextWriter( Writer writer, String fieldDelimiter, Configuration config) {
+    public static UnstructuredWriter produceTextWriter(Writer writer, String fieldDelimiter, Configuration config) {
         return new TextWriterImpl(writer, fieldDelimiter, config);
     }
 
-    public static UnstructuredWriter produceCsvWriter( Writer writer, char fieldDelimiter, Configuration config) {
+    public static UnstructuredWriter produceCsvWriter(Writer writer, char fieldDelimiter, Configuration config) {
         return new CsvWriterImpl(writer, fieldDelimiter, config);
     }
 }

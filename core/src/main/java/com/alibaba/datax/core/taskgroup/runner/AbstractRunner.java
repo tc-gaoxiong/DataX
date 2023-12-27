@@ -78,18 +78,18 @@ public abstract class AbstractRunner {
     }
 
     /**
+     * @return the taskGroupId
+     */
+    public int getTaskGroupId() {
+        return taskGroupId;
+    }
+
+    /**
      * @param taskGroupId the taskGroupId to set
      */
     public void setTaskGroupId(int taskGroupId) {
         this.taskGroupId = taskGroupId;
         this.plugin.setTaskGroupId(taskGroupId);
-    }
-
-    /**
-     * @return the taskGroupId
-     */
-    public int getTaskGroupId() {
-        return taskGroupId;
     }
 
     public int getTaskId() {
@@ -101,14 +101,14 @@ public abstract class AbstractRunner {
         this.plugin.setTaskId(taskId);
     }
 
+    public Communication getRunnerCommunication() {
+        return runnerCommunication;
+    }
+
     public void setRunnerCommunication(final Communication runnerCommunication) {
         Validate.notNull(runnerCommunication,
                 "插件的Communication不能为空");
         this.runnerCommunication = runnerCommunication;
-    }
-
-    public Communication getRunnerCommunication() {
-        return runnerCommunication;
     }
 
     public abstract void shutdown();

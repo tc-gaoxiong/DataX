@@ -75,6 +75,7 @@ public class BinaryFileWriterUtil {
 
     /**
      * 校验文件名是否有重复的,如果有重复的文件名则抛出异常
+     *
      * @param fileNameList
      */
     public static void checkFileNameIfRepeatedThrowException(List<String> fileNameList) {
@@ -90,7 +91,6 @@ public class BinaryFileWriterUtil {
     }
 
     /**
-     *
      * @param readerSplitConfigs
      * @param writerSliceConfig
      * @return 切分后的结果

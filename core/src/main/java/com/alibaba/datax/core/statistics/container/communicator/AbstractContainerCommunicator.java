@@ -23,6 +23,11 @@ public abstract class AbstractContainerCommunicator {
     private long lastReportTime = System.currentTimeMillis();
 
 
+    public AbstractContainerCommunicator(Configuration configuration) {
+        this.configuration = configuration;
+        this.jobId = configuration.getLong(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID);
+    }
+
     public Configuration getConfiguration() {
         return this.configuration;
     }
@@ -31,12 +36,12 @@ public abstract class AbstractContainerCommunicator {
         return collector;
     }
 
-    public AbstractReporter getReporter() {
-        return reporter;
-    }
-
     public void setCollector(AbstractCollector collector) {
         this.collector = collector;
+    }
+
+    public AbstractReporter getReporter() {
+        return reporter;
     }
 
     public void setReporter(AbstractReporter reporter) {
@@ -46,12 +51,6 @@ public abstract class AbstractContainerCommunicator {
     public Long getJobId() {
         return jobId;
     }
-
-    public AbstractContainerCommunicator(Configuration configuration) {
-        this.configuration = configuration;
-        this.jobId = configuration.getLong(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID);
-    }
-
 
     public abstract void registerCommunication(List<Configuration> configurationList);
 
@@ -69,15 +68,15 @@ public abstract class AbstractContainerCommunicator {
      */
     public abstract Map<Integer, Communication> getCommunicationMap();
 
-    public void resetCommunication(Integer id){
+    public void resetCommunication(Integer id) {
         Map<Integer, Communication> map = getCommunicationMap();
         map.put(id, new Communication());
     }
 
-    public void reportVmInfo(){
+    public void reportVmInfo() {
         long now = System.currentTimeMillis();
         //每5分钟打印一次
-        if(now - lastReportTime >= 300000) {
+        if (now - lastReportTime >= 300000) {
             //当前仅打印
             if (vmInfo != null) {
                 vmInfo.getDelta(true);

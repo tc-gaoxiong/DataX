@@ -18,8 +18,8 @@ public enum DataBaseType {
     PostgreSQL("postgresql", "org.postgresql.Driver"),
     RDBMS("rdbms", "com.alibaba.datax.plugin.rdbms.util.DataBaseType"),
     DB2("db2", "com.ibm.db2.jcc.DB2Driver"),
-    ADB("adb","com.mysql.jdbc.Driver"),
-    ADS("ads","com.mysql.jdbc.Driver"),
+    ADB("adb", "com.mysql.jdbc.Driver"),
+    ADS("ads", "com.mysql.jdbc.Driver"),
     ClickHouse("clickhouse", "ru.yandex.clickhouse.ClickHouseDriver"),
     KingbaseES("kingbasees", "com.kingbase8.Driver"),
     Oscar("oscar", "com.oscar.Driver"),
@@ -28,12 +28,29 @@ public enum DataBaseType {
     GaussDB("gaussdb", "org.opengauss.Driver"),
     Databend("databend", "com.databend.jdbc.DatabendDriver");
 
+    private static Pattern mysqlPattern = Pattern.compile("jdbc:mysql://(.+):\\d+/.+");
+    private static Pattern oraclePattern = Pattern.compile("jdbc:oracle:thin:@(.+):\\d+:.+");
     private String typeName;
     private String driverClassName;
 
     DataBaseType(String typeName, String driverClassName) {
         this.typeName = typeName;
         this.driverClassName = driverClassName;
+    }
+
+    /**
+     * 注意：目前只实现了从 mysql/oracle 中识别出ip 信息.未识别到则返回 null.
+     */
+    public static String parseIpFromJdbcUrl(String jdbcUrl) {
+        Matcher mysql = mysqlPattern.matcher(jdbcUrl);
+        if (mysql.matches()) {
+            return mysql.group(1);
+        }
+        Matcher oracle = oraclePattern.matcher(jdbcUrl);
+        if (oracle.matches()) {
+            return oracle.group(1);
+        }
+        return null;
     }
 
     public String getDriverClassName() {
@@ -173,7 +190,6 @@ public enum DataBaseType {
         return result;
     }
 
-
     public String quoteColumnName(String columnName) {
         String result = columnName;
 
@@ -228,23 +244,6 @@ public enum DataBaseType {
         return result;
     }
 
-    private static Pattern mysqlPattern = Pattern.compile("jdbc:mysql://(.+):\\d+/.+");
-    private static Pattern oraclePattern = Pattern.compile("jdbc:oracle:thin:@(.+):\\d+:.+");
-
-    /**
-     * 注意：目前只实现了从 mysql/oracle 中识别出ip 信息.未识别到则返回 null.
-     */
-    public static String parseIpFromJdbcUrl(String jdbcUrl) {
-        Matcher mysql = mysqlPattern.matcher(jdbcUrl);
-        if (mysql.matches()) {
-            return mysql.group(1);
-        }
-        Matcher oracle = oraclePattern.matcher(jdbcUrl);
-        if (oracle.matches()) {
-            return oracle.group(1);
-        }
-        return null;
-    }
     public String getTypeName() {
         return typeName;
     }

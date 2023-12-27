@@ -15,11 +15,11 @@ import java.util.List;
  * Created by liqiang on 16/3/4.
  */
 public class GroovyTransformer extends Transformer {
+    private Transformer groovyTransformer;
+
     public GroovyTransformer() {
         setTransformerName("dx_groovy");
     }
-
-    private Transformer groovyTransformer;
 
     @Override
     public Record evaluate(Record record, Object... paras) {
@@ -33,7 +33,7 @@ public class GroovyTransformer extends Transformer {
 
                 if (groovyTransformer == null) {
                     String code = (String) paras[0];
-                    @SuppressWarnings("unchecked") List<String> extraPackage = paras.length == 2 ?  (List<String>) paras[1] : null;
+                    @SuppressWarnings("unchecked") List<String> extraPackage = paras.length == 2 ? (List<String>) paras[1] : null;
                     initGroovyTransformer(code, extraPackage);
                 }
             }
@@ -67,7 +67,7 @@ public class GroovyTransformer extends Transformer {
 
     private String getGroovyRule(String expression, List<String> extraPackagesStrList) {
         StringBuffer sb = new StringBuffer();
-        if(extraPackagesStrList!=null) {
+        if (extraPackagesStrList != null) {
             for (String extraPackagesStr : extraPackagesStrList) {
                 if (StringUtils.isNotEmpty(extraPackagesStr)) {
                     sb.append(extraPackagesStr);

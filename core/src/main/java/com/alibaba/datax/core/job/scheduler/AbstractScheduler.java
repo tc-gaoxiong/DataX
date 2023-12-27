@@ -25,12 +25,12 @@ public abstract class AbstractScheduler {
 
     private Long jobId;
 
-    public Long getJobId() {
-        return jobId;
-    }
-
     public AbstractScheduler(AbstractContainerCommunicator containerCommunicator) {
         this.containerCommunicator = containerCommunicator;
+    }
+
+    public Long getJobId() {
+        return jobId;
     }
 
     public void schedule(List<Configuration> configurations) {
@@ -131,5 +131,5 @@ public abstract class AbstractScheduler {
 //        return jobInfo.getData() == State.KILLING.value();
 //    }
 
-    protected  abstract  boolean isJobKilling(Long jobId);
+    protected abstract boolean isJobKilling(Long jobId);
 }

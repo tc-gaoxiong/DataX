@@ -20,12 +20,12 @@ public class ReaderRunner extends AbstractRunner implements Runnable {
 
     private RecordSender recordSender;
 
-    public void setRecordSender(RecordSender recordSender) {
-        this.recordSender = recordSender;
-    }
-
     public ReaderRunner(AbstractTaskPlugin abstractTaskPlugin) {
         super(abstractTaskPlugin);
+    }
+
+    public void setRecordSender(RecordSender recordSender) {
+        this.recordSender = recordSender;
     }
 
     @Override
@@ -89,7 +89,7 @@ public class ReaderRunner extends AbstractRunner implements Runnable {
         }
     }
 
-    public void shutdown(){
+    public void shutdown() {
         recordSender.shutdown();
     }
 }

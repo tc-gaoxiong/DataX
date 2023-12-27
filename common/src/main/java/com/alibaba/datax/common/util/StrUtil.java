@@ -78,7 +78,7 @@ public class StrUtil {
         Validate.isTrue(headLength > 0, "Head length must be larger than 0");
         Validate.isTrue(tailLength > 0, "Tail length must be larger than 0");
 
-        if(headLength + tailLength >= s.length()) {
+        if (headLength + tailLength >= s.length()) {
             return s;
         }
         return s.substring(0, headLength) + "..." + s.substring(s.length() - tailLength);

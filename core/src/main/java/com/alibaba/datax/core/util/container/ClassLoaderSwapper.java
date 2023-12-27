@@ -2,7 +2,7 @@ package com.alibaba.datax.core.util.container;
 
 /**
  * Created by jingxing on 14-8-29.
- *
+ * <p>
  * 为避免jar冲突，比如hbase可能有多个版本的读写依赖jar包，JobContainer和TaskGroupContainer
  * 就需要脱离当前classLoader去加载这些jar包，执行完成后，又退回到原来classLoader上继续执行接下来的代码
  */
@@ -30,6 +30,7 @@ public final class ClassLoaderSwapper {
 
     /**
      * 将当前线程的类加载器设置为保存的类加载
+     *
      * @return
      */
     public ClassLoader restoreCurrentThreadClassLoader() {

@@ -23,11 +23,11 @@ import java.util.List;
  */
 public abstract class UnstructuredSplitUtil {
     private static final Logger LOG = LoggerFactory.getLogger(UnstructuredSplitUtil.class);
-    private boolean needInnerSplit;
     // 对每个文件进行切分的块大小是 64MB
     // warn: 这个最好弄成可配置的， 用户配置channel为2但是有10个文件，不一定需要文件内部切分；
     // 弄成可配置的有些情况下可以避免文件内部切分切分的task太碎
     private static final Long BLOCK_BYTE_CAPACITY = 64 * FileUtils.ONE_MB;
+    private boolean needInnerSplit;
 
     public UnstructuredSplitUtil(boolean needInnerSplit) {
         this.needInnerSplit = needInnerSplit;
@@ -83,8 +83,7 @@ public abstract class UnstructuredSplitUtil {
     /**
      * 对原始的切分点位进行调节校准, 将点位落在每一行数据的换行符处
      *
-     * @param startEndInputStreamTripleList
-     *            原始的切分点位及inputstream (start, end, inputStream)
+     * @param startEndInputStreamTripleList 原始的切分点位及inputstream (start, end, inputStream)
      * @return
      */
     private List<StartEndPair> regulateSplitStartEndPair(
@@ -124,8 +123,7 @@ public abstract class UnstructuredSplitUtil {
      * 获取到输入流开始的第一个'\n'偏移量, 如果向后偏移了ByteCapacity个字节,还是没有找到'\n'的话,则抛出异常 注:
      * 对文件切分的最后一个分块不会调用该方法
      *
-     * @param inputStream
-     *            输入流
+     * @param inputStream 输入流
      * @return
      */
     private Long getLFIndex(InputStream inputStream) {
@@ -176,8 +174,7 @@ public abstract class UnstructuredSplitUtil {
     /**
      * 判断文件是否需要切分, 切分的条件是必须要大于 transport.channel.byteCapacity
      *
-     * @param fileTotalLength:
-     *            文件总字节数
+     * @param fileTotalLength: 文件总字节数
      * @return
      */
     private boolean isNeedSplit(Long fileTotalLength) {

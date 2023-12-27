@@ -24,18 +24,20 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class HttpClientUtil {
 
+    private static final int POOL_SIZE = 20;
     private static CredentialsProvider provider;
-
-    private CloseableHttpClient httpClient;
-
     private volatile static HttpClientUtil clientUtil;
 
     //构建httpclient的时候一定要设置这两个参数。淘宝很多生产故障都由此引起
     private static int HTTP_TIMEOUT_INMILLIONSECONDS = 5000;
-
-    private static final int POOL_SIZE = 20;
-
     private static ThreadPoolExecutor asyncExecutor = RetryUtil.createThreadPoolExecutor();
+    private CloseableHttpClient httpClient;
+
+    public HttpClientUtil() {
+        Properties prob = SecretUtil.getSecurityProperties();
+        HttpClientUtil.setBasicAuth(prob.getProperty("auth.user"), prob.getProperty("auth.pass"));
+        initApacheHttpClient();
+    }
 
     public static void setHttpTimeoutInMillionSeconds(int httpTimeoutInMillionSeconds) {
         HTTP_TIMEOUT_INMILLIONSECONDS = httpTimeoutInMillionSeconds;
@@ -52,46 +54,10 @@ public class HttpClientUtil {
         return clientUtil;
     }
 
-    public HttpClientUtil() {
-        Properties prob  = SecretUtil.getSecurityProperties();
-        HttpClientUtil.setBasicAuth(prob.getProperty("auth.user"),prob.getProperty("auth.pass"));
-        initApacheHttpClient();
-    }
-
-    public void destroy() {
-        destroyApacheHttpClient();
-    }
-
     public static void setBasicAuth(String username, String password) {
         provider = new BasicCredentialsProvider();
         provider.setCredentials(AuthScope.ANY,
-                new UsernamePasswordCredentials(username,password));
-    }
-
-    // 创建包含connection pool与超时设置的client
-    private void initApacheHttpClient() {
-        RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(HTTP_TIMEOUT_INMILLIONSECONDS)
-                .setConnectTimeout(HTTP_TIMEOUT_INMILLIONSECONDS).setConnectionRequestTimeout(HTTP_TIMEOUT_INMILLIONSECONDS)
-                .setStaleConnectionCheckEnabled(true).build();
-
-          if(null == provider) {
-              httpClient = HttpClientBuilder.create().setMaxConnTotal(POOL_SIZE).setMaxConnPerRoute(POOL_SIZE)
-                      .setDefaultRequestConfig(requestConfig).build();
-          } else {
-              httpClient = HttpClientBuilder.create().setMaxConnTotal(POOL_SIZE).setMaxConnPerRoute(POOL_SIZE)
-                      .setDefaultRequestConfig(requestConfig).setDefaultCredentialsProvider(provider).build();
-          }
-    }
-
-    private void destroyApacheHttpClient() {
-        try {
-            if (httpClient != null) {
-                httpClient.close();
-                httpClient = null;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+                new UsernamePasswordCredentials(username, password));
     }
 
     public static HttpGet getGetRequest() {
@@ -108,6 +74,36 @@ public class HttpClientUtil {
 
     public static HttpDelete getDeleteRequest() {
         return new HttpDelete();
+    }
+
+    public void destroy() {
+        destroyApacheHttpClient();
+    }
+
+    // 创建包含connection pool与超时设置的client
+    private void initApacheHttpClient() {
+        RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(HTTP_TIMEOUT_INMILLIONSECONDS)
+                .setConnectTimeout(HTTP_TIMEOUT_INMILLIONSECONDS).setConnectionRequestTimeout(HTTP_TIMEOUT_INMILLIONSECONDS)
+                .setStaleConnectionCheckEnabled(true).build();
+
+        if (null == provider) {
+            httpClient = HttpClientBuilder.create().setMaxConnTotal(POOL_SIZE).setMaxConnPerRoute(POOL_SIZE)
+                    .setDefaultRequestConfig(requestConfig).build();
+        } else {
+            httpClient = HttpClientBuilder.create().setMaxConnTotal(POOL_SIZE).setMaxConnPerRoute(POOL_SIZE)
+                    .setDefaultRequestConfig(requestConfig).setDefaultCredentialsProvider(provider).build();
+        }
+    }
+
+    private void destroyApacheHttpClient() {
+        try {
+            if (httpClient != null) {
+                httpClient.close();
+                httpClient = null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public String executeAndGet(HttpRequestBase httpRequestBase) throws Exception {
@@ -151,13 +147,13 @@ public class HttpClientUtil {
         }
     }
 
-    public String executeAndGetWithFailedRetry(final HttpRequestBase httpRequestBase, final int retryTimes, final long retryInterval){
+    public String executeAndGetWithFailedRetry(final HttpRequestBase httpRequestBase, final int retryTimes, final long retryInterval) {
         try {
             return RetryUtil.asyncExecuteWithRetry(new Callable<String>() {
                 @Override
                 public String call() throws Exception {
                     String result = executeAndGet(httpRequestBase);
-                    if(result!=null && result.startsWith("{\"result\":-1")){
+                    if (result != null && result.startsWith("{\"result\":-1")) {
                         throw DataXException.asDataXException(FrameworkErrorCode.CALL_REMOTE_FAILED, "远程接口返回-1,将重试");
                     }
                     return result;

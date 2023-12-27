@@ -10,7 +10,8 @@ public enum State {
     KILLING(40),
     KILLED(50),
     FAILED(60),
-    SUCCEEDED(70), ;
+    SUCCEEDED(70),
+    ;
 
     int value;
 

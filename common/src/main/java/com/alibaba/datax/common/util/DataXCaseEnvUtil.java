@@ -15,19 +15,19 @@ public class DataXCaseEnvUtil {
 
     public static int getRetryTimes(int retryTimes) {
         int actualRetryTimes = DATAX_AUTOTEST_RETRY_TIME != null ? Integer.valueOf(DATAX_AUTOTEST_RETRY_TIME) : retryTimes;
-       // LOGGER.info("The actualRetryTimes is {}", actualRetryTimes);
+        // LOGGER.info("The actualRetryTimes is {}", actualRetryTimes);
         return actualRetryTimes;
     }
 
     public static long getRetryInterval(long retryInterval) {
         long actualRetryInterval = DATAX_AUTOTEST_RETRY_INTERVAL != null ? Long.valueOf(DATAX_AUTOTEST_RETRY_INTERVAL) : retryInterval;
-       // LOGGER.info("The actualRetryInterval is {}", actualRetryInterval);
+        // LOGGER.info("The actualRetryInterval is {}", actualRetryInterval);
         return actualRetryInterval;
     }
 
     public static boolean getRetryExponential(boolean retryExponential) {
         boolean actualRetryExponential = DATAX_AUTOTEST_RETRY_EXPONENTIAL != null ? Boolean.valueOf(DATAX_AUTOTEST_RETRY_EXPONENTIAL) : retryExponential;
-       // LOGGER.info("The actualRetryExponential is {}", actualRetryExponential);
+        // LOGGER.info("The actualRetryExponential is {}", actualRetryExponential);
         return actualRetryExponential;
     }
 }

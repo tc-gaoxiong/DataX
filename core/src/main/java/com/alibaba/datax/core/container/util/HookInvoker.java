@@ -39,6 +39,11 @@ public class HookInvoker {
         this.msg = msg;
     }
 
+    public static void main(String[] args) {
+        new HookInvoker("/Users/xiafei/workspace/datax3/target/datax/datax/hook",
+                null, new HashMap<String, Number>()).invokeAll();
+    }
+
     public void invokeAll() {
         if (!baseDir.exists() || baseDir.isFile()) {
             LOG.info("No hook invoked, because base dir not exists or is a file: " + baseDir.getAbsolutePath());
@@ -82,10 +87,5 @@ public class HookInvoker {
         } finally {
             Thread.currentThread().setContextClassLoader(oldClassLoader);
         }
-    }
-
-    public static void main(String[] args) {
-        new HookInvoker("/Users/xiafei/workspace/datax3/target/datax/datax/hook",
-                null, new HashMap<String, Number>()).invokeAll();
     }
 }

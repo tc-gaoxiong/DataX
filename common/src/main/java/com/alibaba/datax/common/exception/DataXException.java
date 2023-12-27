@@ -48,10 +48,6 @@ public class DataXException extends RuntimeException {
         return new DataXException(errorCode, getMessage(cause), cause);
     }
 
-    public ErrorCode getErrorCode() {
-        return this.errorCode;
-    }
-
     private static String getMessage(Object obj) {
         if (obj == null) {
             return "";
@@ -66,5 +62,9 @@ public class DataXException extends RuntimeException {
         } else {
             return obj.toString();
         }
+    }
+
+    public ErrorCode getErrorCode() {
+        return this.errorCode;
     }
 }

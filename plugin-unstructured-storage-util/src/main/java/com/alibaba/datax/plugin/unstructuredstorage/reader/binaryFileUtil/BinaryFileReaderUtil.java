@@ -5,7 +5,6 @@ import com.alibaba.datax.common.element.Column;
 import com.alibaba.datax.common.element.Record;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.plugin.RecordSender;
-import com.alibaba.datax.plugin.unstructuredstorage.reader.Key;
 import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredStorageReaderErrorCode;
 import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredStorageReaderUtil;
 import org.slf4j.Logger;
@@ -14,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -50,7 +48,7 @@ public class BinaryFileReaderUtil {
         }
     }
 
-    private static void recordSenderBytesColumn(RecordSender recordSender, byte[] tmp, Map<String, String> meta){
+    private static void recordSenderBytesColumn(RecordSender recordSender, byte[] tmp, Map<String, String> meta) {
         Record record = recordSender.createRecord();
         Column column = new BytesColumn(tmp);
         record.addColumn(column);

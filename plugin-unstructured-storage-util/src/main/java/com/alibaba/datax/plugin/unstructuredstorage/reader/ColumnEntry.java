@@ -15,6 +15,10 @@ public class ColumnEntry {
     private DateFormat dateParse;
     private String name;
 
+    public static String toJSONString(ColumnEntry columnEntry) {
+        return JSON.toJSONString(columnEntry);
+    }
+
     public String getName() {
         return name;
     }
@@ -64,9 +68,5 @@ public class ColumnEntry {
 
     public String toJSONString() {
         return ColumnEntry.toJSONString(this);
-    }
-
-    public static String toJSONString(ColumnEntry columnEntry) {
-        return JSON.toJSONString(columnEntry);
     }
 }

@@ -1,17 +1,15 @@
 package com.alibaba.datax.plugin.unstructuredstorage.writer;
 
-import java.io.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import com.alibaba.datax.common.element.BytesColumn;
-
+import com.alibaba.datax.common.element.Column;
+import com.alibaba.datax.common.element.DateColumn;
+import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.exception.DataXException;
+import com.alibaba.datax.common.plugin.RecordReceiver;
+import com.alibaba.datax.common.plugin.TaskPluginCollector;
+import com.alibaba.datax.common.util.Configuration;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.compressors.CompressorOutputStream;
@@ -23,26 +21,22 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.datax.common.element.Column;
-import com.alibaba.datax.common.element.DateColumn;
-import com.alibaba.datax.common.element.Record;
-import com.alibaba.datax.common.exception.DataXException;
-import com.alibaba.datax.common.plugin.RecordReceiver;
-import com.alibaba.datax.common.plugin.TaskPluginCollector;
-import com.alibaba.datax.common.util.Configuration;
-import com.google.common.collect.Sets;
+import java.io.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class UnstructuredStorageWriterUtil {
+    private static final Logger LOG = LoggerFactory
+            .getLogger(UnstructuredStorageWriterUtil.class);
+
     private UnstructuredStorageWriterUtil() {
 
     }
 
-    private static final Logger LOG = LoggerFactory
-            .getLogger(UnstructuredStorageWriterUtil.class);
-
     /**
      * check parameter: writeMode, encoding, compress, filedDelimiter
-     * */
+     */
     public static void validateParameter(Configuration writerConfiguration) {
         // writeMode check
         String writeMode = writerConfiguration.getNecessaryValue(
@@ -212,7 +206,7 @@ public class UnstructuredStorageWriterUtil {
                             UnstructuredStorageWriterErrorCode.Write_FILE_WITH_CHARSET_ERROR, uee);
         } catch (NullPointerException e) {
             throw DataXException.asDataXException(
-                    UnstructuredStorageWriterErrorCode.RUNTIME_EXCEPTION,e);
+                    UnstructuredStorageWriterErrorCode.RUNTIME_EXCEPTION, e);
         } catch (IOException e) {
             throw DataXException.asDataXException(
                     UnstructuredStorageWriterErrorCode.Write_FILE_IO_ERROR, e);
@@ -259,13 +253,13 @@ public class UnstructuredStorageWriterUtil {
         }
 
         if (isSqlFormat) {
-            ((SqlWriter)unstructuredWriter).appendCommit();
+            ((SqlWriter) unstructuredWriter).appendCommit();
         }
         // warn:由调用方控制流的关闭
         // IOUtils.closeQuietly(unstructuredWriter);
     }
 
-    public static UnstructuredWriter produceUnstructuredWriter(String fileFormat, Configuration config, Writer writer){
+    public static UnstructuredWriter produceUnstructuredWriter(String fileFormat, Configuration config, Writer writer) {
         UnstructuredWriter unstructuredWriter = null;
         if (StringUtils.equalsIgnoreCase(fileFormat, Constant.FILE_FORMAT_CSV)) {
 
@@ -291,7 +285,7 @@ public class UnstructuredStorageWriterUtil {
 
     /**
      * 异常表示脏数据
-     * */
+     */
     public static void transportOneRecord(Record record, String nullFormat,
                                           DateFormat dateParse, TaskPluginCollector taskPluginCollector,
                                           UnstructuredWriter unstructuredWriter, String byteEncoding) {
@@ -333,17 +327,17 @@ public class UnstructuredStorageWriterUtil {
                 }
             }
             unstructuredWriter.writeOneRecord(splitedRows);
-        } catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             // warn: dirty data
             taskPluginCollector.collectDirtyRecord(record, e);
-        } catch (DataXException e){
+        } catch (DataXException e) {
             // warn: dirty data
             taskPluginCollector.collectDirtyRecord(record, e);
         } catch (Exception e) {
             // throw exception, it is not dirty data,
             // may be network unreachable and the other problem
             throw DataXException.asDataXException(
-                    UnstructuredStorageWriterErrorCode.Write_ERROR, e.getMessage(),e);
+                    UnstructuredStorageWriterErrorCode.Write_ERROR, e.getMessage(), e);
         }
     }
 

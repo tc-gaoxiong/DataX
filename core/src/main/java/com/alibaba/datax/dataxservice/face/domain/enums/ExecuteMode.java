@@ -12,15 +12,6 @@ public enum ExecuteMode implements EnumStrVal {
         this.value = value;
     }
 
-    @Override
-    public String value() {
-        return value;
-    }
-
-    public String getValue() {
-        return this.value;
-    }
-
     public static boolean isLocal(String mode) {
         return equalsIgnoreCase(LOCAL.getValue(), mode);
     }
@@ -40,6 +31,15 @@ public enum ExecuteMode implements EnumStrVal {
 
     private static boolean equalsIgnoreCase(String str1, String str2) {
         return str1 == null ? str2 == null : str1.equalsIgnoreCase(str2);
+    }
+
+    @Override
+    public String value() {
+        return value;
+    }
+
+    public String getValue() {
+        return this.value;
     }
 
     @Override

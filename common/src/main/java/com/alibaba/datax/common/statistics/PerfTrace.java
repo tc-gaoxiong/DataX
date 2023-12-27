@@ -19,9 +19,11 @@ import java.util.concurrent.TimeUnit;
 
 public class PerfTrace {
 
+    private static final Object lock = new Object();
     private static Logger LOG = LoggerFactory.getLogger(PerfTrace.class);
     private static PerfTrace instance;
-    private static final Object lock = new Object();
+    private final Set<PerfRecord> needReportPool4NotEnd = new HashSet<PerfRecord>();
+    private final List<PerfRecord> totalEndReport = new ArrayList<PerfRecord>();
     private String perfTraceId;
     private volatile boolean enable;
     private volatile boolean isJob;
@@ -30,10 +32,8 @@ public class PerfTrace {
     private long jobVersion;
     private int taskGroupId;
     private int channelNumber;
-
     private int batchSize = 500;
     private volatile boolean perfReportEnable = true;
-
     //jobid_jobversion,instanceid,taskid, src_mark, dst_mark,
     private Map<Integer, String> taskDetails = new ConcurrentHashMap<Integer, String>();
     //PHASE => PerfRecord
@@ -42,8 +42,30 @@ public class PerfTrace {
     private SumPerf4Report sumPerf4Report = new SumPerf4Report();
     private SumPerf4Report sumPerf4Report4NotEnd;
     private Configuration jobInfo;
-    private final Set<PerfRecord> needReportPool4NotEnd = new HashSet<PerfRecord>();
-    private final List<PerfRecord> totalEndReport = new ArrayList<PerfRecord>();
+    private String cluster;
+    private String jobDomain;
+    private String srcType;
+    private String dstType;
+    private String srcGuid;
+    private String dstGuid;
+    private Date windowStart;
+    private Date windowEnd;
+    private Date jobStartTime;
+
+    private PerfTrace(boolean isJob, long jobId, int taskGroupId, boolean enable) {
+        try {
+            this.perfTraceId = isJob ? "job_" + jobId : String.format("taskGroup_%s_%s", jobId, taskGroupId);
+            this.enable = enable;
+            this.isJob = isJob;
+            this.taskGroupId = taskGroupId;
+            this.instId = jobId;
+            LOG.info(String.format("PerfTrace traceId=%s, isEnable=%s", this.perfTraceId, this.enable));
+
+        } catch (Exception e) {
+            // do nothing
+            this.enable = false;
+        }
+    }
 
     /**
      * 单实例
@@ -82,18 +104,24 @@ public class PerfTrace {
         return instance;
     }
 
-    private PerfTrace(boolean isJob, long jobId, int taskGroupId, boolean enable) {
-        try {
-            this.perfTraceId = isJob ? "job_" + jobId : String.format("taskGroup_%s_%s", jobId, taskGroupId);
-            this.enable = enable;
-            this.isJob = isJob;
-            this.taskGroupId = taskGroupId;
-            this.instId = jobId;
-            LOG.info(String.format("PerfTrace traceId=%s, isEnable=%s", this.perfTraceId, this.enable));
+    //缺省传入的时间是nano
+    public static String unitTime(long time) {
+        return unitTime(time, TimeUnit.NANOSECONDS);
+    }
 
-        } catch (Exception e) {
-            // do nothing
-            this.enable = false;
+    public static String unitTime(long time, TimeUnit timeUnit) {
+        return String.format("%,.3fs", ((float) timeUnit.toNanos(time)) / 1000000000);
+    }
+
+    public static String unitSize(long size) {
+        if (size > 1000000000) {
+            return String.format("%,.2fG", (float) size / 1000000000);
+        } else if (size > 1000000) {
+            return String.format("%,.2fM", (float) size / 1000000);
+        } else if (size > 1000) {
+            return String.format("%,.2fK", (float) size / 1000);
+        } else {
+            return size + "B";
         }
     }
 
@@ -134,7 +162,7 @@ public class PerfTrace {
 
                         if (perfReportEnable && needReport(perfRecord)) {
                             synchronized (needReportPool4NotEnd) {
-                                sumPerf4Report.add(curNanoTime,perfRecord);
+                                sumPerf4Report.add(curNanoTime, perfRecord);
                                 needReportPool4NotEnd.remove(perfRecord);
                             }
                         }
@@ -213,7 +241,7 @@ public class PerfTrace {
         //SumPerfRecord4Print countSumPerf = Optional.fromNullable(perfRecordMaps4print.get(PHASE.READ_TASK_DATA)).or(new SumPerfRecord4Print());
 
         SumPerfRecord4Print countSumPerf = perfRecordMaps4print.get(PHASE.READ_TASK_DATA);
-        if(countSumPerf == null){
+        if (countSumPerf == null) {
             countSumPerf = new SumPerfRecord4Print();
         }
 
@@ -233,28 +261,6 @@ public class PerfTrace {
         }
         return info.toString();
     }
-
-    //缺省传入的时间是nano
-    public static String unitTime(long time) {
-        return unitTime(time, TimeUnit.NANOSECONDS);
-    }
-
-    public static String unitTime(long time, TimeUnit timeUnit) {
-        return String.format("%,.3fs", ((float) timeUnit.toNanos(time)) / 1000000000);
-    }
-
-    public static String unitSize(long size) {
-        if (size > 1000000000) {
-            return String.format("%,.2fG", (float) size / 1000000000);
-        } else if (size > 1000000) {
-            return String.format("%,.2fM", (float) size / 1000000);
-        } else if (size > 1000) {
-            return String.format("%,.2fK", (float) size / 1000);
-        } else {
-            return size + "B";
-        }
-    }
-
 
     public synchronized ConcurrentHashMap<PHASE, SumPerfRecord4Print> getPerfRecordMaps4print() {
         if (totalEndReport.size() > 0) {
@@ -286,16 +292,6 @@ public class PerfTrace {
     public boolean isJob() {
         return isJob;
     }
-
-    private String cluster;
-    private String jobDomain;
-    private String srcType;
-    private String dstType;
-    private String srcGuid;
-    private String dstGuid;
-    private Date windowStart;
-    private Date windowEnd;
-    private Date jobStartTime;
 
     public void setJobInfo(Configuration jobInfo, boolean perfReportEnable, int channelNumber) {
         try {
@@ -443,7 +439,7 @@ public class PerfTrace {
         long sqlQueryTimeInMs = 0L;
         long resultNextTimeInMs = 0L;
 
-        public void add(long curNanoTime,PerfRecord perfRecord) {
+        public void add(long curNanoTime, PerfRecord perfRecord) {
             try {
                 long runTimeEndInMs;
                 if (perfRecord.getElapsedTimeInNs() == -1) {
@@ -465,7 +461,7 @@ public class PerfTrace {
                         odpsCloseTimeInMs += runTimeEndInMs;
                         break;
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 //do nothing
             }
         }
@@ -592,6 +588,7 @@ public class PerfTrace {
             return totalCount;
         }
     }
+
     class JobStatisticsDto2 {
 
         private Long id;
@@ -632,260 +629,260 @@ public class PerfTrace {
             return id;
         }
 
-        public Date getGmtCreate() {
-            return gmtCreate;
-        }
-
-        public Date getGmtModified() {
-            return gmtModified;
-        }
-
-        public Long getInstId() {
-            return instId;
-        }
-
-        public Long getJobId() {
-            return jobId;
-        }
-
-        public Long getJobVersion() {
-            return jobVersion;
-        }
-
-        public Integer getTaskGroupId() {
-            return taskGroupId;
-        }
-
-        public Date getWindowStart() {
-            return windowStart;
-        }
-
-        public Date getWindowEnd() {
-            return windowEnd;
-        }
-
-        public Date getJobStartTime() {
-            return jobStartTime;
-        }
-
-        public Date getJobEndTime() {
-            return jobEndTime;
-        }
-
-        public Long getJobRunTimeMs() {
-            return jobRunTimeMs;
-        }
-
-        public Integer getChannelNum() {
-            return channelNum;
-        }
-
-        public String getCluster() {
-            return cluster;
-        }
-
-        public String getJobDomain() {
-            return jobDomain;
-        }
-
-        public String getSrcType() {
-            return srcType;
-        }
-
-        public String getDstType() {
-            return dstType;
-        }
-
-        public String getSrcGuid() {
-            return srcGuid;
-        }
-
-        public String getDstGuid() {
-            return dstGuid;
-        }
-
-        public Long getRecords() {
-            return records;
-        }
-
-        public Long getBytes() {
-            return bytes;
-        }
-
-        public Long getSpeedRecord() {
-            return speedRecord;
-        }
-
-        public Long getSpeedByte() {
-            return speedByte;
-        }
-
-        public String getStagePercent() {
-            return stagePercent;
-        }
-
-        public Long getErrorRecord() {
-            return errorRecord;
-        }
-
-        public Long getErrorBytes() {
-            return errorBytes;
-        }
-
-        public Long getWaitReadTimeMs() {
-            return waitReadTimeMs;
-        }
-
-        public Long getWaitWriteTimeMs() {
-            return waitWriteTimeMs;
-        }
-
-        public Long getOdpsBlockCloseTimeMs() {
-            return odpsBlockCloseTimeMs;
-        }
-
-        public Long getSqlQueryTimeMs() {
-            return sqlQueryTimeMs;
-        }
-
-        public Long getResultNextTimeMs() {
-            return resultNextTimeMs;
-        }
-
-        public Long getTaskTotalTimeMs() {
-            return taskTotalTimeMs;
-        }
-
-        public String getHostAddress() {
-            return hostAddress;
-        }
-
         public void setId(Long id) {
             this.id = id;
+        }
+
+        public Date getGmtCreate() {
+            return gmtCreate;
         }
 
         public void setGmtCreate(Date gmtCreate) {
             this.gmtCreate = gmtCreate;
         }
 
+        public Date getGmtModified() {
+            return gmtModified;
+        }
+
         public void setGmtModified(Date gmtModified) {
             this.gmtModified = gmtModified;
+        }
+
+        public Long getInstId() {
+            return instId;
         }
 
         public void setInstId(Long instId) {
             this.instId = instId;
         }
 
+        public Long getJobId() {
+            return jobId;
+        }
+
         public void setJobId(Long jobId) {
             this.jobId = jobId;
+        }
+
+        public Long getJobVersion() {
+            return jobVersion;
         }
 
         public void setJobVersion(Long jobVersion) {
             this.jobVersion = jobVersion;
         }
 
+        public Integer getTaskGroupId() {
+            return taskGroupId;
+        }
+
         public void setTaskGroupId(Integer taskGroupId) {
             this.taskGroupId = taskGroupId;
+        }
+
+        public Date getWindowStart() {
+            return windowStart;
         }
 
         public void setWindowStart(Date windowStart) {
             this.windowStart = windowStart;
         }
 
+        public Date getWindowEnd() {
+            return windowEnd;
+        }
+
         public void setWindowEnd(Date windowEnd) {
             this.windowEnd = windowEnd;
+        }
+
+        public Date getJobStartTime() {
+            return jobStartTime;
         }
 
         public void setJobStartTime(Date jobStartTime) {
             this.jobStartTime = jobStartTime;
         }
 
+        public Date getJobEndTime() {
+            return jobEndTime;
+        }
+
         public void setJobEndTime(Date jobEndTime) {
             this.jobEndTime = jobEndTime;
+        }
+
+        public Long getJobRunTimeMs() {
+            return jobRunTimeMs;
         }
 
         public void setJobRunTimeMs(Long jobRunTimeMs) {
             this.jobRunTimeMs = jobRunTimeMs;
         }
 
+        public Integer getChannelNum() {
+            return channelNum;
+        }
+
         public void setChannelNum(Integer channelNum) {
             this.channelNum = channelNum;
+        }
+
+        public String getCluster() {
+            return cluster;
         }
 
         public void setCluster(String cluster) {
             this.cluster = cluster;
         }
 
+        public String getJobDomain() {
+            return jobDomain;
+        }
+
         public void setJobDomain(String jobDomain) {
             this.jobDomain = jobDomain;
+        }
+
+        public String getSrcType() {
+            return srcType;
         }
 
         public void setSrcType(String srcType) {
             this.srcType = srcType;
         }
 
+        public String getDstType() {
+            return dstType;
+        }
+
         public void setDstType(String dstType) {
             this.dstType = dstType;
+        }
+
+        public String getSrcGuid() {
+            return srcGuid;
         }
 
         public void setSrcGuid(String srcGuid) {
             this.srcGuid = srcGuid;
         }
 
+        public String getDstGuid() {
+            return dstGuid;
+        }
+
         public void setDstGuid(String dstGuid) {
             this.dstGuid = dstGuid;
+        }
+
+        public Long getRecords() {
+            return records;
         }
 
         public void setRecords(Long records) {
             this.records = records;
         }
 
+        public Long getBytes() {
+            return bytes;
+        }
+
         public void setBytes(Long bytes) {
             this.bytes = bytes;
+        }
+
+        public Long getSpeedRecord() {
+            return speedRecord;
         }
 
         public void setSpeedRecord(Long speedRecord) {
             this.speedRecord = speedRecord;
         }
 
+        public Long getSpeedByte() {
+            return speedByte;
+        }
+
         public void setSpeedByte(Long speedByte) {
             this.speedByte = speedByte;
+        }
+
+        public String getStagePercent() {
+            return stagePercent;
         }
 
         public void setStagePercent(String stagePercent) {
             this.stagePercent = stagePercent;
         }
 
+        public Long getErrorRecord() {
+            return errorRecord;
+        }
+
         public void setErrorRecord(Long errorRecord) {
             this.errorRecord = errorRecord;
+        }
+
+        public Long getErrorBytes() {
+            return errorBytes;
         }
 
         public void setErrorBytes(Long errorBytes) {
             this.errorBytes = errorBytes;
         }
 
+        public Long getWaitReadTimeMs() {
+            return waitReadTimeMs;
+        }
+
         public void setWaitReadTimeMs(Long waitReadTimeMs) {
             this.waitReadTimeMs = waitReadTimeMs;
+        }
+
+        public Long getWaitWriteTimeMs() {
+            return waitWriteTimeMs;
         }
 
         public void setWaitWriteTimeMs(Long waitWriteTimeMs) {
             this.waitWriteTimeMs = waitWriteTimeMs;
         }
 
+        public Long getOdpsBlockCloseTimeMs() {
+            return odpsBlockCloseTimeMs;
+        }
+
         public void setOdpsBlockCloseTimeMs(Long odpsBlockCloseTimeMs) {
             this.odpsBlockCloseTimeMs = odpsBlockCloseTimeMs;
+        }
+
+        public Long getSqlQueryTimeMs() {
+            return sqlQueryTimeMs;
         }
 
         public void setSqlQueryTimeMs(Long sqlQueryTimeMs) {
             this.sqlQueryTimeMs = sqlQueryTimeMs;
         }
 
+        public Long getResultNextTimeMs() {
+            return resultNextTimeMs;
+        }
+
         public void setResultNextTimeMs(Long resultNextTimeMs) {
             this.resultNextTimeMs = resultNextTimeMs;
         }
 
+        public Long getTaskTotalTimeMs() {
+            return taskTotalTimeMs;
+        }
+
         public void setTaskTotalTimeMs(Long taskTotalTimeMs) {
             this.taskTotalTimeMs = taskTotalTimeMs;
+        }
+
+        public String getHostAddress() {
+            return hostAddress;
         }
 
         public void setHostAddress(String hostAddress) {

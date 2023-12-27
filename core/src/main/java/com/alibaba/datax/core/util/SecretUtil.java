@@ -3,7 +3,6 @@ package com.alibaba.datax.core.util;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.core.util.container.CoreConstant;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
@@ -12,7 +11,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -33,21 +31,15 @@ import java.util.Properties;
  * Created by jingxing on 14/12/15.
  */
 public class SecretUtil {
+    public static final String KEY_ALGORITHM_RSA = "RSA";
+    public static final String KEY_ALGORITHM_3DES = "DESede";
+    private static final String ENCODING = "UTF-8";
+    private static final String CIPHER_ALGORITHM_3DES = "DESede/ECB/PKCS5Padding";
+    private static final Base64 base64 = new Base64();
     private static Properties properties;
-
     //RSA Key：keyVersion   value:left:privateKey, right:publicKey, middle: type
     //DESede Key: keyVersion   value:left:keyContent, right:keyContent, middle: type
     private static Map<String, Triple<String, String, String>> versionKeyMap;
-
-    private static final String ENCODING = "UTF-8";
-
-    public static final String KEY_ALGORITHM_RSA = "RSA";
-    
-    public static final String KEY_ALGORITHM_3DES = "DESede";
-    
-    private static final String CIPHER_ALGORITHM_3DES = "DESede/ECB/PKCS5Padding";
-    
-    private static final Base64 base64 = new Base64();
 
     /**
      * BASE64加密
@@ -70,12 +62,13 @@ public class SecretUtil {
     public static byte[] decryptBASE64(String cipherText) {
         return base64.decode(cipherText);
     }
-    
+
     /**
      * 加密<br>
+     *
      * @param data 裸的原始数据
      * @param key  经过base64加密的公钥(RSA)或者裸密钥(3DES)
-     * */
+     */
     public static String encrypt(String data, String key, String method) {
         if (SecretUtil.KEY_ALGORITHM_RSA.equals(method)) {
             return SecretUtil.encryptRSA(data, key);
@@ -87,12 +80,13 @@ public class SecretUtil {
                     String.format("系统编程错误,不支持的加密类型", method));
         }
     }
-    
+
     /**
      * 解密<br>
+     *
      * @param data 已经经过base64加密的密文
      * @param key  已经经过base64加密私钥(RSA)或者裸密钥(3DES)
-     * */
+     */
     public static String decrypt(String data, String key, String method) {
         if (SecretUtil.KEY_ALGORITHM_RSA.equals(method)) {
             return SecretUtil.decryptRSA(data, key);
@@ -134,7 +128,7 @@ public class SecretUtil {
                     FrameworkErrorCode.SECRET_ERROR, "rsa加密出错", e);
         }
     }
-    
+
     /**
      * 解密<br>
      * 用私钥解密
@@ -164,7 +158,7 @@ public class SecretUtil {
                     FrameworkErrorCode.SECRET_ERROR, "rsa解密出错", e);
         }
     }
-    
+
     /**
      * 初始化密钥 for RSA ALGORITHM
      *
@@ -190,7 +184,7 @@ public class SecretUtil {
 
         return publicAndPrivateKey;
     }
-    
+
     /**
      * 加密 DESede<br>
      * 用密钥加密
@@ -214,7 +208,7 @@ public class SecretUtil {
                     FrameworkErrorCode.SECRET_ERROR, "3重DES加密出错", e);
         }
     }
-    
+
     /**
      * 解密<br>
      * 用密钥解密
@@ -238,12 +232,11 @@ public class SecretUtil {
                     FrameworkErrorCode.SECRET_ERROR, "rsa解密出错", e);
         }
     }
-    
+
     /**
      * 根据字符串生成密钥字节数组
-     * 
-     * @param keyStr
-     *            密钥字符串
+     *
+     * @param keyStr 密钥字符串
      * @return key 符合DESede标准的24byte数组
      */
     private static byte[] build3DesKey(String keyStr) {
@@ -306,7 +299,7 @@ public class SecretUtil {
                     FrameworkErrorCode.SECRET_ERROR,
                     String.format("DataX配置的密钥版本为[%s]，但在系统中没有配置，任务密钥配置错误，不存在您配置的密钥版本", keyVersion));
         }
-        
+
         String key = versionKeyMap.get(keyVersion).getRight();
         String method = versionKeyMap.get(keyVersion).getMiddle();
         // keyVersion要求的私钥没有配置
@@ -380,12 +373,12 @@ public class SecretUtil {
             versionKeyMap = new HashMap<String, Triple<String, String, String>>();
             Properties properties = SecretUtil.getSecurityProperties();
 
-            String[] serviceUsernames = new String[] {
+            String[] serviceUsernames = new String[]{
                     CoreConstant.LAST_SERVICE_USERNAME,
-                    CoreConstant.CURRENT_SERVICE_USERNAME };
-            String[] servicePasswords = new String[] {
+                    CoreConstant.CURRENT_SERVICE_USERNAME};
+            String[] servicePasswords = new String[]{
                     CoreConstant.LAST_SERVICE_PASSWORD,
-                    CoreConstant.CURRENT_SERVICE_PASSWORD };
+                    CoreConstant.CURRENT_SERVICE_PASSWORD};
 
             for (int i = 0; i < serviceUsernames.length; i++) {
                 String serviceUsername = properties
@@ -406,12 +399,12 @@ public class SecretUtil {
                 }
             }
 
-            String[] keyVersions = new String[] { CoreConstant.LAST_KEYVERSION,
-                    CoreConstant.CURRENT_KEYVERSION };
-            String[] privateKeys = new String[] { CoreConstant.LAST_PRIVATEKEY,
-                    CoreConstant.CURRENT_PRIVATEKEY };
-            String[] publicKeys = new String[] { CoreConstant.LAST_PUBLICKEY,
-                    CoreConstant.CURRENT_PUBLICKEY };
+            String[] keyVersions = new String[]{CoreConstant.LAST_KEYVERSION,
+                    CoreConstant.CURRENT_KEYVERSION};
+            String[] privateKeys = new String[]{CoreConstant.LAST_PRIVATEKEY,
+                    CoreConstant.CURRENT_PRIVATEKEY};
+            String[] publicKeys = new String[]{CoreConstant.LAST_PUBLICKEY,
+                    CoreConstant.CURRENT_PUBLICKEY};
             for (int i = 0; i < keyVersions.length; i++) {
                 String keyVersion = properties.getProperty(keyVersions[i]);
                 if (StringUtils.isNotBlank(keyVersion)) {

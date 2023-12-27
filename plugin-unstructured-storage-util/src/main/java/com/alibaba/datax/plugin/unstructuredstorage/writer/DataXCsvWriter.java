@@ -10,6 +10,8 @@ import java.io.Writer;
  * @Date 2022-05-19 10:44
  */
 public class DataXCsvWriter {
+    public static final int ESCAPE_MODE_DOUBLED = 1;
+    public static final int ESCAPE_MODE_BACKSLASH = 2;
     private Writer writer;
     @SuppressWarnings("unused")
     private String fileName;
@@ -18,8 +20,6 @@ public class DataXCsvWriter {
     private UserSettings userSettings;
     private boolean initialized;
     private boolean closed;
-    public static final int ESCAPE_MODE_DOUBLED = 1;
-    public static final int ESCAPE_MODE_BACKSLASH = 2;
 
     public DataXCsvWriter(Writer writer, char delimiter) {
         this.writer = null;
@@ -29,12 +29,32 @@ public class DataXCsvWriter {
         this.userSettings = new UserSettings();
         this.initialized = false;
         this.closed = false;
-        if(writer == null) {
+        if (writer == null) {
             throw new IllegalArgumentException("Parameter writer can not be null.");
         } else {
             this.writer = writer;
             this.userSettings.Delimiter = delimiter;
             this.initialized = true;
+        }
+    }
+
+    public static String replace(String var0, String var1, String var2) {
+        int var3 = var1.length();
+        int var4 = var0.indexOf(var1);
+        if (var4 <= -1) {
+            return var0;
+        } else {
+            StringBuffer var5 = new StringBuffer();
+
+            int var6;
+            for (var6 = 0; var4 != -1; var4 = var0.indexOf(var1, var6)) {
+                var5.append(var0.substring(var6, var4));
+                var5.append(var2);
+                var6 = var4 + var3;
+            }
+
+            var5.append(var0.substring(var6));
+            return var5.toString();
         }
     }
 
@@ -79,12 +99,12 @@ public class DataXCsvWriter {
         this.userSettings.EscapeMode = var1;
     }
 
-    public void setComment(char var1) {
-        this.userSettings.Comment = var1;
-    }
-
     public char getComment() {
         return this.userSettings.Comment;
+    }
+
+    public void setComment(char var1) {
+        this.userSettings.Comment = var1;
     }
 
     public boolean getForceQualifier() {
@@ -97,57 +117,57 @@ public class DataXCsvWriter {
 
     public void write(String var1, boolean var2) throws IOException {
         this.checkClosed();
-        if(var1 == null) {
+        if (var1 == null) {
             var1 = "";
         }
 
-        if(!this.firstColumn) {
+        if (!this.firstColumn) {
             this.writer.write(this.userSettings.Delimiter);
         }
 
         boolean var3 = this.userSettings.ForceQualifier;
-        if(!var2 && var1.length() > 0) {
+        if (!var2 && var1.length() > 0) {
             var1 = var1.trim();
         }
 
-        if(!var3 && this.userSettings.UseTextQualifier && (var1.indexOf(this.userSettings.TextQualifier) > -1 || var1.indexOf(this.userSettings.Delimiter) > -1 || !this.useCustomRecordDelimiter && (var1.indexOf(10) > -1 || var1.indexOf(13) > -1) || this.useCustomRecordDelimiter && var1.indexOf(this.userSettings.RecordDelimiter) > -1 || this.firstColumn && var1.length() > 0 && var1.charAt(0) == this.userSettings.Comment || this.firstColumn && var1.length() == 0)) {
+        if (!var3 && this.userSettings.UseTextQualifier && (var1.indexOf(this.userSettings.TextQualifier) > -1 || var1.indexOf(this.userSettings.Delimiter) > -1 || !this.useCustomRecordDelimiter && (var1.indexOf(10) > -1 || var1.indexOf(13) > -1) || this.useCustomRecordDelimiter && var1.indexOf(this.userSettings.RecordDelimiter) > -1 || this.firstColumn && var1.length() > 0 && var1.charAt(0) == this.userSettings.Comment || this.firstColumn && var1.length() == 0)) {
             var3 = true;
         }
 
-        if(this.userSettings.UseTextQualifier && !var3 && var1.length() > 0 && var2) {
+        if (this.userSettings.UseTextQualifier && !var3 && var1.length() > 0 && var2) {
             char var4 = var1.charAt(0);
-            if(var4 == 32 || var4 == 9) {
+            if (var4 == 32 || var4 == 9) {
                 var3 = true;
             }
 
-            if(!var3 && var1.length() > 1) {
+            if (!var3 && var1.length() > 1) {
                 char var5 = var1.charAt(var1.length() - 1);
-                if(var5 == 32 || var5 == 9) {
+                if (var5 == 32 || var5 == 9) {
                     var3 = true;
                 }
             }
         }
 
-        if(var3) {
+        if (var3) {
             this.writer.write(this.userSettings.TextQualifier);
-            if(this.userSettings.EscapeMode == 2) {
+            if (this.userSettings.EscapeMode == 2) {
                 var1 = replace(var1, "\\", "\\\\");
                 var1 = replace(var1, "" + this.userSettings.TextQualifier, "\\" + this.userSettings.TextQualifier);
             } else {
                 var1 = replace(var1, "" + this.userSettings.TextQualifier, "" + this.userSettings.TextQualifier + this.userSettings.TextQualifier);
             }
-        } else if(this.userSettings.EscapeMode == 2) {
+        } else if (this.userSettings.EscapeMode == 2) {
             var1 = replace(var1, "\\", "\\\\");
             var1 = replace(var1, "" + this.userSettings.Delimiter, "\\" + this.userSettings.Delimiter);
-            if(this.useCustomRecordDelimiter) {
+            if (this.useCustomRecordDelimiter) {
                 var1 = replace(var1, "" + this.userSettings.RecordDelimiter, "\\" + this.userSettings.RecordDelimiter);
             } else {
                 var1 = replace(var1, "\r", "\\\r");
                 var1 = replace(var1, "\n", "\\\n");
             }
 
-            if(this.firstColumn && var1.length() > 0 && var1.charAt(0) == this.userSettings.Comment) {
-                if(var1.length() > 1) {
+            if (this.firstColumn && var1.length() > 0 && var1.charAt(0) == this.userSettings.Comment) {
+                if (var1.length() > 1) {
                     var1 = "\\" + this.userSettings.Comment + var1.substring(1);
                 } else {
                     var1 = "\\" + this.userSettings.Comment;
@@ -156,7 +176,7 @@ public class DataXCsvWriter {
         }
 
         this.writer.write(var1);
-        if(var3) {
+        if (var3) {
             this.writer.write(this.userSettings.TextQualifier);
         }
 
@@ -171,7 +191,7 @@ public class DataXCsvWriter {
         this.checkClosed();
         this.writer.write(this.userSettings.Comment);
         this.writer.write(var1);
-        if(this.useCustomRecordDelimiter) {
+        if (this.useCustomRecordDelimiter) {
             this.writer.write(this.userSettings.RecordDelimiter);
         } else {
             this.writer.write(IOUtils.LINE_SEPARATOR);
@@ -181,8 +201,8 @@ public class DataXCsvWriter {
     }
 
     public void writeRecord(String[] var1, boolean var2) throws IOException {
-        if(var1 != null && var1.length > 0) {
-            for(int var3 = 0; var3 < var1.length; ++var3) {
+        if (var1 != null && var1.length > 0) {
+            for (int var3 = 0; var3 < var1.length; ++var3) {
                 this.write(var1[var3], var2);
             }
 
@@ -197,7 +217,7 @@ public class DataXCsvWriter {
 
     public void endRecord() throws IOException {
         this.checkClosed();
-        if(this.useCustomRecordDelimiter) {
+        if (this.useCustomRecordDelimiter) {
             this.writer.write(this.userSettings.RecordDelimiter);
         } else {
             this.writer.write(IOUtils.LINE_SEPARATOR);
@@ -211,7 +231,7 @@ public class DataXCsvWriter {
     }
 
     public void close() {
-        if(!this.closed) {
+        if (!this.closed) {
             this.close(true);
             this.closed = true;
         }
@@ -219,9 +239,9 @@ public class DataXCsvWriter {
     }
 
     private void close(boolean var1) {
-        if(!this.closed) {
+        if (!this.closed) {
             try {
-                if(this.initialized) {
+                if (this.initialized) {
                     this.writer.close();
                 }
             } catch (Exception var3) {
@@ -235,7 +255,7 @@ public class DataXCsvWriter {
     }
 
     private void checkClosed() throws IOException {
-        if(this.closed) {
+        if (this.closed) {
             throw new IOException("This instance of the CsvWriter class has already been closed.");
         }
     }
@@ -243,26 +263,6 @@ public class DataXCsvWriter {
     @Override
     protected void finalize() {
         this.close(false);
-    }
-
-    public static String replace(String var0, String var1, String var2) {
-        int var3 = var1.length();
-        int var4 = var0.indexOf(var1);
-        if(var4 <= -1) {
-            return var0;
-        } else {
-            StringBuffer var5 = new StringBuffer();
-
-            int var6;
-            for(var6 = 0; var4 != -1; var4 = var0.indexOf(var1, var6)) {
-                var5.append(var0.substring(var6, var4));
-                var5.append(var2);
-                var6 = var4 + var3;
-            }
-
-            var5.append(var0.substring(var6));
-            return var5.toString();
-        }
     }
 
     private class UserSettings {

@@ -21,12 +21,12 @@ public class WriterRunner extends AbstractRunner implements Runnable {
 
     private RecordReceiver recordReceiver;
 
-    public void setRecordReceiver(RecordReceiver receiver) {
-        this.recordReceiver = receiver;
-    }
-
     public WriterRunner(AbstractTaskPlugin abstractTaskPlugin) {
         super(abstractTaskPlugin);
+    }
+
+    public void setRecordReceiver(RecordReceiver receiver) {
+        this.recordReceiver = receiver;
     }
 
     @Override
@@ -78,13 +78,13 @@ public class WriterRunner extends AbstractRunner implements Runnable {
             channelWaitRead.end(super.getRunnerCommunication().getLongCounter(CommunicationTool.WAIT_READER_TIME));
         }
     }
-    
-    public boolean supportFailOver(){
-    	Writer.Task taskWriter = (Writer.Task) this.getPlugin();
-    	return taskWriter.supportFailOver();
+
+    public boolean supportFailOver() {
+        Writer.Task taskWriter = (Writer.Task) this.getPlugin();
+        return taskWriter.supportFailOver();
     }
 
-    public void shutdown(){
+    public void shutdown() {
         recordReceiver.shutdown();
     }
 }
