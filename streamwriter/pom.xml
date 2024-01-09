@@ -8,7 +8,9 @@
     </parent>
 
     <artifactId>streamwriter</artifactId>
+
     <name>streamwriter</name>
+
     <packaging>jar</packaging>
 
     <dependencies>
@@ -35,7 +37,7 @@
 
     <build>
         <resources>
-            <!--			将resource目录也输出到target-->
+            <!-- 将 resource 目录也输出到 target -->
             <resource>
                 <directory>src/main/resources</directory>
                 <includes>
@@ -45,16 +47,12 @@
             </resource>
         </resources>
         <plugins>
-            <!-- compiler plugin -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>${jdk-version}</source>
-                    <target>${jdk-version}</target>
-                    <encoding>${project-sourceEncoding}</encoding>
-                </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>

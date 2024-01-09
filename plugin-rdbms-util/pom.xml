@@ -6,8 +6,11 @@
         <artifactId>datax-all</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
+
     <artifactId>plugin-rdbms-util</artifactId>
+
     <name>plugin-rdbms-util</name>
+
     <packaging>jar</packaging>
 
     <dependencies>

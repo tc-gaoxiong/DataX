@@ -1,6 +1,7 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>com.alibaba.datax</groupId>
         <artifactId>datax-all</artifactId>
@@ -8,7 +9,9 @@
     </parent>
 
     <artifactId>datax-core</artifactId>
+
     <name>datax-core</name>
+
     <packaging>jar</packaging>
 
     <dependencies>
@@ -111,6 +114,10 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <archive>
@@ -120,8 +127,8 @@
                     </archive>
                 </configuration>
             </plugin>
-
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <archive>
@@ -134,7 +141,6 @@
                         <descriptor>src/main/assembly/package.xml</descriptor>
                     </descriptors>
                 </configuration>
-
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -143,15 +149,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <!-- compiler plugin -->
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>${jdk-version}</source>
-                    <target>${jdk-version}</target>
-                    <encoding>${project-sourceEncoding}</encoding>
-                </configuration>
             </plugin>
         </plugins>
     </build>
