@@ -9,16 +9,12 @@ import java.util.Map;
  */
 public class TransformerExecutionParas {
 
-    /**
-     * 以下是function参数
-     */
-
+    // 以下是 function 参数
     private Integer columnIndex;
     private String[] paras;
     private Map<String, Object> tContext;
     private String code;
     private List<String> extraPackage;
-
 
     public Integer getColumnIndex() {
         return columnIndex;

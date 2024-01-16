@@ -5,11 +5,10 @@ import com.alibaba.datax.transformer.ComplexTransformer;
 import java.util.Map;
 
 /**
- * 每个func对应一个实例.
+ * 每个 func 对应一个实例.
  * Created by liqiang on 16/3/16.
  */
 public class TransformerExecution {
-
     private final TransformerExecutionParas transformerExecutionParas;
     private final TransformerInfo transformerInfo;
     private Object[] finalParas;
@@ -23,7 +22,6 @@ public class TransformerExecution {
     /**
      * 参数采取延迟检查
      */
-
     private boolean isChecked = false;
 
     public TransformerExecution(TransformerInfo transformerInfo, TransformerExecutionParas transformerExecutionParas) {
@@ -32,38 +30,31 @@ public class TransformerExecution {
     }
 
     public void genFinalParas() {
-
-        /**
-         * groovy不支持传参
-         */
+        // groovy 不支持传参
         if (transformerInfo.getTransformer().getTransformerName().equals("dx_groovy")) {
             finalParas = new Object[2];
             finalParas[0] = transformerExecutionParas.getCode();
             finalParas[1] = transformerExecutionParas.getExtraPackage();
             return;
         }
-        /**
-         * 其他function，按照columnIndex和para的顺序，如果columnIndex为空，跳过conlumnIndex
-         */
+        // 其他 function，按照 columnIndex 和 para 的顺序，如果 columnIndex 为空，跳过 columnIndex
         if (transformerExecutionParas.getColumnIndex() != null) {
             if (transformerExecutionParas.getParas() != null) {
                 finalParas = new Object[transformerExecutionParas.getParas().length + 1];
-                System.arraycopy(transformerExecutionParas.getParas(), 0, finalParas, 1, transformerExecutionParas.getParas().length);
+                System.arraycopy(transformerExecutionParas.getParas(), 0, finalParas,
+                        1, transformerExecutionParas.getParas().length);
             } else {
                 finalParas = new Object[1];
             }
             finalParas[0] = transformerExecutionParas.getColumnIndex();
-
         } else {
             if (transformerExecutionParas.getParas() != null) {
                 finalParas = transformerExecutionParas.getParas();
             } else {
                 finalParas = null;
             }
-
         }
     }
-
 
     public Object[] getFinalParas() {
         return finalParas;

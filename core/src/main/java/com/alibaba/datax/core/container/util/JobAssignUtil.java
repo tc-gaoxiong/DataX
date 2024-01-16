@@ -21,7 +21,7 @@ public final class JobAssignUtil {
         Validate.isTrue(configuration != null, "框架获得的 Job 不能为 null.");
 
         List<Configuration> contentConfig = configuration.getListConfiguration(CoreConstant.DATAX_JOB_CONTENT);
-        Validate.isTrue(contentConfig.size() > 0, "框架获得的切分后的 Job 无内容.");
+        Validate.isTrue(!contentConfig.isEmpty(), "框架获得的切分后的 Job 无内容.");
 
         Validate.isTrue(channelNumber > 0 && channelsPerTaskGroup > 0,
                 "每个channel的平均task数[averTaskPerChannel]，channel数目[channelNumber]，每个taskGroup的平均channel数[channelsPerTaskGroup]都应该为正数");
@@ -44,14 +44,14 @@ public final class JobAssignUtil {
                 conf.set(CoreConstant.JOB_READER_PARAMETER + "." +
                         CommonConstant.LOAD_BALANCE_RESOURCE_MARK, "aFakeResourceMarkForLoadBalance");
             }
-            // 是为了避免某些插件没有设置 资源标识 而进行了一次随机打乱操作
+            // 是为了避免某些插件没有设置资源标识 而进行了一次随机打乱操作
             Collections.shuffle(contentConfig, new Random(System.currentTimeMillis()));
         }
 
         LinkedHashMap<String, List<Integer>> resourceMarkAndTaskIdMap = parseAndGetResourceMarkAndTaskIdMap(contentConfig);
         List<Configuration> taskGroupConfig = doAssign(resourceMarkAndTaskIdMap, configuration, taskGroupNumber);
 
-        // 调整 每个 taskGroup 对应的 Channel 个数（属于优化范畴）
+        // 调整每个 taskGroup 对应的 Channel 个数（属于优化范畴）
         adjustChannelNumPerTaskGroup(taskGroupConfig, channelNumber);
         return taskGroupConfig;
     }
@@ -60,6 +60,7 @@ public final class JobAssignUtil {
         int taskGroupNumber = taskGroupConfig.size();
         int avgChannelsPerTaskGroup = channelNumber / taskGroupNumber;
         int remainderChannelCount = channelNumber % taskGroupNumber;
+
         // 表示有 remainderChannelCount 个 taskGroup,其对应 Channel 个数应该为：avgChannelsPerTaskGroup + 1；
         // （taskGroupNumber - remainderChannelCount）个 taskGroup,其对应 Channel 个数应该为：avgChannelsPerTaskGroup
 
@@ -74,28 +75,31 @@ public final class JobAssignUtil {
     }
 
     /**
-     * 根据task 配置，获取到：
+     * 根据 task 配置，获取到：
      * 资源名称 --> taskId(List) 的 map 映射关系
      */
     private static LinkedHashMap<String, List<Integer>> parseAndGetResourceMarkAndTaskIdMap(List<Configuration> contentConfig) {
         // key: resourceMark, value: taskId
-        LinkedHashMap<String, List<Integer>> readerResourceMarkAndTaskIdMap = new LinkedHashMap<String, List<Integer>>();
-        LinkedHashMap<String, List<Integer>> writerResourceMarkAndTaskIdMap = new LinkedHashMap<String, List<Integer>>();
+        LinkedHashMap<String, List<Integer>> readerResourceMarkAndTaskIdMap = new LinkedHashMap<>();
+        LinkedHashMap<String, List<Integer>> writerResourceMarkAndTaskIdMap = new LinkedHashMap<>();
 
         for (Configuration aTaskConfig : contentConfig) {
             int taskId = aTaskConfig.getInt(CoreConstant.TASK_ID);
             // 把 readerResourceMark 加到 readerResourceMarkAndTaskIdMap 中
-            String readerResourceMark = aTaskConfig.getString(CoreConstant.JOB_READER_PARAMETER + "." + CommonConstant.LOAD_BALANCE_RESOURCE_MARK);
+            String readerResourceMark = aTaskConfig.getString(CoreConstant.JOB_READER_PARAMETER + "."
+                    + CommonConstant.LOAD_BALANCE_RESOURCE_MARK);
             if (readerResourceMarkAndTaskIdMap.get(readerResourceMark) == null) {
-                readerResourceMarkAndTaskIdMap.put(readerResourceMark, new LinkedList<Integer>());
+                readerResourceMarkAndTaskIdMap.put(readerResourceMark, new LinkedList<>());
             }
             readerResourceMarkAndTaskIdMap.get(readerResourceMark).add(taskId);
 
             // 把 writerResourceMark 加到 writerResourceMarkAndTaskIdMap 中
-            String writerResourceMark = aTaskConfig.getString(CoreConstant.JOB_WRITER_PARAMETER + "." + CommonConstant.LOAD_BALANCE_RESOURCE_MARK);
+            String writerResourceMark = aTaskConfig.getString(CoreConstant.JOB_WRITER_PARAMETER + "."
+                    + CommonConstant.LOAD_BALANCE_RESOURCE_MARK);
             if (writerResourceMarkAndTaskIdMap.get(writerResourceMark) == null) {
-                writerResourceMarkAndTaskIdMap.put(writerResourceMark, new LinkedList<Integer>());
+                writerResourceMarkAndTaskIdMap.put(writerResourceMark, new LinkedList<>());
             }
+
             writerResourceMarkAndTaskIdMap.get(writerResourceMark).add(taskId);
         }
 
@@ -108,9 +112,7 @@ public final class JobAssignUtil {
         }
     }
 
-
     /**
-     * /**
      * 需要实现的效果通过例子来说是：
      * <pre>
      * a 库上有表：0, 1, 2
@@ -123,25 +125,25 @@ public final class JobAssignUtil {
      * taskGroup-1: 3,  6,
      * taskGroup-2: 5,  2,
      * taskGroup-3: 1,  7
-     *
      * </pre>
      */
-    private static List<Configuration> doAssign(LinkedHashMap<String, List<Integer>> resourceMarkAndTaskIdMap, Configuration jobConfiguration, int taskGroupNumber) {
+    private static List<Configuration> doAssign(LinkedHashMap<String, List<Integer>> resourceMarkAndTaskIdMap,
+                                                Configuration jobConfiguration, int taskGroupNumber) {
         List<Configuration> contentConfig = jobConfiguration.getListConfiguration(CoreConstant.DATAX_JOB_CONTENT);
 
         Configuration taskGroupTemplate = jobConfiguration.clone();
         taskGroupTemplate.remove(CoreConstant.DATAX_JOB_CONTENT);
 
-        List<Configuration> result = new LinkedList<Configuration>();
+        List<Configuration> result = new LinkedList<>();
 
-        List<List<Configuration>> taskGroupConfigList = new ArrayList<List<Configuration>>(taskGroupNumber);
+        List<List<Configuration>> taskGroupConfigList = new ArrayList<>(taskGroupNumber);
         for (int i = 0; i < taskGroupNumber; i++) {
-            taskGroupConfigList.add(new LinkedList<Configuration>());
+            taskGroupConfigList.add(new LinkedList<>());
         }
 
         int mapValueMaxLength = -1;
 
-        List<String> resourceMarks = new ArrayList<String>();
+        List<String> resourceMarks = new ArrayList<>();
         for (Map.Entry<String, List<Integer>> entry : resourceMarkAndTaskIdMap.entrySet()) {
             resourceMarks.add(entry.getKey());
             if (entry.getValue().size() > mapValueMaxLength) {
@@ -173,5 +175,4 @@ public final class JobAssignUtil {
 
         return result;
     }
-
 }

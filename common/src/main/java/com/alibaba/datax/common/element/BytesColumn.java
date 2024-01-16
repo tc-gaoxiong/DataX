@@ -12,7 +12,6 @@ import java.util.Date;
  * Created by jingxing on 14-8-24.
  */
 public class BytesColumn extends Column {
-
     public BytesColumn() {
         this(null);
     }

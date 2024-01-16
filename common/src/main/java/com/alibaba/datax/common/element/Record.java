@@ -7,7 +7,6 @@ import java.util.Map;
  */
 
 public interface Record {
-
     public void addColumn(Column column);
 
     public void setColumn(int i, final Column column);

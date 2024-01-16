@@ -31,10 +31,8 @@ public enum FileFormat {
     }
 
     /**
-     * 获取文件类型: 目前支持text,csv,excel,binary
+     * 获取文件类型: 目前支持 text,csv,excel,binary
      *
-     * @param configuration
-     * @return
      */
     public static FileFormat getFileFormatByConfiguration(Configuration configuration) {
         String fileFormat = configuration.getString(Key.FILE_FORMAT, Constant.DEFAULT_FILE_FORMAT);
@@ -47,8 +45,10 @@ public enum FileFormat {
                 return fFormat;
             }
         }
+
         throw DataXException.asDataXException(UnstructuredStorageReaderErrorCode.ILLEGAL_VALUE,
-                String.format("DataX 不支持该 fileFormat 类型:%s, 目前支持的 fileFormat 类型是:%s", fileFormat, Arrays.asList(values())));
+                String.format("DataX 不支持该 fileFormat 类型:%s, 目前支持的 fileFormat 类型是:%s",
+                        fileFormat, Arrays.asList(values())));
     }
 
     public String getFileFormat() {

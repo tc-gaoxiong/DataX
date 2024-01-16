@@ -17,7 +17,7 @@ public enum TransformerErrorCode implements ErrorCode {
 
     private final String description;
 
-    private TransformerErrorCode(String code, String description) {
+    TransformerErrorCode(String code, String description) {
         this.code = code;
         this.description = description;
     }
@@ -34,7 +34,6 @@ public enum TransformerErrorCode implements ErrorCode {
 
     @Override
     public String toString() {
-        return String.format("Code:[%s], Description:[%s]. ", this.code,
-                this.description);
+        return String.format("Code:[%s], Description:[%s]. ", this.code, this.description);
     }
 }

@@ -11,7 +11,6 @@ import java.util.Date;
  * <p/>
  */
 public abstract class Column {
-
     private Type type;
 
     private Object rawData;

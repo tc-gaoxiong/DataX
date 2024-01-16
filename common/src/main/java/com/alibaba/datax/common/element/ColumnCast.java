@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.TimeZone;
 
 public final class ColumnCast {
-
     public static void bind(final Configuration configuration) {
         StringCast.init(configuration);
         DateCast.init(configuration);
@@ -75,7 +74,7 @@ class StringCast {
         StringCast.timeFormat = configuration.getString(
                 "common.column.timeFormat", StringCast.timeFormat);
         StringCast.extraFormats = configuration.getList(
-                "common.column.extraFormats", Collections.<String>emptyList(), String.class);
+                "common.column.extraFormats", Collections.emptyList(), String.class);
 
         StringCast.timeZone = configuration.getString("common.column.timeZone",
                 StringCast.timeZone);
@@ -131,6 +130,7 @@ class StringCast {
         } catch (ParseException ignored) {
             e = ignored;
         }
+
         throw e;
     }
 
@@ -145,12 +145,11 @@ class StringCast {
 }
 
 /**
- * 后续为了可维护性，可以考虑直接使用 apache 的DateFormatUtils.
- * <p>
- * 迟南已经修复了该问题，但是为了维护性，还是直接使用apache的内置函数
+ * 后续为了可维护性，可以考虑直接使用 apache 的 DateFormatUtils.
+ * <p/>
+ * 迟南已经修复了该问题，但是为了维护性，还是直接使用 apache 的内置函数
  */
 class DateCast {
-
     static String datetimeFormat = "yyyy-MM-dd HH:mm:ss";
 
     static String dateFormat = "yyyy-MM-dd";

@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class BufferedRecordTransformerExchanger extends TransformerExchanger implements RecordSender, RecordReceiver {
-
     private static Class<? extends Record> RECORD_CLASS;
     protected final int byteCapacity;
     private final Channel channel;
@@ -30,7 +29,6 @@ public class BufferedRecordTransformerExchanger extends TransformerExchanger imp
     private int bufferSize;
     private int bufferIndex = 0;
     private volatile boolean shutdown = false;
-
 
     @SuppressWarnings("unchecked")
     public BufferedRecordTransformerExchanger(final int taskGroupId, final int taskId,
@@ -46,9 +44,9 @@ public class BufferedRecordTransformerExchanger extends TransformerExchanger imp
 
         this.bufferSize = configuration
                 .getInt(CoreConstant.DATAX_CORE_TRANSPORT_EXCHANGER_BUFFERSIZE);
-        this.buffer = new ArrayList<Record>(bufferSize);
+        this.buffer = new ArrayList<>(bufferSize);
 
-        //channel的queue默认大小为8M，原来为64M
+        // channel 的 queue 默认大小为 8M，原来为 64M
         this.byteCapacity = configuration.getInt(
                 CoreConstant.DATAX_CORE_TRANSPORT_CHANNEL_CAPACITY_BYTE, 8 * 1024 * 1024);
 
@@ -58,8 +56,7 @@ public class BufferedRecordTransformerExchanger extends TransformerExchanger imp
                             CoreConstant.DATAX_CORE_TRANSPORT_RECORD_CLASS,
                             "com.alibaba.datax.core.transport.record.DefaultRecord")));
         } catch (Exception e) {
-            throw DataXException.asDataXException(
-                    FrameworkErrorCode.CONFIG_ERROR, e);
+            throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, e);
         }
     }
 
@@ -68,8 +65,7 @@ public class BufferedRecordTransformerExchanger extends TransformerExchanger imp
         try {
             return BufferedRecordTransformerExchanger.RECORD_CLASS.newInstance();
         } catch (Exception e) {
-            throw DataXException.asDataXException(
-                    FrameworkErrorCode.CONFIG_ERROR, e);
+            throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, e);
         }
     }
 
@@ -108,7 +104,7 @@ public class BufferedRecordTransformerExchanger extends TransformerExchanger imp
             throw DataXException.asDataXException(CommonErrorCode.SHUT_DOWN_TASK, "");
         }
         this.channel.pushAll(this.buffer);
-        //和channel的统计保持同步
+        // 和 channel 的统计保持同步
         doStat();
         this.buffer.clear();
         this.bufferIndex = 0;

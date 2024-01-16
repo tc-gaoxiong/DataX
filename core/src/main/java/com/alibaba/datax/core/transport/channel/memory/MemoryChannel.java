@@ -16,10 +16,9 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * 内存Channel的具体实现，底层其实是一个ArrayBlockingQueue
+ * 内存 Channel 的具体实现，底层其实是一个 ArrayBlockingQueue
  */
 public class MemoryChannel extends Channel {
-
     private int bufferSize = 0;
 
     private AtomicInteger memoryBytes = new AtomicInteger(0);
@@ -129,6 +128,7 @@ public class MemoryChannel extends Channel {
         for (Record r : rs) {
             bytes += r.getMemorySize();
         }
+
         return bytes;
     }
 
@@ -141,5 +141,4 @@ public class MemoryChannel extends Channel {
     public boolean isEmpty() {
         return this.queue.isEmpty();
     }
-
 }

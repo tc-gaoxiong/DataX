@@ -4,8 +4,7 @@ package com.alibaba.datax.common.plugin;
  * Created by jingxing on 14-8-24.
  */
 public abstract class AbstractTaskPlugin extends AbstractPlugin {
-
-    //TaskPlugin 应该具备taskId
+    // TaskPlugin 应该具备 taskId
     private int taskGroupId;
     private int taskId;
     private TaskPluginCollector taskPluginCollector;
@@ -14,8 +13,7 @@ public abstract class AbstractTaskPlugin extends AbstractPlugin {
         return taskPluginCollector;
     }
 
-    public void setTaskPluginCollector(
-            TaskPluginCollector taskPluginCollector) {
+    public void setTaskPluginCollector(TaskPluginCollector taskPluginCollector) {
         this.taskPluginCollector = taskPluginCollector;
     }
 

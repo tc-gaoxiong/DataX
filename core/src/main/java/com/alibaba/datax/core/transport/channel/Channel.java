@@ -18,7 +18,6 @@ import java.util.Collection;
  * 统计和限速都在这里
  */
 public abstract class Channel {
-
     private static final Logger LOG = LoggerFactory.getLogger(Channel.class);
     private static Boolean isFirstPrint = true;
     protected int taskGroupId;
@@ -36,7 +35,7 @@ public abstract class Channel {
     private Communication lastCommunication = new Communication();
 
     public Channel(final Configuration configuration) {
-        //channel的queue里默认record为1万条。原来为512条
+        // channel 的 queue 里默认 record 为 1 万条。原来为 512 条
         int capacity = configuration.getInt(
                 CoreConstant.DATAX_CORE_TRANSPORT_CHANNEL_CAPACITY, 2048);
         long byteSpeed = configuration.getLong(
@@ -45,8 +44,7 @@ public abstract class Channel {
                 CoreConstant.DATAX_CORE_TRANSPORT_CHANNEL_SPEED_RECORD, 10000);
 
         if (capacity <= 0) {
-            throw new IllegalArgumentException(String.format(
-                    "通道容量[%d]必须大于0.", capacity));
+            throw new IllegalArgumentException(String.format("通道容量[%d]必须大于0.", capacity));
         }
 
         synchronized (isFirstPrint) {
@@ -66,7 +64,7 @@ public abstract class Channel {
         this.recordSpeed = recordSpeed;
         this.flowControlInterval = configuration.getLong(
                 CoreConstant.DATAX_CORE_TRANSPORT_CHANNEL_FLOWCONTROLINTERVAL, 1000);
-        //channel的queue默认大小为8M，原来为64M
+        // channel 的 queue 默认大小为 8M，原来为 64M
         this.byteCapacity = configuration.getInt(
                 CoreConstant.DATAX_CORE_TRANSPORT_CHANNEL_CAPACITY_BYTE, 8 * 1024 * 1024);
         this.configuration = configuration;
@@ -166,7 +164,7 @@ public abstract class Channel {
                 recordSize);
         currentCommunication.increaseCounter(CommunicationTool.READ_SUCCEED_BYTES,
                 byteSize);
-        //在读的时候进行统计waitCounter即可，因为写（pull）的时候可能正在阻塞，但读的时候已经能读到这个阻塞的counter数
+        // 在读的时候进行统计 waitCounter 即可，因为写（pull）的时候可能正在阻塞，但读的时候已经能读到这个阻塞的 counter 数
 
         currentCommunication.setLongCounter(CommunicationTool.WAIT_READER_TIME, waitReaderTime);
         currentCommunication.setLongCounter(CommunicationTool.WAIT_WRITER_TIME, waitWriterTime);
@@ -187,7 +185,7 @@ public abstract class Channel {
                 long currentByteSpeed = (CommunicationTool.getTotalReadBytes(currentCommunication) -
                         CommunicationTool.getTotalReadBytes(lastCommunication)) * 1000 / interval;
                 if (currentByteSpeed > this.byteSpeed) {
-                    // 计算根据byteLimit得到的休眠时间
+                    // 计算根据 byteLimit 得到的休眠时间
                     byteLimitSleepTime = currentByteSpeed * interval / this.byteSpeed
                             - interval;
                 }
@@ -197,15 +195,14 @@ public abstract class Channel {
                 long currentRecordSpeed = (CommunicationTool.getTotalReadRecords(currentCommunication) -
                         CommunicationTool.getTotalReadRecords(lastCommunication)) * 1000 / interval;
                 if (currentRecordSpeed > this.recordSpeed) {
-                    // 计算根据recordLimit得到的休眠时间
+                    // 计算根据 recordLimit 得到的休眠时间
                     recordLimitSleepTime = currentRecordSpeed * interval / this.recordSpeed
                             - interval;
                 }
             }
 
             // 休眠时间取较大值
-            long sleepTime = byteLimitSleepTime < recordLimitSleepTime ?
-                    recordLimitSleepTime : byteLimitSleepTime;
+            long sleepTime = Math.max(byteLimitSleepTime, recordLimitSleepTime);
             if (sleepTime > 0) {
                 try {
                     Thread.sleep(sleepTime);
@@ -227,10 +224,7 @@ public abstract class Channel {
     }
 
     private void statPull(long recordSize, long byteSize) {
-        currentCommunication.increaseCounter(
-                CommunicationTool.WRITE_RECEIVED_RECORDS, recordSize);
-        currentCommunication.increaseCounter(
-                CommunicationTool.WRITE_RECEIVED_BYTES, byteSize);
+        currentCommunication.increaseCounter(CommunicationTool.WRITE_RECEIVED_RECORDS, recordSize);
+        currentCommunication.increaseCounter(CommunicationTool.WRITE_RECEIVED_BYTES, byteSize);
     }
-
 }

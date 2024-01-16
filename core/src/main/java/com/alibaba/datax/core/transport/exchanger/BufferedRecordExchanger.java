@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
-
     private static Class<? extends Record> RECORD_CLASS;
     protected final int byteCapacity;
     private final Channel channel;
@@ -43,7 +42,7 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
                 .getInt(CoreConstant.DATAX_CORE_TRANSPORT_EXCHANGER_BUFFERSIZE);
         this.buffer = new ArrayList<Record>(bufferSize);
 
-        //channel的queue默认大小为8M，原来为64M
+        // channel 的 queue 默认大小为 8M，原来为 64M
         this.byteCapacity = configuration.getInt(
                 CoreConstant.DATAX_CORE_TRANSPORT_CHANNEL_CAPACITY_BYTE, 8 * 1024 * 1024);
 
@@ -53,8 +52,7 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
                             CoreConstant.DATAX_CORE_TRANSPORT_RECORD_CLASS,
                             "com.alibaba.datax.core.transport.record.DefaultRecord")));
         } catch (Exception e) {
-            throw DataXException.asDataXException(
-                    FrameworkErrorCode.CONFIG_ERROR, e);
+            throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, e);
         }
     }
 
@@ -63,8 +61,7 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
         try {
             return BufferedRecordExchanger.RECORD_CLASS.newInstance();
         } catch (Exception e) {
-            throw DataXException.asDataXException(
-                    FrameworkErrorCode.CONFIG_ERROR, e);
+            throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, e);
         }
     }
 
@@ -77,11 +74,14 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
         Validate.notNull(record, "record不能为空.");
 
         if (record.getMemorySize() > this.byteCapacity) {
-            this.pluginCollector.collectDirtyRecord(record, new Exception(String.format("单条记录超过大小限制，当前限制为:%s", this.byteCapacity)));
+            this.pluginCollector.collectDirtyRecord(record,
+                    new Exception(String.format("单条记录超过大小限制，当前限制为:%s", this.byteCapacity)));
+
             return;
         }
 
-        boolean isFull = (this.bufferIndex >= this.bufferSize || this.memoryBytes.get() + record.getMemorySize() > this.byteCapacity);
+        boolean isFull = (this.bufferIndex >= this.bufferSize ||
+                this.memoryBytes.get() + record.getMemorySize() > this.byteCapacity);
         if (isFull) {
             flush();
         }
@@ -125,6 +125,7 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
         if (record instanceof TerminateRecord) {
             record = null;
         }
+
         return record;
     }
 

@@ -12,12 +12,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by jingxing on 14-9-1.
  * <p/>
- * 单个slice的writer执行调用
+ * 单个 slice 的 writer 执行调用
  */
 public class WriterRunner extends AbstractRunner implements Runnable {
-
-    private static final Logger LOG = LoggerFactory
-            .getLogger(WriterRunner.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WriterRunner.class);
 
     private RecordReceiver recordReceiver;
 
@@ -34,33 +32,40 @@ public class WriterRunner extends AbstractRunner implements Runnable {
         Validate.isTrue(this.recordReceiver != null);
 
         Writer.Task taskWriter = (Writer.Task) this.getPlugin();
-        //统计waitReadTime，并且在finally end
-        PerfRecord channelWaitRead = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.WAIT_READ_TIME);
+
+        // 统计 waitReadTime，并且在 finally end
+        PerfRecord channelWaitRead = new PerfRecord(getTaskGroupId(), getTaskId(),
+                PerfRecord.PHASE.WAIT_READ_TIME);
+
         try {
             channelWaitRead.start();
+
             LOG.debug("task writer starts to do init ...");
-            PerfRecord initPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.WRITE_TASK_INIT);
+            PerfRecord initPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(),
+                    PerfRecord.PHASE.WRITE_TASK_INIT);
             initPerfRecord.start();
             taskWriter.init();
             initPerfRecord.end();
 
             LOG.debug("task writer starts to do prepare ...");
-            PerfRecord preparePerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.WRITE_TASK_PREPARE);
+            PerfRecord preparePerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(),
+                    PerfRecord.PHASE.WRITE_TASK_PREPARE);
             preparePerfRecord.start();
             taskWriter.prepare();
             preparePerfRecord.end();
-            LOG.debug("task writer starts to write ...");
 
-            PerfRecord dataPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.WRITE_TASK_DATA);
+            LOG.debug("task writer starts to write ...");
+            PerfRecord dataPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(),
+                    PerfRecord.PHASE.WRITE_TASK_DATA);
             dataPerfRecord.start();
             taskWriter.startWrite(recordReceiver);
-
             dataPerfRecord.addCount(CommunicationTool.getTotalReadRecords(super.getRunnerCommunication()));
             dataPerfRecord.addSize(CommunicationTool.getTotalReadBytes(super.getRunnerCommunication()));
             dataPerfRecord.end();
 
             LOG.debug("task writer starts to do post ...");
-            PerfRecord postPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.WRITE_TASK_POST);
+            PerfRecord postPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(),
+                    PerfRecord.PHASE.WRITE_TASK_POST);
             postPerfRecord.start();
             taskWriter.post();
             postPerfRecord.end();
@@ -71,10 +76,12 @@ public class WriterRunner extends AbstractRunner implements Runnable {
             super.markFail(e);
         } finally {
             LOG.debug("task writer starts to do destroy ...");
-            PerfRecord desPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.WRITE_TASK_DESTROY);
+            PerfRecord desPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(),
+                    PerfRecord.PHASE.WRITE_TASK_DESTROY);
             desPerfRecord.start();
             super.destroy();
             desPerfRecord.end();
+
             channelWaitRead.end(super.getRunnerCommunication().getLongCounter(CommunicationTool.WAIT_READER_TIME));
         }
     }

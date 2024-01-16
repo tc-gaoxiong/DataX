@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 提供Jar隔离的加载机制，会把传入的路径、及其子路径、以及路径中的jar文件加入到class path。
+ * 提供 Jar 隔离的加载机制，会把传入的路径、及其子路径、以及路径中的 jar 文件加入到 class path
  */
 public class JarLoader extends URLClassLoader {
     public JarLoader(String[] paths) {
@@ -25,16 +25,15 @@ public class JarLoader extends URLClassLoader {
     }
 
     private static URL[] getURLs(String[] paths) {
-        Validate.isTrue(null != paths && 0 != paths.length,
-                "jar包路径不能为空.");
+        Validate.isTrue(null != paths && 0 != paths.length, "jar包路径不能为空.");
 
-        List<String> dirs = new ArrayList<String>();
+        List<String> dirs = new ArrayList<>();
         for (String path : paths) {
             dirs.add(path);
             JarLoader.collectDirs(path, dirs);
         }
 
-        List<URL> urls = new ArrayList<URL>();
+        List<URL> urls = new ArrayList<>();
         for (String path : dirs) {
             urls.addAll(doGetURLs(path));
         }
@@ -67,24 +66,18 @@ public class JarLoader extends URLClassLoader {
 
         File jarPath = new File(path);
 
-        Validate.isTrue(jarPath.exists() && jarPath.isDirectory(),
-                "jar包路径必须存在且为目录.");
+        Validate.isTrue(jarPath.exists() && jarPath.isDirectory(), "jar包路径必须存在且为目录.");
 
-        /* set filter */
-        FileFilter jarFilter = new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                return pathname.getName().endsWith(".jar");
-            }
-        };
+        // set filter
+        FileFilter jarFilter = pathname -> pathname.getName().endsWith(".jar");
 
-        /* iterate all jar */
+        // iterate all jar
         File[] allJars = new File(path).listFiles(jarFilter);
-        List<URL> jarURLs = new ArrayList<URL>(allJars.length);
+        List<URL> jarURLs = new ArrayList<>(allJars.length);
 
-        for (int i = 0; i < allJars.length; i++) {
+        for (File allJar : allJars) {
             try {
-                jarURLs.add(allJars[i].toURI().toURL());
+                jarURLs.add(allJar.toURI().toURL());
             } catch (Exception e) {
                 throw DataXException.asDataXException(
                         FrameworkErrorCode.PLUGIN_INIT_ERROR,

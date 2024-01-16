@@ -19,7 +19,6 @@ public class PadTransformer extends Transformer {
 
     @Override
     public Record evaluate(Record record, Object... paras) {
-
         int columnIndex;
         String padType;
         int length;
@@ -35,7 +34,8 @@ public class PadTransformer extends Transformer {
             length = Integer.valueOf((String) paras[2]);
             padString = (String) paras[3];
         } catch (Exception e) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER, "paras:" + Arrays.asList(paras).toString() + " => " + e.getMessage());
+            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER, "paras:"
+                    + Arrays.asList(paras).toString() + " => " + e.getMessage());
         }
 
         Column column = record.getColumn(columnIndex);
@@ -43,7 +43,7 @@ public class PadTransformer extends Transformer {
         try {
             String oriValue = column.asString();
 
-            //如果字段为空，作为空字符串处理
+            // 如果字段为空，作为空字符串处理
             if (oriValue == null) {
                 oriValue = "";
             }
@@ -54,7 +54,6 @@ public class PadTransformer extends Transformer {
             if (length <= oriValue.length()) {
                 newValue = oriValue.substring(0, length);
             } else {
-
                 newValue = doPad(padType, oriValue, length, padString);
             }
 
@@ -63,15 +62,14 @@ public class PadTransformer extends Transformer {
         } catch (Exception e) {
             throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_RUN_EXCEPTION, e.getMessage(), e);
         }
+
         return record;
     }
 
     private String doPad(String padType, String oriValue, int length, String padString) {
-
         String finalPad = "";
         int NeedLength = length - oriValue.length();
         while (NeedLength > 0) {
-
             if (NeedLength >= padString.length()) {
                 finalPad += padString;
                 NeedLength -= padString.length();
@@ -87,5 +85,4 @@ public class PadTransformer extends Transformer {
             return oriValue + finalPad;
         }
     }
-
 }

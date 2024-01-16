@@ -15,16 +15,14 @@ import java.util.Map;
 /**
  * Created by jingxing on 14-8-24.
  */
-
 public class DefaultRecord implements Record {
-
     private static final int RECORD_AVERGAE_COLUMN_NUMBER = 16;
 
     private List<Column> columns;
 
     private int byteSize;
 
-    // 首先是Record本身需要的内存
+    // 首先是 Record 本身需要的内存
     private int memorySize = ClassSize.DefaultRecordHead;
 
     private Map<String, String> meta;
@@ -102,7 +100,7 @@ public class DefaultRecord implements Record {
 
         byteSize -= column.getByteSize();
 
-        //内存的占用是column对象的头 再加实际大小
+        // 内存的占用是 column 对象的头 再加实际大小
         memorySize = memorySize - ClassSize.ColumnHead - column.getByteSize();
     }
 
@@ -113,7 +111,7 @@ public class DefaultRecord implements Record {
 
         byteSize += column.getByteSize();
 
-        //内存的占用是column对象的头 再加实际大小
+        // 内存的占用是 column 对象的头 再加实际大小
         memorySize = memorySize + ClassSize.ColumnHead + column.getByteSize();
     }
 
@@ -127,5 +125,4 @@ public class DefaultRecord implements Record {
             this.columns.add(null);
         }
     }
-
 }

@@ -19,7 +19,6 @@ package com.alibaba.datax.common.plugin;
 import com.alibaba.datax.common.element.Record;
 
 public interface RecordSender {
-
     public Record createRecord();
 
     public void sendToWriter(Record record);

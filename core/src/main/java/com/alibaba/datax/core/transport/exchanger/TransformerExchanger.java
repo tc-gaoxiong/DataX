@@ -18,7 +18,6 @@ import java.util.List;
  * Created by liqiang on 16/3/9.
  */
 public abstract class TransformerExchanger {
-
     private static final Logger LOG = LoggerFactory.getLogger(TransformerExchanger.class);
     protected final TaskPluginCollector pluginCollector;
 
@@ -31,17 +30,13 @@ public abstract class TransformerExchanger {
     private long totalSuccessRecords = 0;
     private long totalFailedRecords = 0;
 
-
     private List<TransformerExecution> transformerExecs;
 
-    private ClassLoaderSwapper classLoaderSwapper = ClassLoaderSwapper
-            .newCurrentThreadClassLoaderSwapper();
-
+    private ClassLoaderSwapper classLoaderSwapper = ClassLoaderSwapper.newCurrentThreadClassLoaderSwapper();
 
     public TransformerExchanger(int taskGroupId, int taskId, Communication communication,
                                 List<TransformerExecution> transformerExecs,
                                 final TaskPluginCollector pluginCollector) {
-
         this.transformerExecs = transformerExecs;
         this.pluginCollector = pluginCollector;
         this.taskGroupId = taskGroupId;
@@ -57,7 +52,7 @@ public abstract class TransformerExchanger {
 
         Record result = record;
 
-        long diffExaustedTime = 0;
+        long diffExhaustedTime = 0;
         String errorMsg = null;
         boolean failed = false;
         for (TransformerExecution transformerInfoExec : transformerExecs) {
@@ -67,23 +62,23 @@ public abstract class TransformerExchanger {
                 classLoaderSwapper.setCurrentThreadClassLoader(transformerInfoExec.getClassLoader());
             }
 
-            /**
-             * 延迟检查transformer参数的有效性，直接抛出异常，不作为脏数据
-             * 不需要在插件中检查参数的有效性。但参数的个数等和插件相关的参数，在插件内部检查
-             */
+            /// 延迟检查 transformer 参数的有效性，直接抛出异常，不作为脏数据
+            // 不需要在插件中检查参数的有效性。但参数的个数等和插件相关的参数，在插件内部检查
             if (!transformerInfoExec.isChecked()) {
-
-                if (transformerInfoExec.getColumnIndex() != null && transformerInfoExec.getColumnIndex() >= record.getColumnNumber()) {
+                if (transformerInfoExec.getColumnIndex() != null &&
+                        transformerInfoExec.getColumnIndex() >= record.getColumnNumber()) {
                     throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER,
                             String.format("columnIndex[%s] out of bound[%s]. name=%s",
                                     transformerInfoExec.getColumnIndex(), record.getColumnNumber(),
                                     transformerInfoExec.getTransformerName()));
                 }
+
                 transformerInfoExec.setIsChecked(true);
             }
 
             try {
-                result = transformerInfoExec.getTransformer().evaluate(result, transformerInfoExec.gettContext(), transformerInfoExec.getFinalParas());
+                result = transformerInfoExec.getTransformer().evaluate(result, transformerInfoExec.gettContext(),
+                        transformerInfoExec.getFinalParas());
             } catch (Exception e) {
                 errorMsg = String.format("transformer(%s) has Exception(%s)", transformerInfoExec.getTransformerName(),
                         e.getMessage());
@@ -92,7 +87,6 @@ public abstract class TransformerExchanger {
                 // transformerInfoExec.addFailedRecords(1);
                 //脏数据不再进行后续transformer处理，按脏数据处理，并过滤该record。
                 break;
-
             } finally {
                 if (transformerInfoExec.getClassLoader() != null) {
                     classLoaderSwapper.restoreCurrentThreadClassLoader();
@@ -100,21 +94,19 @@ public abstract class TransformerExchanger {
             }
 
             if (result == null) {
-                /**
-                 * 这个null不能传到writer，必须消化掉
-                 */
+                // 这个 null 不能传到 writer，必须消化掉
                 totalFilterRecords++;
-                //transformerInfoExec.addFilterRecords(1);
+                // transformerInfoExec.addFilterRecords(1);
                 break;
             }
 
             long diff = System.nanoTime() - startTs;
             //transformerInfoExec.addExaustedTime(diff);
-            diffExaustedTime += diff;
+            diffExhaustedTime += diff;
             //transformerInfoExec.addSuccessRecords(1);
         }
 
-        totalExaustedTime += diffExaustedTime;
+        totalExaustedTime += diffExhaustedTime;
 
         if (failed) {
             totalFailedRecords++;
@@ -142,6 +134,4 @@ public abstract class TransformerExchanger {
         currentCommunication.setLongCounter(CommunicationTool.TRANSFORMER_FILTER_RECORDS, totalFilterRecords);
         currentCommunication.setLongCounter(CommunicationTool.TRANSFORMER_USED_TIME, totalExaustedTime);
     }
-
-
 }

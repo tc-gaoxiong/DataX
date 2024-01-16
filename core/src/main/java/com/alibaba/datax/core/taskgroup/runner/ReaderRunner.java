@@ -11,12 +11,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by jingxing on 14-9-1.
  * <p/>
- * 单个slice的reader执行调用
+ * 单个 slice 的 reader 执行调用
  */
 public class ReaderRunner extends AbstractRunner implements Runnable {
-
-    private static final Logger LOG = LoggerFactory
-            .getLogger(ReaderRunner.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReaderRunner.class);
 
     private RecordSender recordSender;
 
@@ -34,25 +32,30 @@ public class ReaderRunner extends AbstractRunner implements Runnable {
 
         Reader.Task taskReader = (Reader.Task) this.getPlugin();
 
-        //统计waitWriterTime，并且在finally才end。
-        PerfRecord channelWaitWrite = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.WAIT_WRITE_TIME);
+        // 统计 waitWriterTime，并且在 finally 才 end。
+        PerfRecord channelWaitWrite = new PerfRecord(getTaskGroupId(), getTaskId(),
+                PerfRecord.PHASE.WAIT_WRITE_TIME);
+
         try {
             channelWaitWrite.start();
 
             LOG.debug("task reader starts to do init ...");
-            PerfRecord initPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.READ_TASK_INIT);
+            PerfRecord initPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(),
+                    PerfRecord.PHASE.READ_TASK_INIT);
             initPerfRecord.start();
             taskReader.init();
             initPerfRecord.end();
 
             LOG.debug("task reader starts to do prepare ...");
-            PerfRecord preparePerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.READ_TASK_PREPARE);
+            PerfRecord preparePerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(),
+                    PerfRecord.PHASE.READ_TASK_PREPARE);
             preparePerfRecord.start();
             taskReader.prepare();
             preparePerfRecord.end();
 
             LOG.debug("task reader starts to read ...");
-            PerfRecord dataPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.READ_TASK_DATA);
+            PerfRecord dataPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(),
+                    PerfRecord.PHASE.READ_TASK_DATA);
             dataPerfRecord.start();
             taskReader.startRead(recordSender);
             recordSender.terminate();
@@ -62,7 +65,8 @@ public class ReaderRunner extends AbstractRunner implements Runnable {
             dataPerfRecord.end();
 
             LOG.debug("task reader starts to do post ...");
-            PerfRecord postPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.READ_TASK_POST);
+            PerfRecord postPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(),
+                    PerfRecord.PHASE.READ_TASK_POST);
             postPerfRecord.start();
             taskReader.post();
             postPerfRecord.end();
@@ -73,16 +77,19 @@ public class ReaderRunner extends AbstractRunner implements Runnable {
             super.markFail(e);
         } finally {
             LOG.debug("task reader starts to do destroy ...");
-            PerfRecord desPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.READ_TASK_DESTROY);
+            PerfRecord desPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(),
+                    PerfRecord.PHASE.READ_TASK_DESTROY);
             desPerfRecord.start();
             super.destroy();
             desPerfRecord.end();
 
             channelWaitWrite.end(super.getRunnerCommunication().getLongCounter(CommunicationTool.WAIT_WRITER_TIME));
 
-            long transformerUsedTime = super.getRunnerCommunication().getLongCounter(CommunicationTool.TRANSFORMER_USED_TIME);
+            long transformerUsedTime = super.getRunnerCommunication()
+                    .getLongCounter(CommunicationTool.TRANSFORMER_USED_TIME);
             if (transformerUsedTime > 0) {
-                PerfRecord transformerRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.TRANSFORMER_TIME);
+                PerfRecord transformerRecord = new PerfRecord(getTaskGroupId(), getTaskId(),
+                        PerfRecord.PHASE.TRANSFORMER_TIME);
                 transformerRecord.start();
                 transformerRecord.end(transformerUsedTime);
             }

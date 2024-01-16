@@ -13,7 +13,7 @@
     <name>plugin-unstructured-storage-util</name>
 
     <description>
-        plugin-unstructured-storage-util通用的文件类型的读取写入方法，
+        plugin-unstructured-storage-util 通用的文件类型的读取写入方法，
         供 TxtFileReader/Writer, OSSReader/Writer ,FtpReader/Writer, HdfsReader/Writer使用。
     </description>
 
@@ -90,7 +90,7 @@
             <artifactId>commons-beanutils</artifactId>
             <version>1.9.2</version>
         </dependency>
-        <!--hadoop dependency-->
+        <!-- hadoop dependency -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>

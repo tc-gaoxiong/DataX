@@ -34,24 +34,23 @@ public abstract class AbstractScheduler {
     }
 
     public void schedule(List<Configuration> configurations) {
-        Validate.notNull(configurations,
-                "scheduler配置不能为空");
+        Validate.notNull(configurations, "scheduler 配置不能为空");
+
         int jobReportIntervalInMillSec = configurations.get(0).getInt(
                 CoreConstant.DATAX_CORE_CONTAINER_JOB_REPORTINTERVAL, 30000);
         int jobSleepIntervalInMillSec = configurations.get(0).getInt(
                 CoreConstant.DATAX_CORE_CONTAINER_JOB_SLEEPINTERVAL, 10000);
 
-        this.jobId = configurations.get(0).getLong(
-                CoreConstant.DATAX_CORE_CONTAINER_JOB_ID);
+        this.jobId = configurations.get(0).getLong(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID);
 
         errorLimit = new ErrorRecordChecker(configurations.get(0));
 
-        /**
-         * 给 taskGroupContainer 的 Communication 注册
-         */
+        // 给 taskGroupContainer 的 Communication 注册
         this.containerCommunicator.registerCommunication(configurations);
 
         int totalTasks = calculateTaskCount(configurations);
+
+        // 启动所有任务
         startAllTaskGroup(configurations);
 
         Communication lastJobContainerCommunication = new Communication();
@@ -75,7 +74,7 @@ public abstract class AbstractScheduler {
                 nowJobContainerCommunication.setTimestamp(System.currentTimeMillis());
                 LOG.debug(nowJobContainerCommunication.toString());
 
-                //汇报周期
+                // 汇报周期
                 long now = System.currentTimeMillis();
                 if (now - lastReportTimeStamp > jobReportIntervalInMillSec) {
                     Communication reportCommunication = CommunicationTool
@@ -104,9 +103,7 @@ public abstract class AbstractScheduler {
         } catch (InterruptedException e) {
             // 以 failed 状态退出
             LOG.error("捕获到InterruptedException异常!", e);
-
-            throw DataXException.asDataXException(
-                    FrameworkErrorCode.RUNTIME_ERROR, e);
+            throw DataXException.asDataXException(FrameworkErrorCode.RUNTIME_ERROR, e);
         }
 
     }
@@ -120,8 +117,7 @@ public abstract class AbstractScheduler {
     private int calculateTaskCount(List<Configuration> configurations) {
         int totalTasks = 0;
         for (Configuration taskGroupConfiguration : configurations) {
-            totalTasks += taskGroupConfiguration.getListConfiguration(
-                    CoreConstant.DATAX_JOB_CONTENT).size();
+            totalTasks += taskGroupConfiguration.getListConfiguration(CoreConstant.DATAX_JOB_CONTENT).size();
         }
         return totalTasks;
     }

@@ -43,7 +43,7 @@
 
     <build>
         <resources>
-            <!--将resource目录也输出到target-->
+            <!-- 将 resource 目录也输出到 target-->
             <resource>
                 <directory>src/main/resources</directory>
                 <includes>

@@ -1,9 +1,5 @@
 package com.alibaba.datax.core.container.util;
 
-/**
- * Created by xiafei.qiuxf on 14/12/17.
- */
-
 import com.alibaba.datax.common.exception.CommonErrorCode;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.spi.Hook;
@@ -21,12 +17,13 @@ import java.util.Map;
 import java.util.ServiceLoader;
 
 /**
+ * Created by xiafei.qiuxf on 14/12/17.
+ * <p/>
  * 扫描给定目录的所有一级子目录，每个子目录当作一个Hook的目录。
- * 对于每个子目录，必须符合ServiceLoader的标准目录格式，见http://docs.oracle.com/javase/6/docs/api/java/util/ServiceLoader.html。
- * 加载里头的jar，使用ServiceLoader机制调用。
+ * 对于每个子目录，必须符合 ServiceLoader 的标准目录格式，见http://docs.oracle.com/javase/6/docs/api/java/util/ServiceLoader.html。
+ * 加载里头的 jar，使用 ServiceLoader 机制调用。
  */
 public class HookInvoker {
-
     private static final Logger LOG = LoggerFactory.getLogger(HookInvoker.class);
     private final Map<String, Number> msg;
     private final Configuration conf;
@@ -64,7 +61,6 @@ public class HookInvoker {
         for (String subDir : subDirs) {
             doInvoke(new File(baseDir, subDir).getAbsolutePath());
         }
-
     }
 
     private void doInvoke(String path) {

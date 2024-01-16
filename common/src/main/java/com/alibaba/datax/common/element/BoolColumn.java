@@ -11,7 +11,6 @@ import java.util.Date;
  * Created by jingxing on 14-8-24.
  */
 public class BoolColumn extends Column {
-
     public BoolColumn(Boolean bool) {
         super(bool, Column.Type.BOOL, 1);
     }
@@ -26,6 +25,7 @@ public class BoolColumn extends Column {
             this.setRawData(Boolean.valueOf(data));
             this.setByteSize(1);
         }
+
         return;
     }
 

@@ -7,14 +7,12 @@ import com.alibaba.datax.transformer.ComplexTransformer;
  * Created by liqiang on 16/3/9.
  */
 public class TransformerInfo {
-
     /**
-     * function基本信息
+     * function 基本信息
      */
     private ComplexTransformer transformer;
     private ClassLoader classLoader;
     private boolean isNative;
-
 
     public ComplexTransformer getTransformer() {
         return transformer;

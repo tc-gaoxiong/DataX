@@ -12,7 +12,6 @@ import java.util.Date;
  * Created by jingxing on 14-8-24.
  */
 public class DateColumn extends Column {
-
     private DateType subType = DateType.DATETIME;
 
     private int nanos = 0;
@@ -20,7 +19,7 @@ public class DateColumn extends Column {
     private int precision = -1;
 
     /**
-     * 构建值为time(java.sql.Time)的DateColumn，使用Date子类型为TIME，只有时间，没有日期
+     * 构建值为 time(java.sql.Time)的 DateColumn，使用 Date 子类型为 TIME，只有时间，没有日期
      */
     public DateColumn(Time time, int nanos, int jdbcPrecision) {
         this(time);
@@ -36,29 +35,29 @@ public class DateColumn extends Column {
     }
 
     /**
-     * 构建值为null的DateColumn，使用Date子类型为DATETIME
+     * 构建值为 null 的 DateColumn，使用 Date 子类型为 DATETIME
      */
     public DateColumn() {
         this((Long) null);
     }
 
     /**
-     * 构建值为stamp(Unix时间戳)的DateColumn，使用Date子类型为DATETIME
-     * 实际存储有date改为long的ms，节省存储
+     * 构建值为 stamp(Unix时间戳)的 DateColumn，使用 Date 子类型为 DATETIME
+     * 实际存储有 date 改为 long 的 ms，节省存储
      */
     public DateColumn(final Long stamp) {
         super(stamp, Column.Type.DATE, (null == stamp ? 0 : 8));
     }
 
     /**
-     * 构建值为date(java.util.Date)的DateColumn，使用Date子类型为DATETIME
+     * 构建值为 date(java.util.Date)的 DateColumn，使用 Date 子类型为 DATETIME
      */
     public DateColumn(final Date date) {
         this(date == null ? null : date.getTime());
     }
 
     /**
-     * 构建值为date(java.sql.Date)的DateColumn，使用Date子类型为DATE，只有日期，没有时间
+     * 构建值为 date(java.sql.Date)的 DateColumn，使用 Date 子类型为 DATE，只有日期，没有时间
      */
     public DateColumn(final java.sql.Date date) {
         this(date == null ? null : date.getTime());
@@ -66,7 +65,7 @@ public class DateColumn extends Column {
     }
 
     /**
-     * 构建值为time(java.sql.Time)的DateColumn，使用Date子类型为TIME，只有时间，没有日期
+     * 构建值为 time(java.sql.Time)的 DateColumn，使用 Date 子类型为 TIME，只有时间，没有日期
      */
     public DateColumn(final java.sql.Time time) {
         this(time == null ? null : time.getTime());
@@ -74,7 +73,7 @@ public class DateColumn extends Column {
     }
 
     /**
-     * 构建值为ts(java.sql.Timestamp)的DateColumn，使用Date子类型为DATETIME
+     * 构建值为 ts(java.sql.Timestamp)的 DateColumn，使用 Date 子类型为 DATETIME
      */
     public DateColumn(final java.sql.Timestamp ts) {
         this(ts == null ? null : ts.getTime());
@@ -99,7 +98,6 @@ public class DateColumn extends Column {
 
     @Override
     public Long asLong() {
-
         return (Long) this.getRawData();
     }
 

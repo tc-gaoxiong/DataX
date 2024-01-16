@@ -19,7 +19,6 @@ public class SubstrTransformer extends Transformer {
 
     @Override
     public Record evaluate(Record record, Object... paras) {
-
         int columnIndex;
         int startIndex;
         int length;
@@ -34,20 +33,22 @@ public class SubstrTransformer extends Transformer {
             length = Integer.valueOf((String) paras[2]);
 
         } catch (Exception e) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER, "paras:" + Arrays.asList(paras).toString() + " => " + e.getMessage());
+            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER, "paras:"
+                    + Arrays.asList(paras).toString() + " => " + e.getMessage());
         }
 
         Column column = record.getColumn(columnIndex);
 
         try {
             String oriValue = column.asString();
-            //如果字段为空，跳过subStr处理
+            // 如果字段为空，跳过 subStr 处理
             if (oriValue == null) {
                 return record;
             }
             String newValue;
             if (startIndex > oriValue.length()) {
-                throw new RuntimeException(String.format("dx_substr startIndex(%s) out of range(%s)", startIndex, oriValue.length()));
+                throw new RuntimeException(String.format("dx_substr startIndex(%s) out of range(%s)",
+                        startIndex, oriValue.length()));
             }
             if (startIndex + length >= oriValue.length()) {
                 newValue = oriValue.substring(startIndex, oriValue.length());

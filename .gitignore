@@ -28,19 +28,7 @@ Temporary Items
 *.tar.gz
 *.rar
 hs_err_pid*
-.idea/**/workspace.xml
-.idea/**/tasks.xml
-.idea/**/dictionaries
-.idea/**/shelf
-.idea/**/dataSources/
-.idea/**/dataSources.ids
-.idea/**/dataSources.local.xml
-.idea/**/sqlDataSources.xml
-.idea/**/dynamic.xml
-.idea/**/uiDesigner.xml
-.idea/**/dbnavigator.xml
-.idea/**/gradle.xml
-.idea/**/libraries
+.idea
 cmake-build-debug/
 cmake-build-release/
 .idea/**/mongoSettings.xml
@@ -64,7 +52,6 @@ dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
 !/.mvn/wrapper/maven-wrapper.jar
-.idea
 *.iml
 out
 gen### Python template
@@ -105,14 +92,12 @@ coverage.xml
 .pytest_cache/
 *.mo
 *.pot
-*.log
 local_settings.py
 db.sqlite3
 instance/
 .webassets-cache
 .scrapy
 docs/_build/
-target/
 .ipynb_checkpoints
 .python-version
 celerybeat-schedule

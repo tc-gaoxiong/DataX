@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Engine是DataX入口类，该类负责初始化Job或者Task的运行容器，并运行插件的Job或者Task逻辑
+ * Engine 是 DataX 入口类，该类负责初始化 Job 或者 Task 的运行容器，并运行插件的 Job 或者 Task 逻辑
  */
 public class Engine {
     private static final Logger LOG = LoggerFactory.getLogger(Engine.class);
@@ -55,9 +55,10 @@ public class Engine {
             boolean isSensitive = StringUtils.endsWithIgnoreCase(key, "password")
                     || StringUtils.endsWithIgnoreCase(key, "accessKey");
             if (isSensitive && configuration.get(key) instanceof String) {
-                configuration.set(key, configuration.getString(key).replaceAll(".", "*"));
+                configuration.set(key, configuration.getString(key).replaceAll("\\.", "*"));
             }
         }
+
         return configuration;
     }
 
@@ -72,12 +73,12 @@ public class Engine {
 
         String jobPath = cl.getOptionValue("job");
 
-        // 如果用户没有明确指定jobid, 则 datax.py 会指定 jobid 默认值为-1
+        // 如果用户没有明确指定 jobid, 则 datax.py 会指定 jobid 默认值为 -1
         String jobIdString = cl.getOptionValue("jobid");
         RUNTIME_MODE = cl.getOptionValue("mode");
 
         Configuration configuration = ConfigParser.parse(jobPath);
-        // 绑定i18n信息
+        // 绑定 i18n 信息
         MessageSource.init(configuration);
         MessageSource.reloadResourceBundle(Configuration.class);
 
@@ -96,12 +97,12 @@ public class Engine {
 
         boolean isStandAloneMode = "standalone".equalsIgnoreCase(RUNTIME_MODE);
         if (!isStandAloneMode && jobId == -1) {
-            // 如果不是 standalone 模式，那么 jobId 一定不能为-1
+            // 如果不是 standalone 模式，那么 jobId 一定不能为 -1
             throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, "非 standalone 模式必须在 URL 中提供有效的 jobId.");
         }
         configuration.set(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, jobId);
 
-        //打印vmInfo
+        // 打印 vmInfo
         VMInfo vmInfo = VMInfo.getVmInfo();
         if (vmInfo != null) {
             LOG.info(vmInfo.toString());
@@ -166,7 +167,6 @@ public class Engine {
 
     /* check job model (job/task) first */
     public void start(Configuration allConf) {
-
         // 绑定column转换信息
         ColumnCast.bind(allConf);
 
@@ -175,9 +175,9 @@ public class Engine {
          */
         LoadUtil.bind(allConf);
 
-        boolean isJob = !("taskGroup".equalsIgnoreCase(allConf
-                .getString(CoreConstant.DATAX_CORE_CONTAINER_MODEL)));
-        //JobContainer会在schedule后再行进行设置和调整值
+        boolean isJob = !("taskGroup".equalsIgnoreCase(
+                allConf.getString(CoreConstant.DATAX_CORE_CONTAINER_MODEL)));
+        // JobContainer 会在 schedule 后再行进行设置和调整值
         int channelNumber = 0;
         AbstractContainer container;
         long instanceId;
@@ -185,34 +185,28 @@ public class Engine {
         if (isJob) {
             allConf.set(CoreConstant.DATAX_CORE_CONTAINER_JOB_MODE, RUNTIME_MODE);
             container = new JobContainer(allConf);
-            instanceId = allConf.getLong(
-                    CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, 0);
-
+            instanceId = allConf.getLong(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, 0);
         } else {
             container = new TaskGroupContainer(allConf);
-            instanceId = allConf.getLong(
-                    CoreConstant.DATAX_CORE_CONTAINER_JOB_ID);
-            taskGroupId = allConf.getInt(
-                    CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID);
-            channelNumber = allConf.getInt(
-                    CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL);
+            instanceId = allConf.getLong(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID);
+            taskGroupId = allConf.getInt(CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID);
+            channelNumber = allConf.getInt(CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL);
         }
 
-        //缺省打开perfTrace
+        // 缺省打开 perfTrace
         boolean traceEnable = allConf.getBool(CoreConstant.DATAX_CORE_CONTAINER_TRACE_ENABLE, true);
         boolean perfReportEnable = allConf.getBool(CoreConstant.DATAX_CORE_REPORT_DATAX_PERFLOG, true);
 
-        //standalone模式的 datax shell任务不进行汇报
+        // standalone 模式的 datax shell 任务不进行汇报
         if (instanceId == -1) {
             perfReportEnable = false;
         }
 
         Configuration jobInfoConfig = allConf.getConfiguration(CoreConstant.DATAX_JOB_JOBINFO);
-        //初始化PerfTrace
+        // 初始化 PerfTrace
         PerfTrace perfTrace = PerfTrace.getInstance(isJob, instanceId, taskGroupId, traceEnable);
         perfTrace.setJobInfo(jobInfoConfig, perfReportEnable, channelNumber);
+
         container.start();
-
     }
-
 }

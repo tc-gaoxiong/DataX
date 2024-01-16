@@ -18,7 +18,6 @@ public class FilterTransformer extends Transformer {
 
     @Override
     public Record evaluate(Record record, Object... paras) {
-
         int columnIndex;
         String code;
         String value;
@@ -36,14 +35,13 @@ public class FilterTransformer extends Transformer {
                 throw new RuntimeException("dx_filter para 2 can't be null");
             }
         } catch (Exception e) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER, "paras:" + Arrays.asList(paras).toString() + " => " + e.getMessage());
+            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER,
+                    "paras:" + Arrays.asList(paras) + " => " + e.getMessage());
         }
-
 
         Column column = record.getColumn(columnIndex);
 
         try {
-
             if (code.equalsIgnoreCase("like")) {
                 return doLike(record, value, column);
             } else if (code.equalsIgnoreCase("not like")) {
@@ -68,10 +66,8 @@ public class FilterTransformer extends Transformer {
         }
     }
 
-
     private Record doGreat(Record record, String value, Column column, boolean hasEqual) {
-
-        //如果字段为空，直接不参与比较。即空也属于无穷小
+        // 如果字段为空，直接不参与比较。即空也属于无穷小
         if (column.getRawData() == null) {
             return record;
         }
@@ -130,8 +126,7 @@ public class FilterTransformer extends Transformer {
     }
 
     private Record doLess(Record record, String value, Column column, boolean hasEqual) {
-
-        //如果字段为空，直接不参与比较。即空也属于无穷大
+        // 如果字段为空，直接不参与比较。即空也属于无穷大
         if (column.getRawData() == null) {
             return record;
         }
@@ -188,21 +183,15 @@ public class FilterTransformer extends Transformer {
         } else {
             throw new RuntimeException("<=,< can't support this columnType:" + column.getClass().getSimpleName());
         }
-
     }
 
     /**
-     * DateColumn将比较long值，StringColumn，ByteColumn以及BooleanColumn比较其String值
+     * DateColumn 将比较 long 值，StringColumn，ByteColumn 以及 BooleanColumn 比较其 String 值
      *
-     * @param record
-     * @param value
-     * @param column
      * @return 如果相等，则过滤。
      */
-
     private Record doEqual(Record record, String value, Column column) {
-
-        //如果字段为空，只比较目标字段为"null"，否则null字段均不过滤
+        // 如果字段为空，只比较目标字段为 null，否则 null 字段均不过滤
         if (column.getRawData() == null) {
             if (value.equalsIgnoreCase("null")) {
                 return null;
@@ -239,20 +228,15 @@ public class FilterTransformer extends Transformer {
         } else {
             throw new RuntimeException("== can't support this columnType:" + column.getClass().getSimpleName());
         }
-
     }
 
     /**
-     * DateColumn将比较long值，StringColumn，ByteColumn以及BooleanColumn比较其String值
+     * DateColumn 将比较 long 值，StringColumn，ByteColumn 以及 BooleanColumn 比较其 String 值
      *
-     * @param record
-     * @param value
-     * @param column
      * @return 如果不相等，则过滤。
      */
     private Record doNotEqual(Record record, String value, Column column) {
-
-        //如果字段为空，只比较目标字段为"null", 否则null字段均过滤。
+        // 如果字段为空，只比较目标字段为 null, 否则 null 字段均过滤。
         if (column.getRawData() == null) {
             if (value.equalsIgnoreCase("null")) {
                 return record;

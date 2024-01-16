@@ -26,5 +26,4 @@ public interface Pluginable {
     public String getPeerPluginName();
 
     public void setPeerPluginName(String peerPluginName);
-
 }

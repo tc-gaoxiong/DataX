@@ -23,14 +23,12 @@ public class GroovyTransformer extends Transformer {
 
     @Override
     public Record evaluate(Record record, Object... paras) {
-
         if (groovyTransformer == null) {
-            //全局唯一
+            // 全局唯一
             if (paras.length < 1 || paras.length > 2) {
                 throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER, "dx_groovy paras must be 1 or 2 . now paras is: " + Arrays.asList(paras).toString());
             }
             synchronized (this) {
-
                 if (groovyTransformer == null) {
                     String code = (String) paras[0];
                     @SuppressWarnings("unchecked") List<String> extraPackage = paras.length == 2 ? (List<String>) paras[1] : null;
@@ -56,14 +54,14 @@ public class GroovyTransformer extends Transformer {
         try {
             Object t = groovyClass.newInstance();
             if (!(t instanceof Transformer)) {
-                throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_GROOVY_INIT_EXCEPTION, "datax bug! contact askdatax");
+                throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_GROOVY_INIT_EXCEPTION,
+                        "datax bug! contact askdatax");
             }
             this.groovyTransformer = (Transformer) t;
         } catch (Throwable ex) {
             throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_GROOVY_INIT_EXCEPTION, ex);
         }
     }
-
 
     private String getGroovyRule(String expression, List<String> extraPackagesStrList) {
         StringBuffer sb = new StringBuffer();
@@ -86,6 +84,4 @@ public class GroovyTransformer extends Transformer {
 
         return sb.toString();
     }
-
-
 }

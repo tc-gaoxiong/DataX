@@ -17,7 +17,6 @@ import java.util.Arrays;
  * @since 2021-08-16
  */
 public class DigestTransformer extends Transformer {
-
     private static final String MD5 = "md5";
     private static final String SHA1 = "sha1";
     private static final String TO_UPPER_CASE = "toUpperCase";
@@ -46,11 +45,13 @@ public class DigestTransformer extends Transformer {
             if (!StringUtils.equalsIgnoreCase(MD5, type) && !StringUtils.equalsIgnoreCase(SHA1, type)) {
                 throw new RuntimeException("dx_digest paras index 1 must be md5 or sha1");
             }
-            if (!StringUtils.equalsIgnoreCase(TO_UPPER_CASE, charType) && !StringUtils.equalsIgnoreCase(TO_LOWER_CASE, charType)) {
+            if (!StringUtils.equalsIgnoreCase(TO_UPPER_CASE, charType) &&
+                    !StringUtils.equalsIgnoreCase(TO_LOWER_CASE, charType)) {
                 throw new RuntimeException("dx_digest paras index 2 must be toUpperCase or toLowerCase");
             }
         } catch (Exception e) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER, "paras:" + Arrays.asList(paras) + " => " + e.getMessage());
+            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER, "paras:"
+                    + Arrays.asList(paras) + " => " + e.getMessage());
         }
 
         Column column = record.getColumn(columnIndex);
@@ -76,11 +77,10 @@ public class DigestTransformer extends Transformer {
             }
 
             record.setColumn(columnIndex, new StringColumn(newValue));
-
         } catch (Exception e) {
             throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_RUN_EXCEPTION, e.getMessage(), e);
         }
+
         return record;
     }
-
 }

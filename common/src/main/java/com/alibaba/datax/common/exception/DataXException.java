@@ -6,7 +6,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 public class DataXException extends RuntimeException {
-
     private static final long serialVersionUID = 1L;
 
     private ErrorCode errorCode;
@@ -57,6 +56,7 @@ public class DataXException extends RuntimeException {
             StringWriter str = new StringWriter();
             PrintWriter pw = new PrintWriter(str);
             ((Throwable) obj).printStackTrace(pw);
+
             return str.toString();
             // return ((Throwable) obj).getMessage();
         } else {

@@ -33,7 +33,6 @@ import com.alibaba.datax.core.util.container.CoreConstant;
 import java.util.List;
 
 public class RecordExchanger extends TransformerExchanger implements RecordSender, RecordReceiver {
-
     private static Class<? extends Record> RECORD_CLASS;
     private Channel channel;
     private Configuration configuration;
@@ -51,8 +50,7 @@ public class RecordExchanger extends TransformerExchanger implements RecordSende
                             CoreConstant.DATAX_CORE_TRANSPORT_RECORD_CLASS,
                             "com.alibaba.datax.core.transport.record.DefaultRecord"));
         } catch (ClassNotFoundException e) {
-            throw DataXException.asDataXException(
-                    FrameworkErrorCode.CONFIG_ERROR, e);
+            throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, e);
         }
     }
 
@@ -70,8 +68,7 @@ public class RecordExchanger extends TransformerExchanger implements RecordSende
         try {
             return RECORD_CLASS.newInstance();
         } catch (Exception e) {
-            throw DataXException.asDataXException(
-                    FrameworkErrorCode.CONFIG_ERROR, e);
+            throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, e);
         }
     }
 
@@ -85,7 +82,7 @@ public class RecordExchanger extends TransformerExchanger implements RecordSende
             return;
         }
         this.channel.push(record);
-        //和channel的统计保持同步
+        // 和 channel 的统计保持同步
         doStat();
     }
 
@@ -99,7 +96,7 @@ public class RecordExchanger extends TransformerExchanger implements RecordSende
             throw DataXException.asDataXException(CommonErrorCode.SHUT_DOWN_TASK, "");
         }
         this.channel.pushTerminate(TerminateRecord.get());
-        //和channel的统计保持同步
+        // 和 channel 的统计保持同步
         doStat();
     }
 
