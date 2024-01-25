@@ -44,23 +44,6 @@
             </includes>
             <outputDirectory>/lib</outputDirectory>
         </fileSet>
-
-        <!--<fileSet>-->
-        <!--<directory>src/main/log/</directory>-->
-        <!--<includes>-->
-        <!--<include>*.log</include>-->
-        <!--</includes>-->
-        <!--<outputDirectory>/log</outputDirectory>-->
-        <!--</fileSet>-->
-
-        <!--<fileSet>-->
-        <!--<directory>src/main/log/</directory>-->
-        <!--<includes>-->
-        <!--<include>*.log</include>-->
-        <!--</includes>-->
-        <!--<outputDirectory>/log_perf</outputDirectory>-->
-        <!--</fileSet>-->
-
         <fileSet>
             <directory>src/main/job/</directory>
             <includes>
@@ -68,7 +51,6 @@
             </includes>
             <outputDirectory>/job</outputDirectory>
         </fileSet>
-
         <fileSet>
             <directory>src/main/tools/</directory>
             <includes>
@@ -76,7 +58,6 @@
             </includes>
             <outputDirectory>/tools</outputDirectory>
         </fileSet>
-
         <fileSet>
             <fileMode>777</fileMode>
             <directory>src/main/tmp</directory>

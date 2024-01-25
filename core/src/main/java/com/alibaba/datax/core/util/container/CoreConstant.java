@@ -67,6 +67,8 @@ public class CoreConstant {
 
     public static final String DATAX_CORE_STATISTICS_COLLECTOR_PLUGIN_MAXDIRTYNUM = "core.statistics.collector.plugin.maxDirtyNumber";
 
+    public static final String DATAX_CORE_SENSITIVECONF = "core.sensitiveConf";
+
     public static final String DATAX_JOB_CONTENT_READER_NAME = "job.content[0].reader.name";
 
     public static final String DATAX_JOB_CONTENT_READER_PARAMETER = "job.content[0].reader.parameter";

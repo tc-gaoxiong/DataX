@@ -36,7 +36,7 @@
                 "type": "bytes"
               }
             ],
-            "sliceRecordCount": 100000
+            "sliceRecordCount": 7
           }
         },
         "writer": {

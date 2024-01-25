@@ -20,18 +20,15 @@ public final class ColumnCast {
         BytesCast.init(configuration);
     }
 
-    public static Date string2Date(final StringColumn column)
-            throws ParseException {
+    public static Date string2Date(final StringColumn column) throws ParseException {
         return StringCast.asDate(column);
     }
 
-    public static Date string2Date(final StringColumn column, String dateFormat)
-            throws ParseException {
+    public static Date string2Date(final StringColumn column, String dateFormat) throws ParseException {
         return StringCast.asDate(column, dateFormat);
     }
 
-    public static byte[] string2Bytes(final StringColumn column)
-            throws UnsupportedEncodingException {
+    public static byte[] string2Bytes(final StringColumn column) throws UnsupportedEncodingException {
         return StringCast.asBytes(column);
     }
 
@@ -39,8 +36,7 @@ public final class ColumnCast {
         return DateCast.asString(column);
     }
 
-    public static String bytes2String(final BytesColumn column)
-            throws UnsupportedEncodingException {
+    public static String bytes2String(final BytesColumn column) throws UnsupportedEncodingException {
         return BytesCast.asString(column);
     }
 }

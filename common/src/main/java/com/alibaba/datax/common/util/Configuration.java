@@ -10,6 +10,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
@@ -46,6 +48,8 @@ import java.util.*;
  * 3. 输出 JSON，将上述对象转为 JSON，要把上述 Map 的多级 key 转为树形结构，并输出为 JSON <br>
  */
 public class Configuration {
+    private static final Logger LOG = LoggerFactory.getLogger(Configuration.class);
+
     /**
      * 对于加密的 keyPath，需要记录下来
      * 为的是后面分布式情况下将该值加密后抛到 DataXServer 中
@@ -631,7 +635,7 @@ public class Configuration {
     }
 
     /**
-     * 获取Configuration下所有叶子节点的key
+     * 获取 Configuration 下所有叶子节点的 key
      * <p/>
      * <br>
      * <p/>
@@ -639,10 +643,10 @@ public class Configuration {
      * <p/>
      * {"a": {"b": {"c": [0,1,2,3]}}, "x": "y"}
      * <p/>
-     * 下属的key包括: a.b.c[0],a.b.c[1],a.b.c[2],a.b.c[3],x
+     * 下属的 key 包括: a.b.c[0],a.b.c[1],a.b.c[2],a.b.c[3],x
      */
     public Set<String> getKeys() {
-        Set<String> collect = new HashSet<String>();
+        Set<String> collect = new HashSet<>();
         this.getKeysRecursive(this.getInternal(), "", collect);
         return collect;
     }
@@ -663,23 +667,23 @@ public class Configuration {
     }
 
     /**
-     * 合并其他Configuration，并修改两者冲突的KV配置
+     * 合并其他 Configuration，并修改两者冲突的 KV 配置
      *
-     * @param another            合并加入的第三方Configuration
-     * @param updateWhenConflict 当合并双方出现KV冲突时候，选择更新当前KV，或者忽略该KV
+     * @param another            合并加入的第三方 Configuration
+     * @param updateWhenConflict 当合并双方出现 KV 冲突时候，选择更新当前 KV，或者忽略该 KV
      * @return 返回合并后对象
      */
     public Configuration merge(final Configuration another, boolean updateWhenConflict) {
         Set<String> keys = another.getKeys();
 
         for (final String key : keys) {
-            // 如果使用更新策略，凡是another存在的key，均需要更新
+            // 如果使用更新策略，凡是 another 存在的 key，均需要更新
             if (updateWhenConflict) {
                 this.set(key, another.get(key));
                 continue;
             }
 
-            // 使用忽略策略，只有another Configuration存在但是当前Configuration不存在的key，才需要更新
+            // 使用忽略策略，只有 another Configuration 存在但是当前 Configuration 不存在的 key，才需要更新
             boolean isCurrentExists = this.get(key) != null;
             if (isCurrentExists) {
                 continue;
@@ -704,7 +708,7 @@ public class Configuration {
     }
 
     /**
-     * 拷贝当前Configuration，注意，这里使用了深拷贝，避免冲突
+     * 拷贝当前 Configuration，注意，这里使用了深拷贝，避免冲突
      */
     public Configuration clone() {
         Configuration config = Configuration.from(Configuration.toJSONString(this.getInternal()));
@@ -713,7 +717,7 @@ public class Configuration {
     }
 
     /**
-     * 按照configuration要求格式的path
+     * 按照 configuration 要求格式的path
      * 比如：
      * a.b.c
      * a.b[2].c
@@ -761,8 +765,14 @@ public class Configuration {
         boolean isList = current instanceof List;
         if (isList) {
             List<Object> lists = (List<Object>) current;
-            for (int i = 0; i < lists.size(); i++) {
-                getKeysRecursive(lists.get(i), path + String.format("[%d]", i), collect);
+            if (lists.size() == 0) {
+                // 如果列表为空，则可以视为是最后一级路径
+                collect.add(path);
+                return;
+            } else {
+                for (int i = 0; i < lists.size(); i++) {
+                    getKeysRecursive(lists.get(i), path + String.format("[%d]", i), collect);
+                }
             }
 
             return;

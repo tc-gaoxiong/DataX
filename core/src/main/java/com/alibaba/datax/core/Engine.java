@@ -1,6 +1,7 @@
 package com.alibaba.datax.core;
 
 import com.alibaba.datax.common.element.ColumnCast;
+import com.alibaba.datax.common.exception.CommonErrorCode;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.spi.ErrorCode;
 import com.alibaba.datax.common.statistics.PerfTrace;
@@ -18,10 +19,10 @@ import com.alibaba.datax.core.util.container.LoadUtil;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -38,24 +39,34 @@ public class Engine {
 
     // 注意屏蔽敏感信息
     public static String filterJobConfiguration(final Configuration configuration) {
-        Configuration jobConfWithSetting = configuration.getConfiguration("job").clone();
+        // 获取需要屏蔽的敏感配置项
+        List<Object> tmpList = configuration.getList(CoreConstant.DATAX_CORE_SENSITIVECONF);
+        List<String> sensitiveConf = new ArrayList<>();
+        for (Object conf : tmpList) {
+            if (conf instanceof String) {
+                sensitiveConf.add(String.valueOf(conf));
+            } else {
+                throw DataXException.asDataXException(CommonErrorCode.CONFIG_ERROR,
+                        String.format("敏感配置参数必须是字符串。请修改配置：%s", conf));
+            }
+        }
+        // 屏蔽敏感信息
+        Configuration unSensitiveConf = filterSensitiveConfiguration(configuration, sensitiveConf);
 
-        Configuration jobContent = jobConfWithSetting.getConfiguration("content");
-
-        filterSensitiveConfiguration(jobContent);
-
-        jobConfWithSetting.set("content", jobContent);
+        // 获取 job 配置信息
+        Configuration jobConfWithSetting = unSensitiveConf.getConfiguration("job").clone();
 
         return jobConfWithSetting.beautify();
     }
 
-    public static Configuration filterSensitiveConfiguration(Configuration configuration) {
+    public static Configuration filterSensitiveConfiguration(Configuration configuration, List<String> sensitiveConf) {
         Set<String> keys = configuration.getKeys();
+
         for (final String key : keys) {
-            boolean isSensitive = StringUtils.endsWithIgnoreCase(key, "password")
-                    || StringUtils.endsWithIgnoreCase(key, "accessKey");
-            if (isSensitive && configuration.get(key) instanceof String) {
-                configuration.set(key, configuration.getString(key).replaceAll("\\.", "*"));
+            if (sensitiveConf.contains(key)) {
+                LOG.debug("make " + key + " invisible");
+                // 置空
+                configuration.set(key, null);
             }
         }
 
@@ -77,6 +88,7 @@ public class Engine {
         String jobIdString = cl.getOptionValue("jobid");
         RUNTIME_MODE = cl.getOptionValue("mode");
 
+        // 配置解析，jobPath 是绝对路径，返回的是全部配置信息，包括 core.json
         Configuration configuration = ConfigParser.parse(jobPath);
         // 绑定 i18n 信息
         MessageSource.init(configuration);
@@ -98,7 +110,7 @@ public class Engine {
         boolean isStandAloneMode = "standalone".equalsIgnoreCase(RUNTIME_MODE);
         if (!isStandAloneMode && jobId == -1) {
             // 如果不是 standalone 模式，那么 jobId 一定不能为 -1
-            throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, "非 standalone 模式必须在 URL 中提供有效的 jobId.");
+            throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, "非 standalone 模式必须在 URL 中提供有效的 jobId。");
         }
         configuration.set(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, jobId);
 
@@ -167,16 +179,13 @@ public class Engine {
 
     /* check job model (job/task) first */
     public void start(Configuration allConf) {
-        // 绑定column转换信息
+        // 绑定 column 转换信息
         ColumnCast.bind(allConf);
 
-        /**
-         * 初始化PluginLoader，可以获取各种插件配置
-         */
+        // 初始化 PluginLoader，可以获取各种插件配置
         LoadUtil.bind(allConf);
 
-        boolean isJob = !("taskGroup".equalsIgnoreCase(
-                allConf.getString(CoreConstant.DATAX_CORE_CONTAINER_MODEL)));
+        boolean isJob = !("taskGroup".equalsIgnoreCase(allConf.getString(CoreConstant.DATAX_CORE_CONTAINER_MODEL)));
         // JobContainer 会在 schedule 后再行进行设置和调整值
         int channelNumber = 0;
         AbstractContainer container;

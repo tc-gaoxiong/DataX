@@ -26,20 +26,14 @@ public final class ConfigParser {
     public static Configuration parse(final String jobPath) {
         Configuration configuration = ConfigParser.parseJobConfig(jobPath);
 
-        configuration.merge(
-                ConfigParser.parseCoreConfig(CoreConstant.DATAX_CONF_PATH),
-                false);
+        configuration.merge(ConfigParser.parseCoreConfig(CoreConstant.DATAX_CONF_PATH), false);
         // todo config优化，只捕获需要的plugin
-        String readerPluginName = configuration.getString(
-                CoreConstant.DATAX_JOB_CONTENT_READER_NAME);
-        String writerPluginName = configuration.getString(
-                CoreConstant.DATAX_JOB_CONTENT_WRITER_NAME);
+        String readerPluginName = configuration.getString(CoreConstant.DATAX_JOB_CONTENT_READER_NAME);
+        String writerPluginName = configuration.getString(CoreConstant.DATAX_JOB_CONTENT_WRITER_NAME);
 
-        String preHandlerName = configuration.getString(
-                CoreConstant.DATAX_JOB_PREHANDLER_PLUGINNAME);
+        String preHandlerName = configuration.getString(CoreConstant.DATAX_JOB_PREHANDLER_PLUGINNAME);
 
-        String postHandlerName = configuration.getString(
-                CoreConstant.DATAX_JOB_POSTHANDLER_PLUGINNAME);
+        String postHandlerName = configuration.getString(CoreConstant.DATAX_JOB_POSTHANDLER_PLUGINNAME);
 
         Set<String> pluginList = new HashSet<String>();
         pluginList.add(readerPluginName);
@@ -82,7 +76,6 @@ public final class ConfigParser {
         String jobContent;
 
         boolean isJobResourceFromHttp = jobResource.trim().toLowerCase().startsWith("http");
-
 
         if (isJobResourceFromHttp) {
             //设置httpclient的 HTTP_TIMEOUT_INMILLIONSECONDS
