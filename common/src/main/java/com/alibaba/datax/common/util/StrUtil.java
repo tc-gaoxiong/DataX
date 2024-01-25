@@ -2,6 +2,8 @@ package com.alibaba.datax.common.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -12,6 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StrUtil {
+    private static final Logger LOG = LoggerFactory.getLogger(StrUtil.class);
 
     private final static long KB_IN_BYTES = 1024;
 
@@ -23,8 +26,10 @@ public class StrUtil {
 
     private final static DecimalFormat df = new DecimalFormat("0.00");
 
-    private static final Pattern VARIABLE_PATTERN = Pattern
-            .compile("(\\$)\\{?(\\w+)\\}?");
+    // 匹配以 $ 开始，后跟一个单词字符（字母、数字、下划线），{} 是可选的
+    // \\{?，{ 有特殊含义，所以需要转义，? 表示 0 或 1 次匹配
+    // + 表示匹配前面的元素一次或多次
+    private static final Pattern VARIABLE_PATTERN = Pattern.compile("(\\$)\\{?(\\w+)}?");
 
     private static String SYSTEM_ENCODING = System.getProperty("file.encoding");
 
@@ -47,21 +52,29 @@ public class StrUtil {
         } else if (byteNumber / KB_IN_BYTES > 0) {
             return df.format((double) byteNumber / (double) KB_IN_BYTES) + "KB";
         } else {
-            return String.valueOf(byteNumber) + "B";
+            return byteNumber + "B";
         }
     }
 
-
+    /**
+     * 替换变量，将 ${var}、$var，替换为系统变量中的值
+     */
     public static String replaceVariable(final String param) {
-        Map<String, String> mapping = new HashMap<String, String>();
+        Map<String, String> mapping = new HashMap<>();
 
+        // 匹配类似 ${var}、$var 的字符串
         Matcher matcher = VARIABLE_PATTERN.matcher(param);
+        // 搜索字符串
         while (matcher.find()) {
-            String variable = matcher.group(2);
+            String variable = matcher.group(2); // ${var} 中的 var
+            // 获取系统属性
             String value = System.getProperty(variable);
+            LOG.debug("get property from system: " + variable);
+
             if (StringUtils.isBlank(value)) {
                 value = matcher.group();
             }
+
             mapping.put(matcher.group(), value);
         }
 

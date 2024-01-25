@@ -42,19 +42,13 @@ public class JarLoader extends URLClassLoader {
     }
 
     private static void collectDirs(String path, List<String> collector) {
-        if (null == path || StringUtils.isBlank(path)) {
-            return;
-        }
+        if (null == path || StringUtils.isBlank(path)) return;
 
         File current = new File(path);
-        if (!current.exists() || !current.isDirectory()) {
-            return;
-        }
+        if (!current.exists() || !current.isDirectory()) return;
 
         for (File child : current.listFiles()) {
-            if (!child.isDirectory()) {
-                continue;
-            }
+            if (!child.isDirectory()) continue;
 
             collector.add(child.getAbsolutePath());
             collectDirs(child.getAbsolutePath(), collector);
