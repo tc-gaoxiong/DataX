@@ -47,35 +47,21 @@ public class JobContainer extends AbstractContainer {
     private static final Logger LOG = LoggerFactory.getLogger(JobContainer.class);
 
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
+    private final ErrorRecordChecker errorLimit;
     private ClassLoaderSwapper classLoaderSwapper = ClassLoaderSwapper.newCurrentThreadClassLoaderSwapper();
-
     private long jobId;
-
     private String readerPluginName;
-
     private String writerPluginName;
-
     // reader 和 writer jobContainer 的实例
     private Reader.Job jobReader;
-
     private Writer.Job jobWriter;
-
     private Configuration userConf;
-
     private long startTimeStamp;
-
     private long endTimeStamp;
-
     private long startTransferTimeStamp;
-
     private long endTransferTimeStamp;
-
     private int needChannelNumber;
-
     private int totalStage = 1;
-
-    private ErrorRecordChecker errorLimit;
 
     public JobContainer(Configuration configuration) {
         super(configuration);
@@ -367,37 +353,48 @@ public class JobContainer extends AbstractContainer {
     /**
      * 执行 reader 和 writer 最细粒度的切分，需要注意的是，writer 的切分结果要参照 reader 的切分结果，
      * 达到切分后数目相等，才能满足 1：1 的通道模型，所以这里可以将 reader 和 writer 的配置整合到一起，
-     * 然后，为避免顺序给读写端带来长尾影响，将整合的结果 shuffler 掉
+     * 然后，为避免顺序给读写端带来长尾影响，将整合的结果 shuffle 掉
      */
     private int split() {
+        // 调整 needChannelNumber 的值
         this.adjustChannelNumber();
 
         if (this.needChannelNumber <= 0) {
+            // 最小 1 个 channel
             this.needChannelNumber = 1;
         }
 
+        // 这里的 split 的最终结果就是在 job.content 数组中为每一个切分后的作业增加一个配置
+
+        // 先切分 reader
         List<Configuration> readerTaskConfigs = this.doReaderSplit(this.needChannelNumber);
         int taskNumber = readerTaskConfigs.size();
+        // 再切分 writer
         List<Configuration> writerTaskConfigs = this.doWriterSplit(taskNumber);
 
-        List<Configuration> transformerList = this.configuration.getListConfiguration(CoreConstant.DATAX_JOB_CONTENT_TRANSFORMER);
+        List<Configuration> transformerList = this.configuration.getListConfiguration(
+                CoreConstant.DATAX_JOB_CONTENT_TRANSFORMER);
 
-        LOG.debug("transformer configuration: " + JSON.toJSONString(transformerList));
+        LOG.debug("transformer configuration: {}", JSON.toJSONString(transformerList));
         // 输入是 reader 和 writer 的 parameter list，输出是 content 下面元素的 list
         List<Configuration> contentConfig = mergeReaderAndWriterTaskConfigs(
                 readerTaskConfigs, writerTaskConfigs, transformerList);
 
-        LOG.debug("contentConfig configuration: " + JSON.toJSONString(contentConfig));
+        LOG.debug("contentConfig configuration: {}", JSON.toJSONString(contentConfig));
 
         this.configuration.set(CoreConstant.DATAX_JOB_CONTENT, contentConfig);
 
         return contentConfig.size();
     }
 
+    /**
+     * 根据字节流、记录流限速等调整 channel 数量
+     */
     private void adjustChannelNumber() {
         int needChannelNumberByByte = Integer.MAX_VALUE;
         int needChannelNumberByRecord = Integer.MAX_VALUE;
 
+        // 是否有字节流限速
         boolean isByteLimit = (this.configuration.getInt(
                 CoreConstant.DATAX_JOB_SETTING_SPEED_BYTE, 0) > 0);
         if (isByteLimit) {
@@ -410,14 +407,15 @@ public class JobContainer extends AbstractContainer {
             if (channelLimitedByteSpeed == null || channelLimitedByteSpeed <= 0) {
                 throw DataXException.asDataXException(
                         FrameworkErrorCode.CONFIG_ERROR,
-                        "在有总bps限速条件下，单个channel的bps值不能为空，也不能为非正数");
+                        "在有总 bps 限速条件下，单个 channel 的 bps 值不能为空，也不能为非正数");
             }
 
             needChannelNumberByByte = (int) (globalLimitedByteSpeed / channelLimitedByteSpeed);
             needChannelNumberByByte = needChannelNumberByByte > 0 ? needChannelNumberByByte : 1;
-            LOG.info("Job set Max-Byte-Speed to " + globalLimitedByteSpeed + " bytes.");
+            LOG.info("Job set Max-Byte-Speed to {} bytes.", globalLimitedByteSpeed);
         }
 
+        // 是否有记录流限速
         boolean isRecordLimit = (this.configuration.getInt(CoreConstant.DATAX_JOB_SETTING_SPEED_RECORD, 0)) > 0;
         if (isRecordLimit) {
             long globalLimitedRecordSpeed = this.configuration.getInt(
@@ -427,26 +425,27 @@ public class JobContainer extends AbstractContainer {
                     CoreConstant.DATAX_CORE_TRANSPORT_CHANNEL_SPEED_RECORD);
             if (channelLimitedRecordSpeed == null || channelLimitedRecordSpeed <= 0) {
                 throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR,
-                        "在有总tps限速条件下，单个channel的tps值不能为空，也不能为非正数");
+                        "在有总 tps 限速条件下，单个 channel 的 tps 值不能为空，也不能为非正数");
             }
 
             needChannelNumberByRecord = (int) (globalLimitedRecordSpeed / channelLimitedRecordSpeed);
             needChannelNumberByRecord = needChannelNumberByRecord > 0 ? needChannelNumberByRecord : 1;
-            LOG.info("Job set Max-Record-Speed to " + globalLimitedRecordSpeed + " records.");
+            LOG.info("Job set Max-Record-Speed to {} records.", globalLimitedRecordSpeed);
         }
 
         // 取较小值
         this.needChannelNumber = Math.min(needChannelNumberByByte, needChannelNumberByRecord);
 
-        // 如果从 byte 或 record 上设置了 needChannelNumber 则退出
+        // 如果从 byte 或 record 上设置了 needChannelNumber 则返回
         if (this.needChannelNumber < Integer.MAX_VALUE) return;
 
+        // 是否有单独设置 channel 数量
         boolean isChannelLimit = (this.configuration.getInt(
                 CoreConstant.DATAX_JOB_SETTING_SPEED_CHANNEL, 0) > 0);
         if (isChannelLimit) {
             this.needChannelNumber = this.configuration.getInt(CoreConstant.DATAX_JOB_SETTING_SPEED_CHANNEL);
 
-            LOG.info("Job set Channel-Number to " + this.needChannelNumber + " channels.");
+            LOG.info("Job set Channel-Number to {} channels.", this.needChannelNumber);
 
             return;
         }
@@ -455,22 +454,24 @@ public class JobContainer extends AbstractContainer {
     }
 
     /**
-     * schedule 首先完成的工作是把上一步 reader 和 writer split 的结果整合到具体 taskGroupContainer 中,
-     * 同时不同的执行模式调用不同的调度策略，将所有任务调度起来
+     * task 是最小执行单元，scheduler 会将上一步 reader 和 writer 拆分出的 task 根据并发配置重新组合，
+     * 组装成 taskGroup，每个 taskGroup 负责以一定的并发度运行所有分配好的 task，默认单个 taskGroup 并行度是 5
      */
     private void schedule() {
         // 这里的全局 speed 和每个 channel 的速度设置为 B/s
+        // 获取每个 channel 的并行度，默认是 5
         int channelsPerTaskGroup = this.configuration.getInt(
                 CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL, 5);
-        // 获取 task 数量：1
+        // task 即 job.content 数组，包括：reader writer taskId（没有配置即为 0），一般情况 taskNumber = 1
         int taskNumber = this.configuration.getList(CoreConstant.DATAX_JOB_CONTENT).size();
 
-        this.needChannelNumber = Math.min(this.needChannelNumber, taskNumber);
+        this.needChannelNumber = Math.min(this.needChannelNumber, taskNumber); // 最小为 1
 
         PerfTrace.getInstance().setChannelNumber(needChannelNumber);
 
         // 通过获取配置信息得到每个 taskGroup 需要运行哪些 tasks 任务
 
+        // taskGroup 数量 = channel 数量 / 每个 taskGroup 的 channel 数量
         List<Configuration> taskGroupConfigs = JobAssignUtil.assignFairly(this.configuration,
                 this.needChannelNumber, channelsPerTaskGroup);
 
@@ -487,12 +488,12 @@ public class JobContainer extends AbstractContainer {
                 taskGroupConfig.set(CoreConstant.DATAX_CORE_CONTAINER_JOB_MODE, executeMode.getValue());
             }
 
-            if (executeMode == ExecuteMode.LOCAL || executeMode == ExecuteMode.DISTRIBUTE) {
-                if (this.jobId <= 0) {
-                    throw DataXException.asDataXException(FrameworkErrorCode.RUNTIME_ERROR,
-                            "在[ local | distribute ]模式下必须设置jobId，并且其值 > 0 .");
-                }
-            }
+//            if (executeMode == ExecuteMode.LOCAL || executeMode == ExecuteMode.DISTRIBUTE) {
+//                if (this.jobId <= 0) {
+//                    throw DataXException.asDataXException(FrameworkErrorCode.RUNTIME_ERROR,
+//                            "在[ local | distribute ]模式下必须设置jobId，并且其值 > 0 .");
+//                }
+//            }
 
             LOG.info("Running by {} Mode.", executeMode);
 
@@ -723,12 +724,12 @@ public class JobContainer extends AbstractContainer {
         if (readerTasksConfigs.size() != writerTasksConfigs.size()) {
             throw DataXException.asDataXException(
                     FrameworkErrorCode.PLUGIN_SPLIT_ERROR,
-                    String.format("reader切分的task数目[%d]不等于writer切分的task数目[%d].",
+                    String.format("reader 切分的 task 数目 [%d] 不等于 writer 切分的 task 数目 [%d].",
                             readerTasksConfigs.size(), writerTasksConfigs.size())
             );
         }
 
-        List<Configuration> contentConfigs = new ArrayList<Configuration>();
+        List<Configuration> contentConfigs = new ArrayList<>();
         for (int i = 0; i < readerTasksConfigs.size(); i++) {
             Configuration taskConfig = Configuration.newDefault();
             taskConfig.set(CoreConstant.JOB_READER_NAME, this.readerPluginName);
@@ -740,6 +741,7 @@ public class JobContainer extends AbstractContainer {
                 taskConfig.set(CoreConstant.JOB_TRANSFORMER, transformerConfigs);
             }
 
+            // 设置 taskId
             taskConfig.set(CoreConstant.TASK_ID, i);
             contentConfigs.add(taskConfig);
         }
@@ -765,7 +767,7 @@ public class JobContainer extends AbstractContainer {
      * 先按平均为3个tasks找4个channel，设置taskGroupId为0，
      * 接下来就像发牌一样轮询分配task到剩下的包含平均channel数的taskGroup中
      * <p/>
-     *
+     * <p>
      * TODO delete it
      *
      * @return 每个 taskGroup 独立的全部配置

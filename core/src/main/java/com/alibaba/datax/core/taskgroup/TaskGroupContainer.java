@@ -34,22 +34,25 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+/**
+ * 任务组容器，它本身并不是一个线程类，而是由 runner 线程调用执行
+ */
 public class TaskGroupContainer extends AbstractContainer {
     private static final Logger LOG = LoggerFactory.getLogger(TaskGroupContainer.class);
 
     // 当前 taskGroup 所属jobId
-    private long jobId;
+    private final long jobId;
 
     // 当前 taskGroupId
-    private int taskGroupId;
+    private final int taskGroupId;
 
     // 使用的 channel 类
-    private String channelClazz;
+    private final String channelClazz;
 
     // task 收集器使用的类
-    private String taskCollectorClass;
+    private final String taskCollectorClass;
 
-    private TaskMonitor taskMonitor = TaskMonitor.getInstance();
+    private final TaskMonitor taskMonitor = TaskMonitor.getInstance();
 
     public TaskGroupContainer(Configuration configuration) {
         super(configuration);
@@ -98,10 +101,10 @@ public class TaskGroupContainer extends AbstractContainer {
             int taskMaxRetryTimes = this.configuration.getInt(
                     CoreConstant.DATAX_CORE_CONTAINER_TASK_FAILOVER_MAXRETRYTIMES, 1);
 
-            long taskRetryIntervalInMsec = this.configuration.getLong(
+            long taskRetryIntervalInMses = this.configuration.getLong(
                     CoreConstant.DATAX_CORE_CONTAINER_TASK_FAILOVER_RETRYINTERVALINMSEC, 10000);
 
-            long taskMaxWaitInMsec = this.configuration.getLong(
+            long taskMaxWaitInMses = this.configuration.getLong(
                     CoreConstant.DATAX_CORE_CONTAINER_TASK_FAILOVER_MAXWAITINMSEC, 60000);
 
             List<Configuration> taskConfigs = this.configuration
@@ -118,11 +121,16 @@ public class TaskGroupContainer extends AbstractContainer {
 
             this.containerCommunicator.registerCommunication(taskConfigs);
 
-            Map<Integer, Configuration> taskConfigMap = buildTaskConfigMap(taskConfigs); // taskId 与 task 配置
-            List<Configuration> taskQueue = buildRemainTasks(taskConfigs); // 待运行 task 列表
-            Map<Integer, TaskExecutor> taskFailedExecutorMap = new HashMap<>(); // taskId 与上次失败实例
-            List<TaskExecutor> runTasks = new ArrayList<>(channelNumber); // 正在运行 task
-            Map<Integer, Long> taskStartTimeMap = new HashMap<>(); // 任务开始时间
+            // taskId 与 task 配置
+            Map<Integer, Configuration> taskConfigMap = buildTaskConfigMap(taskConfigs);
+            // 待运行 task 队列
+            List<Configuration> taskQueue = buildRemainTasks(taskConfigs);
+            // taskId 与上次失败实例
+            Map<Integer, TaskExecutor> taskFailedExecutorMap = new HashMap<>();
+            // 正在运行 task，channel 数量即同时运行的 task 数量
+            List<TaskExecutor> runTasks = new ArrayList<>(channelNumber);
+            // 任务开始时间
+            Map<Integer, Long> taskStartTimeMap = new HashMap<>();
 
             long lastReportTimeStamp = 0;
             Communication lastTaskGroupContainerCommunication = new Communication();
@@ -193,11 +201,11 @@ public class TaskGroupContainer extends AbstractContainer {
                         attemptCount = lastExecutor.getAttemptCount() + 1;
                         long now = System.currentTimeMillis();
                         long failedTime = lastExecutor.getTimeStamp();
-                        if (now - failedTime < taskRetryIntervalInMsec) {  // 未到等待时间，继续留在队列
+                        if (now - failedTime < taskRetryIntervalInMses) {  // 未到等待时间，继续留在队列
                             continue;
                         }
                         if (!lastExecutor.isShutdown()) { // 上次失败的 task 仍未结束
-                            if (now - failedTime > taskMaxWaitInMsec) {
+                            if (now - failedTime > taskMaxWaitInMses) {
                                 markCommunicationFailed(taskId);
                                 reportTaskGroupCommunication(lastTaskGroupContainerCommunication,
                                         taskCountInThisTaskGroup);
@@ -216,6 +224,8 @@ public class TaskGroupContainer extends AbstractContainer {
                     Configuration taskConfigForRun = taskMaxRetryTimes > 1 ? taskConfig.clone() : taskConfig;
                     TaskExecutor taskExecutor = new TaskExecutor(taskConfigForRun, attemptCount);
                     taskStartTimeMap.put(taskId, System.currentTimeMillis());
+
+                    // 启动 executor 执行读写
                     taskExecutor.doStart();
 
                     iterator.remove();
@@ -285,21 +295,23 @@ public class TaskGroupContainer extends AbstractContainer {
         }
     }
 
+    /**
+     * taskId 及其配置文件
+     *
+     * @param configurations
+     */
     private Map<Integer, Configuration> buildTaskConfigMap(List<Configuration> configurations) {
-        Map<Integer, Configuration> map = new HashMap<Integer, Configuration>();
+        Map<Integer, Configuration> map = new HashMap<>();
         for (Configuration taskConfig : configurations) {
             int taskId = taskConfig.getInt(CoreConstant.TASK_ID);
             map.put(taskId, taskConfig);
         }
+
         return map;
     }
 
     private List<Configuration> buildRemainTasks(List<Configuration> configurations) {
-        List<Configuration> remainTasks = new LinkedList<Configuration>();
-        for (Configuration taskConfig : configurations) {
-            remainTasks.add(taskConfig);
-        }
-        return remainTasks;
+        return new LinkedList<Configuration>(configurations);
     }
 
     private TaskExecutor removeTask(List<TaskExecutor> taskList, int taskId) {
@@ -311,6 +323,7 @@ public class TaskGroupContainer extends AbstractContainer {
                 return taskExecutor;
             }
         }
+
         return null;
     }
 
@@ -338,25 +351,25 @@ public class TaskGroupContainer extends AbstractContainer {
     }
 
     /**
-     * TaskExecutor是一个完整task的执行器
-     * 其中包括1：1的reader和writer
+     * TaskExecutor 是一个完整 task 的执行器
+     * 其中包括 1：1 的 reader 和 writer
      */
     class TaskExecutor {
-        private Configuration taskConfig;
+        private final Configuration taskConfig;
 
-        private int taskId;
+        private final int taskId;
 
-        private int attemptCount;
+        private final int attemptCount;
 
-        private Channel channel;
+        private final Channel channel;
 
-        private Thread readerThread;
+        private final Thread readerThread;
 
-        private Thread writerThread;
+        private final Thread writerThread;
 
-        private ReaderRunner readerRunner;
+        private final ReaderRunner readerRunner;
 
-        private WriterRunner writerRunner;
+        private final WriterRunner writerRunner;
 
         /**
          * 该处的 taskCommunication 在多处用到：
@@ -364,7 +377,7 @@ public class TaskGroupContainer extends AbstractContainer {
          * 2. readerRunner 和 writerRunner
          * 3. reader和writer 的 taskPluginCollector
          */
-        private Communication taskCommunication;
+        private final Communication taskCommunication;
 
         public TaskExecutor(Configuration taskConf, int attemptCount) {
             // 获取该 taskExecutor 的配置
@@ -406,7 +419,9 @@ public class TaskGroupContainer extends AbstractContainer {
                     PluginType.READER, this.taskConfig.getString(CoreConstant.JOB_READER_NAME)));
         }
 
+        // 启动 task
         public void doStart() {
+            // 启动 writer 线程
             this.writerThread.start();
 
             // reader 没有起来，writer 不可能结束
@@ -416,6 +431,7 @@ public class TaskGroupContainer extends AbstractContainer {
                         this.taskCommunication.getThrowable());
             }
 
+            // 启动 reader 线程
             this.readerThread.start();
 
             // 这里 reader 可能很快结束
@@ -492,19 +508,14 @@ public class TaskGroupContainer extends AbstractContainer {
 
         /**
          * 检查人物是否结束
-         *
          */
         private boolean isTaskFinished() {
-            // 如果reader 或 writer没有完成工作，那么直接返回工作没有完成
+            // 如果 reader 或 writer 没有完成工作，那么直接返回工作没有完成
             if (readerThread.isAlive() || writerThread.isAlive()) {
                 return false;
             }
 
-            if (taskCommunication == null || !taskCommunication.isFinished()) {
-                return false;
-            }
-
-            return true;
+            return taskCommunication != null && taskCommunication.isFinished();
         }
 
         private int getTaskId() {

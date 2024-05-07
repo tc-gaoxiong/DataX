@@ -21,7 +21,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StreamReader extends Reader {
-
     private enum Type {
         STRING, LONG, BOOL, DOUBLE, DATE, BYTES,
         ;
@@ -38,9 +37,7 @@ public class StreamReader extends Reader {
     }
 
     public static class Job extends Reader.Job {
-
-        private static final Logger LOG = LoggerFactory
-                .getLogger(Job.class);
+        private static final Logger LOG = LoggerFactory.getLogger(Job.class);
         private Pattern mixupFunctionPattern;
         private Configuration originalConfig;
 
@@ -123,7 +120,7 @@ public class StreamReader extends Reader {
                 eachColumnConfig.getNecessaryValue(Constant.VALUE,
                         StreamReaderErrorCode.REQUIRED_VALUE);
             }
-            // 2者都有配置
+            // 2 者都有配置
             if (StringUtils.isNotBlank(columnMixup) && StringUtils.isNotBlank(columnValue)) {
                 LOG.warn(String.format("您配置了streamreader常量列(value:%s)和随机混淆列(random:%s), 常量列优先", columnValue, columnMixup));
                 eachColumnConfig.remove(Constant.RANDOM);
@@ -187,11 +184,11 @@ public class StreamReader extends Reader {
 
         @Override
         public List<Configuration> split(int adviceNumber) {
-            List<Configuration> configurations = new ArrayList<Configuration>();
-
+            List<Configuration> configurations = new ArrayList<>();
             for (int i = 0; i < adviceNumber; i++) {
                 configurations.add(this.originalConfig.clone());
             }
+
             return configurations;
         }
 
@@ -206,7 +203,6 @@ public class StreamReader extends Reader {
     }
 
     public static class Task extends Reader.Task {
-
         private Configuration readerSliceConfig;
 
         private List<String> columns;
@@ -215,15 +211,12 @@ public class StreamReader extends Reader {
 
         private boolean haveMixupFunction;
 
-
         @Override
         public void init() {
             this.readerSliceConfig = super.getPluginJobConf();
-            this.columns = this.readerSliceConfig.getList(Key.COLUMN,
-                    String.class);
+            this.columns = this.readerSliceConfig.getList(Key.COLUMN, String.class);
 
-            this.sliceRecordCount = this.readerSliceConfig
-                    .getLong(Key.SLICE_RECORD_COUNT);
+            this.sliceRecordCount = this.readerSliceConfig.getLong(Key.SLICE_RECORD_COUNT);
             this.haveMixupFunction = this.readerSliceConfig.getBool(
                     Constant.HAVE_MIXUP_FUNCTION, false);
         }
@@ -253,10 +246,8 @@ public class StreamReader extends Reader {
         }
 
         private Column buildOneColumn(Configuration eachColumnConfig) throws Exception {
-            String columnValue = eachColumnConfig
-                    .getString(Constant.VALUE);
-            Type columnType = Type.valueOf(eachColumnConfig.getString(
-                    Constant.TYPE).toUpperCase());
+            String columnValue = eachColumnConfig.getString(Constant.VALUE);
+            Type columnType = Type.valueOf(eachColumnConfig.getString(Constant.TYPE).toUpperCase());
             String columnMixup = eachColumnConfig.getString(Constant.RANDOM);
             long param1Int = eachColumnConfig.getLong(Constant.MIXUP_FUNCTION_PARAM1, 0L);
             long param2Int = eachColumnConfig.getLong(Constant.MIXUP_FUNCTION_PARAM2, 1L);
@@ -302,10 +293,10 @@ public class StreamReader extends Reader {
                             return new BoolColumn(false);
                         } else {
                             long randomInt = RandomUtils.nextLong(0, param1Int + param2Int + 1);
-                            return new BoolColumn(randomInt <= param1Int ? false : true);
+                            return new BoolColumn(randomInt > param1Int);
                         }
                     } else {
-                        return new BoolColumn("true".equalsIgnoreCase(columnValue) ? true : false);
+                        return new BoolColumn("true".equalsIgnoreCase(columnValue));
                     }
                 case BYTES:
                     if (isColumnMixup) {
@@ -315,21 +306,17 @@ public class StreamReader extends Reader {
                     }
                 default:
                     // in fact,never to be here
-                    throw new Exception(String.format("不支持类型[%s]",
-                            columnType.name()));
+                    throw new Exception(String.format("不支持类型[%s]", columnType.name()));
             }
         }
 
-        private Record buildOneRecord(RecordSender recordSender,
-                                      List<String> columns) {
+        private Record buildOneRecord(RecordSender recordSender, List<String> columns) {
             if (null == recordSender) {
-                throw new IllegalArgumentException(
-                        "参数[recordSender]不能为空.");
+                throw new IllegalArgumentException("参数[recordSender]不能为空.");
             }
 
             if (null == columns || columns.isEmpty()) {
-                throw new IllegalArgumentException(
-                        "参数[column]不能为空.");
+                throw new IllegalArgumentException("参数[column]不能为空.");
             }
 
             Record record = recordSender.createRecord();
@@ -339,11 +326,10 @@ public class StreamReader extends Reader {
                     record.addColumn(this.buildOneColumn(eachColumnConfig));
                 }
             } catch (Exception e) {
-                throw DataXException.asDataXException(StreamReaderErrorCode.ILLEGAL_VALUE,
-                        "构造一个record失败.", e);
+                throw DataXException.asDataXException(StreamReaderErrorCode.ILLEGAL_VALUE, "构造一个record失败.", e);
             }
+
             return record;
         }
     }
-
 }

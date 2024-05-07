@@ -5,7 +5,11 @@ import com.alibaba.datax.core.taskgroup.TaskGroupContainer;
 import com.alibaba.datax.core.util.FrameworkErrorCode;
 import com.alibaba.datax.dataxservice.face.domain.enums.State;
 
+/**
+ * 任务组容器执行器线程类
+ */
 public class TaskGroupContainerRunner implements Runnable {
+    // 每个 runner 持有一个 container
     private final TaskGroupContainer taskGroupContainer;
 
     private State state;
@@ -18,8 +22,10 @@ public class TaskGroupContainerRunner implements Runnable {
     @Override
     public void run() {
         try {
+            // 设置 runner 线程名称
             Thread.currentThread().setName(
                     String.format("taskGroup-%d", this.taskGroupContainer.getTaskGroupId()));
+            // 启动容器
             this.taskGroupContainer.start();
             this.state = State.SUCCEEDED;
         } catch (Throwable e) {

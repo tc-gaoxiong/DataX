@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * 进程内调度器，也就是线程调度器
+ */
 public abstract class ProcessInnerScheduler extends AbstractScheduler {
     private ExecutorService taskGroupContainerExecutorService;
 
@@ -21,6 +24,7 @@ public abstract class ProcessInnerScheduler extends AbstractScheduler {
 
     @Override
     public void startAllTaskGroup(List<Configuration> configurations) {
+        // Executors 类提供了几个静态方法来创建线程池，这里初始化一个固定大小的线程池
         this.taskGroupContainerExecutorService = Executors.newFixedThreadPool(configurations.size());
 
         for (Configuration taskGroupConfiguration : configurations) {
@@ -28,6 +32,7 @@ public abstract class ProcessInnerScheduler extends AbstractScheduler {
             this.taskGroupContainerExecutorService.execute(taskGroupContainerRunner);
         }
 
+        // 调用 shutdown 方法之后，线程池不能接受新的任务，清除一些空的 worker，等待任务完成，主线程继续往下进行
         this.taskGroupContainerExecutorService.shutdown();
     }
 
@@ -46,6 +51,7 @@ public abstract class ProcessInnerScheduler extends AbstractScheduler {
         throw DataXException.asDataXException(FrameworkErrorCode.KILLED_EXIT_VALUE, "job killed status");
     }
 
+    // 初始化一个 runner，每个 runner 持有一个 container
     private TaskGroupContainerRunner newTaskGroupContainerRunner(Configuration configuration) {
         TaskGroupContainer taskGroupContainer = new TaskGroupContainer(configuration);
 

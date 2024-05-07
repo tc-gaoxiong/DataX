@@ -4,7 +4,6 @@ import com.alibaba.datax.common.exception.CommonErrorCode;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.spi.ErrorCode;
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONWriter;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.CharUtils;
@@ -323,9 +322,9 @@ public class Configuration {
     }
 
     /**
-     * 根据用户提供的json path，寻址Integer对象
+     * 根据用户提供的 json path，寻址 Integer 对象
      *
-     * @return Integer对象，如果path不存在或者Integer不存在，返回null
+     * @return Integer 对象，如果 path 不存在或者 Integer 不存在，返回 null
      */
     public Integer getInt(final String path) {
         String result = this.getString(path);

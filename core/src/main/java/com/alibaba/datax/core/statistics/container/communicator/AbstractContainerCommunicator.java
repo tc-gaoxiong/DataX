@@ -1,6 +1,5 @@
 package com.alibaba.datax.core.statistics.container.communicator;
 
-
 import com.alibaba.datax.common.statistics.VMInfo;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.core.statistics.communication.Communication;
@@ -13,13 +12,13 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class AbstractContainerCommunicator {
-    private Configuration configuration;
+    private final Configuration configuration;
     private AbstractCollector collector;
     private AbstractReporter reporter;
 
-    private Long jobId;
+    private final Long jobId;
 
-    private VMInfo vmInfo = VMInfo.getVmInfo();
+    private final VMInfo vmInfo = VMInfo.getVmInfo();
     private long lastReportTime = System.currentTimeMillis();
 
 
@@ -75,9 +74,9 @@ public abstract class AbstractContainerCommunicator {
 
     public void reportVmInfo() {
         long now = System.currentTimeMillis();
-        //每5分钟打印一次
+        // 每 5 分钟打印一次
         if (now - lastReportTime >= 300000) {
-            //当前仅打印
+            // 当前仅打印
             if (vmInfo != null) {
                 vmInfo.getDelta(true);
             }

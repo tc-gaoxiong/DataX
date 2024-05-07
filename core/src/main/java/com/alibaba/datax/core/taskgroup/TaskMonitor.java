@@ -15,29 +15,30 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TaskMonitor {
     private static final Logger LOG = LoggerFactory.getLogger(TaskMonitor.class);
+
     private static final TaskMonitor instance = new TaskMonitor();
-    private static long EXPIRED_TIME = 172800 * 1000;
 
     private ConcurrentHashMap<Integer, TaskCommunication> tasks = new ConcurrentHashMap<>();
 
     private TaskMonitor() {
     }
 
+    // 饿汉式单例
     public static TaskMonitor getInstance() {
         return instance;
     }
 
-    public void registerTask(Integer taskid, Communication communication) {
+    public void registerTask(Integer taskId, Communication communication) {
         // 如果 task 已经 finish，直接返回
         if (communication.isFinished()) {
             return;
         }
 
-        tasks.putIfAbsent(taskid, new TaskCommunication(taskid, communication));
+        tasks.putIfAbsent(taskId, new TaskCommunication(taskId, communication));
     }
 
-    public void removeTask(Integer taskid) {
-        tasks.remove(taskid);
+    public void removeTask(Integer taskId) {
+        tasks.remove(taskId);
     }
 
     public void report(Integer taskId, Communication communication) {
@@ -87,23 +88,12 @@ public class TaskMonitor {
         }
 
         private boolean isExpired(long lastUpdateCommunicationTS) {
+            long EXPIRED_TIME = 172800 * 1000;
             return System.currentTimeMillis() - lastUpdateCommunicationTS > EXPIRED_TIME;
         }
 
         public Integer getTaskId() {
             return taskId;
-        }
-
-        public long getLastAllReadRecords() {
-            return lastAllReadRecords;
-        }
-
-        public long getLastUpdateComunicationTS() {
-            return lastUpdateComunicationTS;
-        }
-
-        public long getTtl() {
-            return ttl;
         }
     }
 }

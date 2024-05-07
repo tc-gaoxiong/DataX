@@ -16,12 +16,11 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 public abstract class AbstractScheduler {
-    private static final Logger LOG = LoggerFactory
-            .getLogger(AbstractScheduler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractScheduler.class);
 
     private ErrorRecordChecker errorLimit;
 
-    private AbstractContainerCommunicator containerCommunicator;
+    private final AbstractContainerCommunicator containerCommunicator;
 
     private Long jobId;
 

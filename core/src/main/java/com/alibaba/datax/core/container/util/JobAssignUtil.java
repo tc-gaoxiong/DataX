@@ -24,7 +24,7 @@ public final class JobAssignUtil {
         Validate.isTrue(!contentConfig.isEmpty(), "框架获得的切分后的 Job 无内容.");
 
         Validate.isTrue(channelNumber > 0 && channelsPerTaskGroup > 0,
-                "每个channel的平均task数[averTaskPerChannel]，channel数目[channelNumber]，每个taskGroup的平均channel数[channelsPerTaskGroup]都应该为正数");
+                "每个 channel 的平均 task 数 [averTaskPerChannel]，channel 数目 [channelNumber]，每个 taskGroup 的平均 channel 数 [channelsPerTaskGroup] 都应该为正数");
 
         int taskGroupNumber = (int) Math.ceil(1.0 * channelNumber / channelsPerTaskGroup);
 
@@ -168,6 +168,7 @@ public final class JobAssignUtil {
         for (int i = 0; i < taskGroupNumber; i++) {
             tempTaskGroupConfig = taskGroupTemplate.clone();
             tempTaskGroupConfig.set(CoreConstant.DATAX_JOB_CONTENT, taskGroupConfigList.get(i));
+            // 设置 taskGroupId
             tempTaskGroupConfig.set(CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID, i);
 
             result.add(tempTaskGroupConfig);

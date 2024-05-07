@@ -6,3 +6,8 @@
 ```bash
 mvn clean package -DskipTests
 ```
+
+debug:
+```bash
+python ./bin/datax.py ./job/job.json -d
+```
