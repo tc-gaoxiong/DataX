@@ -10,7 +10,9 @@ public enum TransformerErrorCode implements ErrorCode {
     TRANSFORMER_CONFIGURATION_ERROR("TransformerErrorCode-04", "Transformer configuration error"),
     TRANSFORMER_ILLEGAL_PARAMETER("TransformerErrorCode-05", "Transformer parameter illegal"),
     TRANSFORMER_RUN_EXCEPTION("TransformerErrorCode-06", "Transformer run exception"),
-    TRANSFORMER_GROOVY_INIT_EXCEPTION("TransformerErrorCode-07", "Transformer Groovy init exception"),
+    TRANSFORMER_GROOVY_INIT_EXCEPTION(
+            "TransformerErrorCode-07",
+            "Transformer Groovy init exception"),
     ;
 
     private final String code;

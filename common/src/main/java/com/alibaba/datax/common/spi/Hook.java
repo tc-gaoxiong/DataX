@@ -9,19 +9,19 @@ import java.util.Map;
  */
 public interface Hook {
 
-    /**
-     * 返回名字
-     *
-     * @return
-     */
-    public String getName();
+  /**
+   * 返回名字
+   *
+   * @return
+   */
+  public String getName();
 
-    /**
-     * TODO 文档
-     *
-     * @param jobConf
-     * @param msg
-     */
-    public void invoke(Configuration jobConf, Map<String, Number> msg);
+  /**
+   * TODO 文档
+   *
+   * @param jobConf
+   * @param msg
+   */
+  public void invoke(Configuration jobConf, Map<String, Number> msg);
 
 }

@@ -2,7 +2,11 @@ package com.alibaba.datax.core.util;
 
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.util.Configuration;
-import com.alibaba.datax.core.transport.transformer.*;
+import com.alibaba.datax.core.transport.transformer.TransformerErrorCode;
+import com.alibaba.datax.core.transport.transformer.TransformerExecution;
+import com.alibaba.datax.core.transport.transformer.TransformerExecutionParas;
+import com.alibaba.datax.core.transport.transformer.TransformerInfo;
+import com.alibaba.datax.core.transport.transformer.TransformerRegistry;
 import com.alibaba.datax.core.util.container.CoreConstant;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -34,11 +38,15 @@ public class TransformerUtil {
         for (Configuration configuration : tfConfigs) {
             String functionName = configuration.getString("name");
             if (StringUtils.isEmpty(functionName)) {
-                throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_CONFIGURATION_ERROR, "config=" + configuration.toJSON());
+                throw DataXException.asDataXException(
+                        TransformerErrorCode.TRANSFORMER_CONFIGURATION_ERROR,
+                        "config=" + configuration.toJSON());
             }
 
             if (functionName.equals("dx_groovy") && functionNames.contains("dx_groovy")) {
-                throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_CONFIGURATION_ERROR, "dx_groovy can be invoke once only.");
+                throw DataXException.asDataXException(
+                        TransformerErrorCode.TRANSFORMER_CONFIGURATION_ERROR,
+                        "dx_groovy can be invoke once only.");
             }
             functionNames.add(functionName);
         }
@@ -55,7 +63,9 @@ public class TransformerUtil {
             String functionName = configuration.getString("name");
             TransformerInfo transformerInfo = TransformerRegistry.getTransformer(functionName);
             if (transformerInfo == null) {
-                throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_NOTFOUND_ERROR, "name=" + functionName);
+                throw DataXException.asDataXException(
+                        TransformerErrorCode.TRANSFORMER_NOTFOUND_ERROR,
+                        "name=" + functionName);
             }
 
             /**
@@ -69,36 +79,51 @@ public class TransformerUtil {
                 Integer columnIndex = configuration.getInt(CoreConstant.TRANSFORMER_PARAMETER_COLUMNINDEX);
 
                 if (columnIndex == null) {
-                    throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER, "columnIndex must be set by UDF:name=" + functionName);
+                    throw DataXException.asDataXException(
+                            TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER,
+                            "columnIndex must be set by UDF:name=" + functionName);
                 }
 
                 transformerExecutionParas.setColumnIndex(columnIndex);
-                List<String> paras = configuration.getList(CoreConstant.TRANSFORMER_PARAMETER_PARAS, String.class);
+                List<String> paras = configuration.getList(
+                        CoreConstant.TRANSFORMER_PARAMETER_PARAS,
+                        String.class);
                 if (paras != null && paras.size() > 0) {
                     transformerExecutionParas.setParas(paras.toArray(new String[0]));
                 }
             } else {
                 String code = configuration.getString(CoreConstant.TRANSFORMER_PARAMETER_CODE);
                 if (StringUtils.isEmpty(code)) {
-                    throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER, "groovy code must be set by UDF:name=" + functionName);
+                    throw DataXException.asDataXException(
+                            TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER,
+                            "groovy code must be set by UDF:name=" + functionName);
                 }
                 transformerExecutionParas.setCode(code);
 
-                List<String> extraPackage = configuration.getList(CoreConstant.TRANSFORMER_PARAMETER_EXTRAPACKAGE, String.class);
+                List<String> extraPackage = configuration.getList(
+                        CoreConstant.TRANSFORMER_PARAMETER_EXTRAPACKAGE,
+                        String.class);
                 if (extraPackage != null && extraPackage.size() > 0) {
                     transformerExecutionParas.setExtraPackage(extraPackage);
                 }
             }
             transformerExecutionParas.settContext(configuration.getMap(CoreConstant.TRANSFORMER_PARAMETER_CONTEXT));
 
-            TransformerExecution transformerExecution = new TransformerExecution(transformerInfo, transformerExecutionParas);
+            TransformerExecution transformerExecution = new TransformerExecution(
+                    transformerInfo,
+                    transformerExecutionParas);
 
             transformerExecution.genFinalParas();
             result.add(transformerExecution);
             i++;
-            LOG.info(String.format(" %s of transformer init success. name=%s, isNative=%s parameter = %s"
-                    , i, transformerInfo.getTransformer().getTransformerName()
-                    , transformerInfo.isNative(), configuration.getConfiguration("parameter")));
+            LOG.info(String.format(
+                    " %s of transformer init success. name=%s, isNative=%s parameter = %s"
+                    ,
+                    i,
+                    transformerInfo.getTransformer().getTransformerName()
+                    ,
+                    transformerInfo.isNative(),
+                    configuration.getConfiguration("parameter")));
         }
 
         return result;

@@ -50,6 +50,7 @@ public class LoadUtil {
      *
      * @param pluginType 插件类型
      * @param pluginName 插件名称
+     *
      * @return plugin.pluginType.pluginName
      */
     private static String generatePluginKey(PluginType pluginType, String pluginName) {
@@ -57,10 +58,13 @@ public class LoadUtil {
     }
 
     private static Configuration getPluginConf(PluginType pluginType, String pluginName) {
-        Configuration pluginConf = pluginRegisterCenter.getConfiguration(generatePluginKey(pluginType, pluginName));
+        Configuration pluginConf = pluginRegisterCenter.getConfiguration(generatePluginKey(
+                pluginType,
+                pluginName));
 
         if (pluginConf == null) {
-            throw DataXException.asDataXException(FrameworkErrorCode.PLUGIN_INSTALL_ERROR,
+            throw DataXException.asDataXException(
+                    FrameworkErrorCode.PLUGIN_INSTALL_ERROR,
                     String.format("DataX不能找到插件[%s]的配置.", pluginName));
         }
 
@@ -72,10 +76,14 @@ public class LoadUtil {
      *
      * @param pluginType 插件类型
      * @param pluginName 插件名称
+     *
      * @return
      */
     public static AbstractJobPlugin loadJobPlugin(PluginType pluginType, String pluginName) {
-        Class<? extends AbstractPlugin> clazz = LoadUtil.loadPluginClass(pluginType, pluginName, ContainerType.Job);
+        Class<? extends AbstractPlugin> clazz = LoadUtil.loadPluginClass(
+                pluginType,
+                pluginName,
+                ContainerType.Job);
 
         try {
             AbstractJobPlugin jobPlugin = (AbstractJobPlugin) clazz.newInstance();
@@ -91,7 +99,10 @@ public class LoadUtil {
      * 加载 taskPlugin，reader、writer 都可能加载
      */
     public static AbstractTaskPlugin loadTaskPlugin(PluginType pluginType, String pluginName) {
-        Class<? extends AbstractPlugin> clazz = LoadUtil.loadPluginClass(pluginType, pluginName, ContainerType.Task);
+        Class<? extends AbstractPlugin> clazz = LoadUtil.loadPluginClass(
+                pluginType,
+                pluginName,
+                ContainerType.Task);
 
         try {
             AbstractTaskPlugin taskPlugin = (AbstractTaskPlugin) clazz.newInstance();
@@ -116,7 +127,9 @@ public class LoadUtil {
             case WRITER:
                 return new WriterRunner(taskPlugin);
             default:
-                throw DataXException.asDataXException(FrameworkErrorCode.RUNTIME_ERROR, String.format("插件[%s]的类型必须是[reader]或[writer]!", pluginName));
+                throw DataXException.asDataXException(
+                        FrameworkErrorCode.RUNTIME_ERROR,
+                        String.format("插件[%s]的类型必须是[reader]或[writer]!", pluginName));
         }
     }
 
@@ -124,13 +137,17 @@ public class LoadUtil {
      * 反射出具体 plugin 实例
      */
     @SuppressWarnings("unchecked")
-    private static synchronized Class<? extends AbstractPlugin> loadPluginClass(PluginType pluginType, String pluginName, ContainerType pluginRunType) {
+    private static synchronized Class<? extends AbstractPlugin> loadPluginClass(
+            PluginType pluginType,
+            String pluginName,
+            ContainerType pluginRunType) {
         Configuration pluginConf = getPluginConf(pluginType, pluginName);
 
         JarLoader jarLoader = LoadUtil.getJarLoader(pluginType, pluginName);
 
         try {
-            return (Class<? extends AbstractPlugin>) jarLoader.loadClass(pluginConf.getString("class") + "$" + pluginRunType.value());
+            return (Class<? extends AbstractPlugin>) jarLoader.loadClass(
+                    pluginConf.getString("class") + "$" + pluginRunType.value());
         } catch (Exception e) {
             throw DataXException.asDataXException(FrameworkErrorCode.RUNTIME_ERROR, e);
         }
@@ -143,7 +160,8 @@ public class LoadUtil {
         if (jarLoader == null) {
             String pluginPath = pluginConf.getString("path");
             if (StringUtils.isBlank(pluginPath)) {
-                throw DataXException.asDataXException(FrameworkErrorCode.RUNTIME_ERROR,
+                throw DataXException.asDataXException(
+                        FrameworkErrorCode.RUNTIME_ERROR,
                         String.format("%s插件[%s]路径非法!", pluginType, pluginName));
             }
             jarLoader = new JarLoader(new String[]{pluginPath});

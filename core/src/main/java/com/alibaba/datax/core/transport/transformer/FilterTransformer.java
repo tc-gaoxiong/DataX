@@ -1,6 +1,13 @@
 package com.alibaba.datax.core.transport.transformer;
 
-import com.alibaba.datax.common.element.*;
+import com.alibaba.datax.common.element.BoolColumn;
+import com.alibaba.datax.common.element.BytesColumn;
+import com.alibaba.datax.common.element.Column;
+import com.alibaba.datax.common.element.DateColumn;
+import com.alibaba.datax.common.element.DoubleColumn;
+import com.alibaba.datax.common.element.LongColumn;
+import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.StringColumn;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.transformer.Transformer;
 import org.apache.commons.lang3.StringUtils;
@@ -35,7 +42,8 @@ public class FilterTransformer extends Transformer {
                 throw new RuntimeException("dx_filter para 2 can't be null");
             }
         } catch (Exception e) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER,
+            throw DataXException.asDataXException(
+                    TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER,
                     "paras:" + Arrays.asList(paras) + " => " + e.getMessage());
         }
 
@@ -62,7 +70,10 @@ public class FilterTransformer extends Transformer {
                 throw new RuntimeException("dx_filter can't support code:" + code);
             }
         } catch (Exception e) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_RUN_EXCEPTION, e.getMessage(), e);
+            throw DataXException.asDataXException(
+                    TransformerErrorCode.TRANSFORMER_RUN_EXCEPTION,
+                    e.getMessage(),
+                    e);
         }
     }
 
@@ -105,7 +116,8 @@ public class FilterTransformer extends Transformer {
                     return record;
                 }
             }
-        } else if (column instanceof StringColumn || column instanceof BytesColumn || column instanceof BoolColumn) {
+        } else if (column instanceof StringColumn || column instanceof BytesColumn
+                || column instanceof BoolColumn) {
             String ori = column.asString();
             if (hasEqual) {
                 if (ori.compareTo(value) >= 0) {
@@ -121,7 +133,8 @@ public class FilterTransformer extends Transformer {
                 }
             }
         } else {
-            throw new RuntimeException(">=,> can't support this columnType:" + column.getClass().getSimpleName());
+            throw new RuntimeException(
+                    ">=,> can't support this columnType:" + column.getClass().getSimpleName());
         }
     }
 
@@ -165,7 +178,8 @@ public class FilterTransformer extends Transformer {
                     return record;
                 }
             }
-        } else if (column instanceof StringColumn || column instanceof BytesColumn || column instanceof BoolColumn) {
+        } else if (column instanceof StringColumn || column instanceof BytesColumn
+                || column instanceof BoolColumn) {
             String ori = column.asString();
             if (hasEqual) {
                 if (ori.compareTo(value) <= 0) {
@@ -181,7 +195,8 @@ public class FilterTransformer extends Transformer {
                 }
             }
         } else {
-            throw new RuntimeException("<=,< can't support this columnType:" + column.getClass().getSimpleName());
+            throw new RuntimeException(
+                    "<=,< can't support this columnType:" + column.getClass().getSimpleName());
         }
     }
 
@@ -218,7 +233,8 @@ public class FilterTransformer extends Transformer {
             } else {
                 return record;
             }
-        } else if (column instanceof StringColumn || column instanceof BytesColumn || column instanceof BoolColumn) {
+        } else if (column instanceof StringColumn || column instanceof BytesColumn
+                || column instanceof BoolColumn) {
             String ori = column.asString();
             if (ori.compareTo(value) == 0) {
                 return null;
@@ -226,7 +242,8 @@ public class FilterTransformer extends Transformer {
                 return record;
             }
         } else {
-            throw new RuntimeException("== can't support this columnType:" + column.getClass().getSimpleName());
+            throw new RuntimeException(
+                    "== can't support this columnType:" + column.getClass().getSimpleName());
         }
     }
 
@@ -263,7 +280,8 @@ public class FilterTransformer extends Transformer {
             } else {
                 return record;
             }
-        } else if (column instanceof StringColumn || column instanceof BytesColumn || column instanceof BoolColumn) {
+        } else if (column instanceof StringColumn || column instanceof BytesColumn
+                || column instanceof BoolColumn) {
             String ori = column.asString();
             if (ori.compareTo(value) != 0) {
                 return null;
@@ -271,7 +289,8 @@ public class FilterTransformer extends Transformer {
                 return record;
             }
         } else {
-            throw new RuntimeException("== can't support this columnType:" + column.getClass().getSimpleName());
+            throw new RuntimeException(
+                    "== can't support this columnType:" + column.getClass().getSimpleName());
         }
     }
 

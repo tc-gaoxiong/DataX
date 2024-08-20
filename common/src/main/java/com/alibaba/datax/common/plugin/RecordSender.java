@@ -19,13 +19,13 @@ package com.alibaba.datax.common.plugin;
 import com.alibaba.datax.common.element.Record;
 
 public interface RecordSender {
-    public Record createRecord();
+  public Record createRecord();
 
-    public void sendToWriter(Record record);
+  public void sendToWriter(Record record);
 
-    public void flush();
+  public void flush();
 
-    public void terminate();
+  public void terminate();
 
-    public void shutdown();
+  public void shutdown();
 }

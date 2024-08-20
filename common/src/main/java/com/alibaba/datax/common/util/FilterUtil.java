@@ -10,44 +10,44 @@ import java.util.regex.Pattern;
  */
 public final class FilterUtil {
 
-    //已经去重
-    public static List<String> filterByRegular(List<String> allStrs,
-                                               String regular) {
-        List<String> matchedValues = new ArrayList<String>();
+  //已经去重
+  public static List<String> filterByRegular(List<String> allStrs,
+                                             String regular) {
+    List<String> matchedValues = new ArrayList<String>();
 
-        // 语法习惯上的兼容处理(pt=* 实际正则应该是：pt=.*)
-        String newReqular = regular.replace(".*", "*").replace("*", ".*");
+    // 语法习惯上的兼容处理(pt=* 实际正则应该是：pt=.*)
+    String newReqular = regular.replace(".*", "*").replace("*", ".*");
 
-        Pattern p = Pattern.compile(newReqular);
+    Pattern p = Pattern.compile(newReqular);
 
-        for (String partition : allStrs) {
-            if (p.matcher(partition).matches()) {
-                if (!matchedValues.contains(partition)) {
-                    matchedValues.add(partition);
-                }
-            }
+    for (String partition : allStrs) {
+      if (p.matcher(partition).matches()) {
+        if (!matchedValues.contains(partition)) {
+          matchedValues.add(partition);
         }
-
-        return matchedValues;
+      }
     }
 
-    //已经去重
-    public static List<String> filterByRegulars(List<String> allStrs,
-                                                List<String> regulars) {
-        List<String> matchedValues = new ArrayList<String>();
+    return matchedValues;
+  }
 
-        List<String> tempMatched = null;
-        for (String regular : regulars) {
-            tempMatched = filterByRegular(allStrs, regular);
-            if (null != tempMatched && !tempMatched.isEmpty()) {
-                for (String temp : tempMatched) {
-                    if (!matchedValues.contains(temp)) {
-                        matchedValues.add(temp);
-                    }
-                }
-            }
+  //已经去重
+  public static List<String> filterByRegulars(List<String> allStrs,
+                                              List<String> regulars) {
+    List<String> matchedValues = new ArrayList<String>();
+
+    List<String> tempMatched = null;
+    for (String regular : regulars) {
+      tempMatched = filterByRegular(allStrs, regular);
+      if (null != tempMatched && !tempMatched.isEmpty()) {
+        for (String temp : tempMatched) {
+          if (!matchedValues.contains(temp)) {
+            matchedValues.add(temp);
+          }
         }
-
-        return matchedValues;
+      }
     }
+
+    return matchedValues;
+  }
 }

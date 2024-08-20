@@ -7,11 +7,11 @@ import org.apache.commons.codec.digest.DigestUtils;
  * Created by liqiang on 16/3/4.
  */
 public class GroovyTransformerStaticUtil {
-    public static String md5(final String data) {
-        return DigestUtils.md5Hex(data);
-    }
+  public static String md5(final String data) {
+    return DigestUtils.md5Hex(data);
+  }
 
-    public static String sha1(final String data) {
-        return DigestUtils.sha1Hex(data);
-    }
+  public static String sha1(final String data) {
+    return DigestUtils.sha1Hex(data);
+  }
 }

@@ -23,7 +23,8 @@ public final class ErrorRecordChecker {
     private Double percentageLimit;
 
     public ErrorRecordChecker(Configuration configuration) {
-        this(configuration.getLong(CoreConstant.DATAX_JOB_SETTING_ERRORLIMIT_RECORD),
+        this(
+                configuration.getLong(CoreConstant.DATAX_JOB_SETTING_ERRORLIMIT_RECORD),
                 configuration.getDouble(CoreConstant.DATAX_JOB_SETTING_ERRORLIMIT_PERCENT));
     }
 
@@ -32,12 +33,14 @@ public final class ErrorRecordChecker {
         percentageLimit = percentage;
 
         if (percentageLimit != null) {
-            Validate.isTrue(0.0 <= percentageLimit && percentageLimit <= 1.0,
+            Validate.isTrue(
+                    0.0 <= percentageLimit && percentageLimit <= 1.0,
                     "脏数据百分比限制应该在[0.0, 1.0]之间");
         }
 
         if (recordLimit != null) {
-            Validate.isTrue(recordLimit >= 0,
+            Validate.isTrue(
+                    recordLimit >= 0,
                     "脏数据条数现在应该为非负整数");
 
             // errorRecord优先级高于errorPercentage.
@@ -53,7 +56,8 @@ public final class ErrorRecordChecker {
         long errorNumber = CommunicationTool.getTotalErrorRecords(communication);
         if (recordLimit < errorNumber) {
             LOG.debug(
-                    String.format("Error-limit set to %d, error count check.",
+                    String.format(
+                            "Error-limit set to %d, error count check.",
                             recordLimit));
             throw DataXException.asDataXException(
                     FrameworkErrorCode.PLUGIN_DIRTY_DATA_LIMIT_EXCEED,

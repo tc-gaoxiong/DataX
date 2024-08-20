@@ -39,7 +39,13 @@ public class RecordExchanger extends TransformerExchanger implements RecordSende
     private volatile boolean shutdown = false;
 
     @SuppressWarnings("unchecked")
-    public RecordExchanger(final int taskGroupId, final int taskId, final Channel channel, final Communication communication, List<TransformerExecution> transformerExecs, final TaskPluginCollector pluginCollector) {
+    public RecordExchanger(
+            final int taskGroupId,
+            final int taskId,
+            final Channel channel,
+            final Communication communication,
+            List<TransformerExecution> transformerExecs,
+            final TaskPluginCollector pluginCollector) {
         super(taskGroupId, taskId, communication, transformerExecs, pluginCollector);
         assert channel != null;
         this.channel = channel;

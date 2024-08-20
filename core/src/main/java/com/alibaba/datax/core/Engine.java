@@ -33,189 +33,189 @@ import java.util.regex.Pattern;
  * Engine 是 DataX 入口类，该类负责初始化 Job 或者 Task 的运行容器，并运行插件的 Job 或者 Task 逻辑
  */
 public class Engine {
-    private static final Logger LOG = LoggerFactory.getLogger(Engine.class);
+  private static final Logger LOG = LoggerFactory.getLogger(Engine.class);
 
-    private static String RUNTIME_MODE;
+  private static String RUNTIME_MODE;
 
-    // 注意屏蔽敏感信息
-    public static String filterJobConfiguration(final Configuration configuration) {
-        // 获取需要屏蔽的敏感配置项
-        List<Object> tmpList = configuration.getList(CoreConstant.DATAX_CORE_SENSITIVECONF);
-        List<String> sensitiveConf = new ArrayList<>();
-        for (Object conf : tmpList) {
-            if (conf instanceof String) {
-                sensitiveConf.add(String.valueOf(conf));
-            } else {
-                throw DataXException.asDataXException(CommonErrorCode.CONFIG_ERROR,
-                        String.format("敏感配置参数必须是字符串。请修改配置：%s", conf));
-            }
-        }
-        // 屏蔽敏感信息
-        Configuration unSensitiveConf = filterSensitiveConfiguration(configuration, sensitiveConf);
+  // 注意屏蔽敏感信息
+  public static String filterJobConfiguration(final Configuration configuration) {
+    // 获取需要屏蔽的敏感配置项
+    List<Object> tmpList = configuration.getList(CoreConstant.DATAX_CORE_SENSITIVECONF);
+    List<String> sensitiveConf = new ArrayList<>();
+    for (Object conf : tmpList) {
+      if (conf instanceof String) {
+        sensitiveConf.add(String.valueOf(conf));
+      } else {
+        throw DataXException.asDataXException(CommonErrorCode.CONFIG_ERROR,
+            String.format("敏感配置参数必须是字符串。请修改配置：%s", conf));
+      }
+    }
+    // 屏蔽敏感信息
+    Configuration unSensitiveConf = filterSensitiveConfiguration(configuration, sensitiveConf);
 
-        // 获取 job 配置信息
-        Configuration jobConfWithSetting = unSensitiveConf.getConfiguration("job").clone();
+    // 获取 job 配置信息
+    Configuration jobConfWithSetting = unSensitiveConf.getConfiguration("job").clone();
 
-        return jobConfWithSetting.beautify();
+    return jobConfWithSetting.beautify();
+  }
+
+  public static Configuration filterSensitiveConfiguration(Configuration configuration, List<String> sensitiveConf) {
+    Set<String> keys = configuration.getKeys();
+
+    for (final String key : keys) {
+      if (sensitiveConf.contains(key)) {
+        LOG.debug("make " + key + " invisible");
+        // 置空
+        configuration.set(key, null);
+      }
     }
 
-    public static Configuration filterSensitiveConfiguration(Configuration configuration, List<String> sensitiveConf) {
-        Set<String> keys = configuration.getKeys();
+    return configuration;
+  }
 
-        for (final String key : keys) {
-            if (sensitiveConf.contains(key)) {
-                LOG.debug("make " + key + " invisible");
-                // 置空
-                configuration.set(key, null);
-            }
-        }
+  public static void entry(final String[] args) throws Throwable {
+    Options options = new Options();
+    options.addOption("job", true, "Job config.");
+    options.addOption("jobid", true, "Job unique id.");
+    options.addOption("mode", true, "Job runtime mode.");
 
-        return configuration;
+    BasicParser parser = new BasicParser();
+    CommandLine cl = parser.parse(options, args);
+
+    String jobPath = cl.getOptionValue("job");
+
+    // 如果用户没有明确指定 jobid, 则 datax.py 会指定 jobid 默认值为 -1
+    String jobIdString = cl.getOptionValue("jobid");
+    RUNTIME_MODE = cl.getOptionValue("mode");
+
+    // 配置解析，jobPath 是绝对路径，返回的是全部配置信息，包括 core.json
+    Configuration configuration = ConfigParser.parse(jobPath);
+    // 绑定 i18n 信息
+    MessageSource.init(configuration);
+    MessageSource.reloadResourceBundle(Configuration.class);
+
+    long jobId;
+    if (!"-1".equalsIgnoreCase(jobIdString)) {
+      jobId = Long.parseLong(jobIdString);
+    } else {
+      // only for dsc & ds & datax 3 update
+      String dscJobUrlPatternString = "/instance/(\\d{1,})/config.xml";
+      String dsJobUrlPatternString = "/inner/job/(\\d{1,})/config";
+      String dsTaskGroupUrlPatternString = "/inner/job/(\\d{1,})/taskGroup/";
+      List<String> patternStringList = Arrays.asList(dscJobUrlPatternString,
+          dsJobUrlPatternString, dsTaskGroupUrlPatternString);
+      jobId = parseJobIdFromUrl(patternStringList, jobPath);
     }
 
-    public static void entry(final String[] args) throws Throwable {
-        Options options = new Options();
-        options.addOption("job", true, "Job config.");
-        options.addOption("jobid", true, "Job unique id.");
-        options.addOption("mode", true, "Job runtime mode.");
+    boolean isStandAloneMode = "standalone".equalsIgnoreCase(RUNTIME_MODE);
+    if (!isStandAloneMode && jobId == -1) {
+      // 如果不是 standalone 模式，那么 jobId 一定不能为 -1
+      throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, "非 standalone 模式必须在 URL 中提供有效的 jobId。");
+    }
+    configuration.set(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, jobId);
 
-        BasicParser parser = new BasicParser();
-        CommandLine cl = parser.parse(options, args);
-
-        String jobPath = cl.getOptionValue("job");
-
-        // 如果用户没有明确指定 jobid, 则 datax.py 会指定 jobid 默认值为 -1
-        String jobIdString = cl.getOptionValue("jobid");
-        RUNTIME_MODE = cl.getOptionValue("mode");
-
-        // 配置解析，jobPath 是绝对路径，返回的是全部配置信息，包括 core.json
-        Configuration configuration = ConfigParser.parse(jobPath);
-        // 绑定 i18n 信息
-        MessageSource.init(configuration);
-        MessageSource.reloadResourceBundle(Configuration.class);
-
-        long jobId;
-        if (!"-1".equalsIgnoreCase(jobIdString)) {
-            jobId = Long.parseLong(jobIdString);
-        } else {
-            // only for dsc & ds & datax 3 update
-            String dscJobUrlPatternString = "/instance/(\\d{1,})/config.xml";
-            String dsJobUrlPatternString = "/inner/job/(\\d{1,})/config";
-            String dsTaskGroupUrlPatternString = "/inner/job/(\\d{1,})/taskGroup/";
-            List<String> patternStringList = Arrays.asList(dscJobUrlPatternString,
-                    dsJobUrlPatternString, dsTaskGroupUrlPatternString);
-            jobId = parseJobIdFromUrl(patternStringList, jobPath);
-        }
-
-        boolean isStandAloneMode = "standalone".equalsIgnoreCase(RUNTIME_MODE);
-        if (!isStandAloneMode && jobId == -1) {
-            // 如果不是 standalone 模式，那么 jobId 一定不能为 -1
-            throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, "非 standalone 模式必须在 URL 中提供有效的 jobId。");
-        }
-        configuration.set(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, jobId);
-
-        // 打印 vmInfo
-        VMInfo vmInfo = VMInfo.getVmInfo();
-        if (vmInfo != null) {
-            LOG.info(vmInfo.toString());
-        }
-
-        LOG.info("\n" + Engine.filterJobConfiguration(configuration) + "\n");
-
-        LOG.debug(configuration.toJSON());
-
-        ConfigurationValidate.doValidate(configuration);
-        Engine engine = new Engine();
-        engine.start(configuration);
+    // 打印 vmInfo
+    VMInfo vmInfo = VMInfo.getVmInfo();
+    if (vmInfo != null) {
+      LOG.info(vmInfo.toString());
     }
 
-    /**
-     * -1 表示未能解析到 jobId
-     * <p>
-     * only for dsc & ds & datax 3 update
-     */
-    private static long parseJobIdFromUrl(List<String> patternStringList, String url) {
-        long result = -1;
-        for (String patternString : patternStringList) {
-            result = doParseJobIdFromUrl(patternString, url);
-            if (result != -1) {
-                return result;
-            }
-        }
+    LOG.info("\n{}\n", Engine.filterJobConfiguration(configuration));
+
+    LOG.debug(configuration.toJSON());
+
+    ConfigurationValidate.doValidate(configuration);
+    Engine engine = new Engine();
+    engine.start(configuration);
+  }
+
+  /**
+   * -1 表示未能解析到 jobId
+   * <p>
+   * only for dsc & ds & datax 3 update
+   */
+  private static long parseJobIdFromUrl(List<String> patternStringList, String url) {
+    long result = -1;
+    for (String patternString : patternStringList) {
+      result = doParseJobIdFromUrl(patternString, url);
+      if (result != -1) {
         return result;
+      }
+    }
+    return result;
+  }
+
+  private static long doParseJobIdFromUrl(String patternString, String url) {
+    Pattern pattern = Pattern.compile(patternString);
+    Matcher matcher = pattern.matcher(url);
+    if (matcher.find()) {
+      return Long.parseLong(matcher.group(1));
     }
 
-    private static long doParseJobIdFromUrl(String patternString, String url) {
-        Pattern pattern = Pattern.compile(patternString);
-        Matcher matcher = pattern.matcher(url);
-        if (matcher.find()) {
-            return Long.parseLong(matcher.group(1));
-        }
+    return -1;
+  }
 
-        return -1;
+  public static void main(String[] args) throws Exception {
+    int exitCode = 0;
+    try {
+      Engine.entry(args);
+    } catch (Throwable e) {
+      exitCode = 1;
+      LOG.error("\n\n经DataX智能分析,该任务最可能的错误原因是:\n{}", ExceptionTracker.trace(e));
+
+      if (e instanceof DataXException) {
+        DataXException tempException = (DataXException) e;
+        ErrorCode errorCode = tempException.getErrorCode();
+        if (errorCode instanceof FrameworkErrorCode) {
+          FrameworkErrorCode tempErrorCode = (FrameworkErrorCode) errorCode;
+          exitCode = tempErrorCode.toExitValue();
+        }
+      }
+
+      System.exit(exitCode);
+    }
+    System.exit(exitCode);
+  }
+
+  /* check job model (job/task) first */
+  public void start(Configuration allConf) {
+    // 绑定 column 转换信息
+    ColumnCast.bind(allConf);
+
+    // 初始化 PluginLoader，可以获取各种插件配置
+    LoadUtil.bind(allConf);
+
+    boolean isJob = !("taskGroup".equalsIgnoreCase(allConf.getString(CoreConstant.DATAX_CORE_CONTAINER_MODEL)));
+    // JobContainer 会在 schedule 后再行进行设置和调整值
+    int channelNumber = 0;
+    AbstractContainer container;
+    long instanceId;
+    int taskGroupId = -1;
+    if (isJob) {
+      allConf.set(CoreConstant.DATAX_CORE_CONTAINER_JOB_MODE, RUNTIME_MODE);
+      container = new JobContainer(allConf);
+      instanceId = allConf.getLong(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, 0);
+    } else {
+      container = new TaskGroupContainer(allConf);
+      instanceId = allConf.getLong(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID);
+      taskGroupId = allConf.getInt(CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID);
+      channelNumber = allConf.getInt(CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL);
     }
 
-    public static void main(String[] args) throws Exception {
-        int exitCode = 0;
-        try {
-            Engine.entry(args);
-        } catch (Throwable e) {
-            exitCode = 1;
-            LOG.error("\n\n经DataX智能分析,该任务最可能的错误原因是:\n" + ExceptionTracker.trace(e));
+    // 缺省打开 perfTrace
+    boolean traceEnable = allConf.getBool(CoreConstant.DATAX_CORE_CONTAINER_TRACE_ENABLE, true);
+    boolean perfReportEnable = allConf.getBool(CoreConstant.DATAX_CORE_REPORT_DATAX_PERFLOG, true);
 
-            if (e instanceof DataXException) {
-                DataXException tempException = (DataXException) e;
-                ErrorCode errorCode = tempException.getErrorCode();
-                if (errorCode instanceof FrameworkErrorCode) {
-                    FrameworkErrorCode tempErrorCode = (FrameworkErrorCode) errorCode;
-                    exitCode = tempErrorCode.toExitValue();
-                }
-            }
-
-            System.exit(exitCode);
-        }
-        System.exit(exitCode);
+    // standalone 模式的 datax shell 任务不进行汇报
+    if (instanceId == -1) {
+      perfReportEnable = false;
     }
 
-    /* check job model (job/task) first */
-    public void start(Configuration allConf) {
-        // 绑定 column 转换信息
-        ColumnCast.bind(allConf);
+    Configuration jobInfoConfig = allConf.getConfiguration(CoreConstant.DATAX_JOB_JOBINFO);
+    // 初始化 PerfTrace
+    PerfTrace perfTrace = PerfTrace.getInstance(isJob, instanceId, taskGroupId, traceEnable);
+    perfTrace.setJobInfo(jobInfoConfig, perfReportEnable, channelNumber);
 
-        // 初始化 PluginLoader，可以获取各种插件配置
-        LoadUtil.bind(allConf);
-
-        boolean isJob = !("taskGroup".equalsIgnoreCase(allConf.getString(CoreConstant.DATAX_CORE_CONTAINER_MODEL)));
-        // JobContainer 会在 schedule 后再行进行设置和调整值
-        int channelNumber = 0;
-        AbstractContainer container;
-        long instanceId;
-        int taskGroupId = -1;
-        if (isJob) {
-            allConf.set(CoreConstant.DATAX_CORE_CONTAINER_JOB_MODE, RUNTIME_MODE);
-            container = new JobContainer(allConf);
-            instanceId = allConf.getLong(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, 0);
-        } else {
-            container = new TaskGroupContainer(allConf);
-            instanceId = allConf.getLong(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID);
-            taskGroupId = allConf.getInt(CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID);
-            channelNumber = allConf.getInt(CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL);
-        }
-
-        // 缺省打开 perfTrace
-        boolean traceEnable = allConf.getBool(CoreConstant.DATAX_CORE_CONTAINER_TRACE_ENABLE, true);
-        boolean perfReportEnable = allConf.getBool(CoreConstant.DATAX_CORE_REPORT_DATAX_PERFLOG, true);
-
-        // standalone 模式的 datax shell 任务不进行汇报
-        if (instanceId == -1) {
-            perfReportEnable = false;
-        }
-
-        Configuration jobInfoConfig = allConf.getConfiguration(CoreConstant.DATAX_JOB_JOBINFO);
-        // 初始化 PerfTrace
-        PerfTrace perfTrace = PerfTrace.getInstance(isJob, instanceId, taskGroupId, traceEnable);
-        perfTrace.setJobInfo(jobInfoConfig, perfReportEnable, channelNumber);
-
-        container.start();
-    }
+    container.start();
+  }
 }

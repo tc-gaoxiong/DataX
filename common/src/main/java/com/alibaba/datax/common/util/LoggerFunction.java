@@ -6,5 +6,5 @@ package com.alibaba.datax.common.util;
  */
 public interface LoggerFunction {
 
-    void apply();
+  void apply();
 }

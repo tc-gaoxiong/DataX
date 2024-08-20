@@ -13,161 +13,161 @@ import java.util.Date;
 
 public class StringColumn extends Column {
 
-    public StringColumn() {
-        this((String) null);
+  public StringColumn() {
+    this((String) null);
+  }
+
+  public StringColumn(final String rawData) {
+    super(rawData, Column.Type.STRING, (null == rawData ? 0 : rawData
+        .length()));
+  }
+
+  @Override
+  public String asString() {
+    if (null == this.getRawData()) {
+      return null;
     }
 
-    public StringColumn(final String rawData) {
-        super(rawData, Column.Type.STRING, (null == rawData ? 0 : rawData
-                .length()));
+    return (String) this.getRawData();
+  }
+
+  private void validateDoubleSpecific(final String data) {
+    if ("NaN".equals(data) || "Infinity".equals(data)
+        || "-Infinity".equals(data)) {
+      throw DataXException.asDataXException(
+          CommonErrorCode.CONVERT_NOT_SUPPORT,
+          String.format("String[\"%s\"]属于Double特殊类型，不能转为其他类型 .", data));
     }
 
-    @Override
-    public String asString() {
-        if (null == this.getRawData()) {
-            return null;
-        }
+    return;
+  }
 
-        return (String) this.getRawData();
+  @Override
+  public BigInteger asBigInteger() {
+    if (null == this.getRawData()) {
+      return null;
     }
 
-    private void validateDoubleSpecific(final String data) {
-        if ("NaN".equals(data) || "Infinity".equals(data)
-                || "-Infinity".equals(data)) {
-            throw DataXException.asDataXException(
-                    CommonErrorCode.CONVERT_NOT_SUPPORT,
-                    String.format("String[\"%s\"]属于Double特殊类型，不能转为其他类型 .", data));
-        }
+    this.validateDoubleSpecific((String) this.getRawData());
 
-        return;
+    try {
+      return this.asBigDecimal().toBigInteger();
+    } catch (Exception e) {
+      throw DataXException.asDataXException(
+          CommonErrorCode.CONVERT_NOT_SUPPORT, String.format(
+              "String[\"%s\"]不能转为BigInteger .", this.asString()));
+    }
+  }
+
+  @Override
+  public Long asLong() {
+    if (null == this.getRawData()) {
+      return null;
     }
 
-    @Override
-    public BigInteger asBigInteger() {
-        if (null == this.getRawData()) {
-            return null;
-        }
+    this.validateDoubleSpecific((String) this.getRawData());
 
-        this.validateDoubleSpecific((String) this.getRawData());
+    try {
+      BigInteger integer = this.asBigInteger();
+      OverFlowUtil.validateLongNotOverFlow(integer);
+      return integer.longValue();
+    } catch (Exception e) {
+      throw DataXException.asDataXException(
+          CommonErrorCode.CONVERT_NOT_SUPPORT,
+          String.format("String[\"%s\"]不能转为Long .", this.asString()));
+    }
+  }
 
-        try {
-            return this.asBigDecimal().toBigInteger();
-        } catch (Exception e) {
-            throw DataXException.asDataXException(
-                    CommonErrorCode.CONVERT_NOT_SUPPORT, String.format(
-                            "String[\"%s\"]不能转为BigInteger .", this.asString()));
-        }
+  @Override
+  public BigDecimal asBigDecimal() {
+    if (null == this.getRawData()) {
+      return null;
     }
 
-    @Override
-    public Long asLong() {
-        if (null == this.getRawData()) {
-            return null;
-        }
+    this.validateDoubleSpecific((String) this.getRawData());
 
-        this.validateDoubleSpecific((String) this.getRawData());
+    try {
+      return new BigDecimal(this.asString());
+    } catch (Exception e) {
+      throw DataXException.asDataXException(
+          CommonErrorCode.CONVERT_NOT_SUPPORT, String.format(
+              "String [\"%s\"] 不能转为BigDecimal .", this.asString()));
+    }
+  }
 
-        try {
-            BigInteger integer = this.asBigInteger();
-            OverFlowUtil.validateLongNotOverFlow(integer);
-            return integer.longValue();
-        } catch (Exception e) {
-            throw DataXException.asDataXException(
-                    CommonErrorCode.CONVERT_NOT_SUPPORT,
-                    String.format("String[\"%s\"]不能转为Long .", this.asString()));
-        }
+  @Override
+  public Double asDouble() {
+    if (null == this.getRawData()) {
+      return null;
     }
 
-    @Override
-    public BigDecimal asBigDecimal() {
-        if (null == this.getRawData()) {
-            return null;
-        }
-
-        this.validateDoubleSpecific((String) this.getRawData());
-
-        try {
-            return new BigDecimal(this.asString());
-        } catch (Exception e) {
-            throw DataXException.asDataXException(
-                    CommonErrorCode.CONVERT_NOT_SUPPORT, String.format(
-                            "String [\"%s\"] 不能转为BigDecimal .", this.asString()));
-        }
+    String data = (String) this.getRawData();
+    if ("NaN".equals(data)) {
+      return Double.NaN;
     }
 
-    @Override
-    public Double asDouble() {
-        if (null == this.getRawData()) {
-            return null;
-        }
-
-        String data = (String) this.getRawData();
-        if ("NaN".equals(data)) {
-            return Double.NaN;
-        }
-
-        if ("Infinity".equals(data)) {
-            return Double.POSITIVE_INFINITY;
-        }
-
-        if ("-Infinity".equals(data)) {
-            return Double.NEGATIVE_INFINITY;
-        }
-
-        BigDecimal decimal = this.asBigDecimal();
-        OverFlowUtil.validateDoubleNotOverFlow(decimal);
-
-        return decimal.doubleValue();
+    if ("Infinity".equals(data)) {
+      return Double.POSITIVE_INFINITY;
     }
 
-    @Override
-    public Boolean asBoolean() {
-        if (null == this.getRawData()) {
-            return null;
-        }
-
-        if ("true".equalsIgnoreCase(this.asString())) {
-            return true;
-        }
-
-        if ("false".equalsIgnoreCase(this.asString())) {
-            return false;
-        }
-
-        throw DataXException.asDataXException(
-                CommonErrorCode.CONVERT_NOT_SUPPORT,
-                String.format("String[\"%s\"]不能转为Bool .", this.asString()));
+    if ("-Infinity".equals(data)) {
+      return Double.NEGATIVE_INFINITY;
     }
 
-    @Override
-    public Date asDate() {
-        try {
-            return ColumnCast.string2Date(this);
-        } catch (Exception e) {
-            throw DataXException.asDataXException(
-                    CommonErrorCode.CONVERT_NOT_SUPPORT,
-                    String.format("String[\"%s\"]不能转为Date .", this.asString()));
-        }
+    BigDecimal decimal = this.asBigDecimal();
+    OverFlowUtil.validateDoubleNotOverFlow(decimal);
+
+    return decimal.doubleValue();
+  }
+
+  @Override
+  public Boolean asBoolean() {
+    if (null == this.getRawData()) {
+      return null;
     }
 
-    @Override
-    public Date asDate(String dateFormat) {
-        try {
-            return ColumnCast.string2Date(this, dateFormat);
-        } catch (Exception e) {
-            throw DataXException.asDataXException(CommonErrorCode.CONVERT_NOT_SUPPORT,
-                    String.format("String[\"%s\"]不能转为Date .", this.asString()));
-        }
+    if ("true".equalsIgnoreCase(this.asString())) {
+      return true;
     }
 
-    @Override
-    public byte[] asBytes() {
-        try {
-            return ColumnCast.string2Bytes(this);
-        } catch (Exception e) {
-            throw DataXException.asDataXException(
-                    CommonErrorCode.CONVERT_NOT_SUPPORT,
-                    String.format("String[\"%s\"]不能转为Bytes .", this.asString()));
-        }
+    if ("false".equalsIgnoreCase(this.asString())) {
+      return false;
     }
+
+    throw DataXException.asDataXException(
+        CommonErrorCode.CONVERT_NOT_SUPPORT,
+        String.format("String[\"%s\"]不能转为Bool .", this.asString()));
+  }
+
+  @Override
+  public Date asDate() {
+    try {
+      return ColumnCast.string2Date(this);
+    } catch (Exception e) {
+      throw DataXException.asDataXException(
+          CommonErrorCode.CONVERT_NOT_SUPPORT,
+          String.format("String[\"%s\"]不能转为Date .", this.asString()));
+    }
+  }
+
+  @Override
+  public Date asDate(String dateFormat) {
+    try {
+      return ColumnCast.string2Date(this, dateFormat);
+    } catch (Exception e) {
+      throw DataXException.asDataXException(CommonErrorCode.CONVERT_NOT_SUPPORT,
+          String.format("String[\"%s\"]不能转为Date .", this.asString()));
+    }
+  }
+
+  @Override
+  public byte[] asBytes() {
+    try {
+      return ColumnCast.string2Bytes(this);
+    } catch (Exception e) {
+      throw DataXException.asDataXException(
+          CommonErrorCode.CONVERT_NOT_SUPPORT,
+          String.format("String[\"%s\"]不能转为Bytes .", this.asString()));
+    }
+  }
 }

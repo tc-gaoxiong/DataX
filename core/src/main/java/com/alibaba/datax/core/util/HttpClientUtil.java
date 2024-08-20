@@ -10,7 +10,11 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -56,7 +60,8 @@ public class HttpClientUtil {
 
     public static void setBasicAuth(String username, String password) {
         provider = new BasicCredentialsProvider();
-        provider.setCredentials(AuthScope.ANY,
+        provider.setCredentials(
+                AuthScope.ANY,
                 new UsernamePasswordCredentials(username, password));
     }
 
@@ -82,16 +87,29 @@ public class HttpClientUtil {
 
     // 创建包含connection pool与超时设置的client
     private void initApacheHttpClient() {
-        RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(HTTP_TIMEOUT_INMILLIONSECONDS)
-                .setConnectTimeout(HTTP_TIMEOUT_INMILLIONSECONDS).setConnectionRequestTimeout(HTTP_TIMEOUT_INMILLIONSECONDS)
-                .setStaleConnectionCheckEnabled(true).build();
+        RequestConfig requestConfig = RequestConfig
+                .custom()
+                .setSocketTimeout(HTTP_TIMEOUT_INMILLIONSECONDS)
+                .setConnectTimeout(HTTP_TIMEOUT_INMILLIONSECONDS)
+                .setConnectionRequestTimeout(HTTP_TIMEOUT_INMILLIONSECONDS)
+                .setStaleConnectionCheckEnabled(true)
+                .build();
 
         if (null == provider) {
-            httpClient = HttpClientBuilder.create().setMaxConnTotal(POOL_SIZE).setMaxConnPerRoute(POOL_SIZE)
-                    .setDefaultRequestConfig(requestConfig).build();
+            httpClient = HttpClientBuilder
+                    .create()
+                    .setMaxConnTotal(POOL_SIZE)
+                    .setMaxConnPerRoute(POOL_SIZE)
+                    .setDefaultRequestConfig(requestConfig)
+                    .build();
         } else {
-            httpClient = HttpClientBuilder.create().setMaxConnTotal(POOL_SIZE).setMaxConnPerRoute(POOL_SIZE)
-                    .setDefaultRequestConfig(requestConfig).setDefaultCredentialsProvider(provider).build();
+            httpClient = HttpClientBuilder
+                    .create()
+                    .setMaxConnTotal(POOL_SIZE)
+                    .setMaxConnPerRoute(POOL_SIZE)
+                    .setDefaultRequestConfig(requestConfig)
+                    .setDefaultCredentialsProvider(provider)
+                    .build();
         }
     }
 
@@ -113,12 +131,14 @@ public class HttpClientUtil {
             response = httpClient.execute(httpRequestBase);
 
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                System.err.println("请求地址：" + httpRequestBase.getURI() + ", 请求方法：" + httpRequestBase.getMethod()
+                System.err.println("请求地址：" + httpRequestBase.getURI() + ", 请求方法："
+                        + httpRequestBase.getMethod()
                         + ",STATUS CODE = " + response.getStatusLine().getStatusCode());
                 if (httpRequestBase != null) {
                     httpRequestBase.abort();
                 }
-                throw new Exception("Response Status Code : " + response.getStatusLine().getStatusCode());
+                throw new Exception(
+                        "Response Status Code : " + response.getStatusLine().getStatusCode());
             } else {
                 HttpEntity entity = response.getEntity();
                 if (entity != null) {
@@ -134,31 +154,51 @@ public class HttpClientUtil {
         return entiStr;
     }
 
-    public String executeAndGetWithRetry(final HttpRequestBase httpRequestBase, final int retryTimes, final long retryInterval) {
+    public String executeAndGetWithRetry(
+            final HttpRequestBase httpRequestBase,
+            final int retryTimes,
+            final long retryInterval) {
         try {
-            return RetryUtil.asyncExecuteWithRetry(new Callable<String>() {
-                @Override
-                public String call() throws Exception {
-                    return executeAndGet(httpRequestBase);
-                }
-            }, retryTimes, retryInterval, true, HTTP_TIMEOUT_INMILLIONSECONDS + 1000, asyncExecutor);
+            return RetryUtil.asyncExecuteWithRetry(
+                    new Callable<String>() {
+                        @Override
+                        public String call() throws Exception {
+                            return executeAndGet(httpRequestBase);
+                        }
+                    },
+                    retryTimes,
+                    retryInterval,
+                    true,
+                    HTTP_TIMEOUT_INMILLIONSECONDS + 1000,
+                    asyncExecutor);
         } catch (Exception e) {
             throw DataXException.asDataXException(FrameworkErrorCode.RUNTIME_ERROR, e);
         }
     }
 
-    public String executeAndGetWithFailedRetry(final HttpRequestBase httpRequestBase, final int retryTimes, final long retryInterval) {
+    public String executeAndGetWithFailedRetry(
+            final HttpRequestBase httpRequestBase,
+            final int retryTimes,
+            final long retryInterval) {
         try {
-            return RetryUtil.asyncExecuteWithRetry(new Callable<String>() {
-                @Override
-                public String call() throws Exception {
-                    String result = executeAndGet(httpRequestBase);
-                    if (result != null && result.startsWith("{\"result\":-1")) {
-                        throw DataXException.asDataXException(FrameworkErrorCode.CALL_REMOTE_FAILED, "远程接口返回-1,将重试");
-                    }
-                    return result;
-                }
-            }, retryTimes, retryInterval, true, HTTP_TIMEOUT_INMILLIONSECONDS + 1000, asyncExecutor);
+            return RetryUtil.asyncExecuteWithRetry(
+                    new Callable<String>() {
+                        @Override
+                        public String call() throws Exception {
+                            String result = executeAndGet(httpRequestBase);
+                            if (result != null && result.startsWith("{\"result\":-1")) {
+                                throw DataXException.asDataXException(
+                                        FrameworkErrorCode.CALL_REMOTE_FAILED,
+                                        "远程接口返回-1,将重试");
+                            }
+                            return result;
+                        }
+                    },
+                    retryTimes,
+                    retryInterval,
+                    true,
+                    HTTP_TIMEOUT_INMILLIONSECONDS + 1000,
+                    asyncExecutor);
         } catch (Exception e) {
             throw DataXException.asDataXException(FrameworkErrorCode.RUNTIME_ERROR, e);
         }

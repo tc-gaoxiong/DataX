@@ -8,40 +8,40 @@ import java.util.Arrays;
  */
 public class ByteUtils {
 
-    private int size;
-    private int kDefaultBufferSize = 0;
-    private byte[] buffer;
+  private int size;
+  private int kDefaultBufferSize = 0;
+  private byte[] buffer;
 
-    public ByteUtils() {
-        buffer = new byte[0];
-        size = 0;
+  public ByteUtils() {
+    buffer = new byte[0];
+    size = 0;
+  }
+
+  public byte[] getBuffer() {
+    return buffer;
+  }
+
+  public long getSize() {
+    return size;
+  }
+
+  public void setSize(int size) {
+    this.size = size;
+  }
+
+  public ByteUtils append(byte[] buf) {
+
+    if (buf == null) {
+      return this;
     }
+    buffer = Arrays.copyOf(buffer, buffer.length + buf.length);
+    System.arraycopy(buf, 0, buffer, size, buf.length);
+    size += buf.length;
+    return this;
+  }
 
-    public byte[] getBuffer() {
-        return buffer;
-    }
-
-    public long getSize() {
-        return size;
-    }
-
-    public void setSize(int size) {
-        this.size = size;
-    }
-
-    public ByteUtils append(byte[] buf) {
-
-        if (buf == null) {
-            return this;
-        }
-        buffer = Arrays.copyOf(buffer, buffer.length + buf.length);
-        System.arraycopy(buf, 0, buffer, size, buf.length);
-        size += buf.length;
-        return this;
-    }
-
-    public void clear() {
-        buffer = new byte[kDefaultBufferSize];
-        size = 0;
-    }
+  public void clear() {
+    buffer = new byte[kDefaultBufferSize];
+    size = 0;
+  }
 }

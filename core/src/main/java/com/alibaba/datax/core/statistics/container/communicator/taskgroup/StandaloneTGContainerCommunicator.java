@@ -6,14 +6,14 @@ import com.alibaba.datax.core.statistics.container.report.ProcessInnerReporter;
 
 public class StandaloneTGContainerCommunicator extends AbstractTGContainerCommunicator {
 
-    public StandaloneTGContainerCommunicator(Configuration configuration) {
-        super(configuration);
-        super.setReporter(new ProcessInnerReporter());
-    }
+  public StandaloneTGContainerCommunicator(Configuration configuration) {
+    super(configuration);
+    super.setReporter(new ProcessInnerReporter());
+  }
 
-    @Override
-    public void report(Communication communication) {
-        super.getReporter().reportTGCommunication(super.taskGroupId, communication);
-    }
+  @Override
+  public void report(Communication communication) {
+    super.getReporter().reportTGCommunication(super.taskGroupId, communication);
+  }
 
 }

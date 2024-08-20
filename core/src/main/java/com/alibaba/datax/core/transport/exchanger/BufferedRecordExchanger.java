@@ -30,7 +30,9 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
     private volatile boolean shutdown = false;
 
     @SuppressWarnings("unchecked")
-    public BufferedRecordExchanger(final Channel channel, final TaskPluginCollector pluginCollector) {
+    public BufferedRecordExchanger(
+            final Channel channel,
+            final TaskPluginCollector pluginCollector) {
         assert null != channel;
         assert null != channel.getConfiguration();
 
@@ -74,8 +76,11 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
         Validate.notNull(record, "record不能为空.");
 
         if (record.getMemorySize() > this.byteCapacity) {
-            this.pluginCollector.collectDirtyRecord(record,
-                    new Exception(String.format("单条记录超过大小限制，当前限制为:%s", this.byteCapacity)));
+            this.pluginCollector.collectDirtyRecord(
+                    record,
+                    new Exception(String.format(
+                            "单条记录超过大小限制，当前限制为:%s",
+                            this.byteCapacity)));
 
             return;
         }

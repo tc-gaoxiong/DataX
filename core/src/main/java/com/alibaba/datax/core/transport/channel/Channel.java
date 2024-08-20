@@ -160,9 +160,11 @@ public abstract class Channel {
     }
 
     private void statPush(long recordSize, long byteSize) {
-        currentCommunication.increaseCounter(CommunicationTool.READ_SUCCEED_RECORDS,
+        currentCommunication.increaseCounter(
+                CommunicationTool.READ_SUCCEED_RECORDS,
                 recordSize);
-        currentCommunication.increaseCounter(CommunicationTool.READ_SUCCEED_BYTES,
+        currentCommunication.increaseCounter(
+                CommunicationTool.READ_SUCCEED_BYTES,
                 byteSize);
         // 在读的时候进行统计 waitCounter 即可，因为写（pull）的时候可能正在阻塞，但读的时候已经能读到这个阻塞的 counter 数
 
@@ -192,8 +194,10 @@ public abstract class Channel {
             }
 
             if (isChannelRecordSpeedLimit) {
-                long currentRecordSpeed = (CommunicationTool.getTotalReadRecords(currentCommunication) -
-                        CommunicationTool.getTotalReadRecords(lastCommunication)) * 1000 / interval;
+                long currentRecordSpeed =
+                        (CommunicationTool.getTotalReadRecords(currentCommunication) -
+                                CommunicationTool.getTotalReadRecords(lastCommunication)) * 1000
+                                / interval;
                 if (currentRecordSpeed > this.recordSpeed) {
                     // 计算根据 recordLimit 得到的休眠时间
                     recordLimitSleepTime = currentRecordSpeed * interval / this.recordSpeed
@@ -211,13 +215,17 @@ public abstract class Channel {
                 }
             }
 
-            lastCommunication.setLongCounter(CommunicationTool.READ_SUCCEED_BYTES,
+            lastCommunication.setLongCounter(
+                    CommunicationTool.READ_SUCCEED_BYTES,
                     currentCommunication.getLongCounter(CommunicationTool.READ_SUCCEED_BYTES));
-            lastCommunication.setLongCounter(CommunicationTool.READ_FAILED_BYTES,
+            lastCommunication.setLongCounter(
+                    CommunicationTool.READ_FAILED_BYTES,
                     currentCommunication.getLongCounter(CommunicationTool.READ_FAILED_BYTES));
-            lastCommunication.setLongCounter(CommunicationTool.READ_SUCCEED_RECORDS,
+            lastCommunication.setLongCounter(
+                    CommunicationTool.READ_SUCCEED_RECORDS,
                     currentCommunication.getLongCounter(CommunicationTool.READ_SUCCEED_RECORDS));
-            lastCommunication.setLongCounter(CommunicationTool.READ_FAILED_RECORDS,
+            lastCommunication.setLongCounter(
+                    CommunicationTool.READ_FAILED_RECORDS,
                     currentCommunication.getLongCounter(CommunicationTool.READ_FAILED_RECORDS));
             lastCommunication.setTimestamp(nowTimestamp);
         }

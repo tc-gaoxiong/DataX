@@ -9,50 +9,50 @@ import java.util.Map;
  */
 public class TransformerExecutionParas {
 
-    // 以下是 function 参数
-    private Integer columnIndex;
-    private String[] paras;
-    private Map<String, Object> tContext;
-    private String code;
-    private List<String> extraPackage;
+  // 以下是 function 参数
+  private Integer columnIndex;
+  private String[] paras;
+  private Map<String, Object> tContext;
+  private String code;
+  private List<String> extraPackage;
 
-    public Integer getColumnIndex() {
-        return columnIndex;
-    }
+  public Integer getColumnIndex() {
+    return columnIndex;
+  }
 
-    public void setColumnIndex(Integer columnIndex) {
-        this.columnIndex = columnIndex;
-    }
+  public void setColumnIndex(Integer columnIndex) {
+    this.columnIndex = columnIndex;
+  }
 
-    public String[] getParas() {
-        return paras;
-    }
+  public String[] getParas() {
+    return paras;
+  }
 
-    public void setParas(String[] paras) {
-        this.paras = paras;
-    }
+  public void setParas(String[] paras) {
+    this.paras = paras;
+  }
 
-    public Map<String, Object> gettContext() {
-        return tContext;
-    }
+  public Map<String, Object> gettContext() {
+    return tContext;
+  }
 
-    public void settContext(Map<String, Object> tContext) {
-        this.tContext = tContext;
-    }
+  public void settContext(Map<String, Object> tContext) {
+    this.tContext = tContext;
+  }
 
-    public String getCode() {
-        return code;
-    }
+  public String getCode() {
+    return code;
+  }
 
-    public void setCode(String code) {
-        this.code = code;
-    }
+  public void setCode(String code) {
+    this.code = code;
+  }
 
-    public List<String> getExtraPackage() {
-        return extraPackage;
-    }
+  public List<String> getExtraPackage() {
+    return extraPackage;
+  }
 
-    public void setExtraPackage(List<String> extraPackage) {
-        this.extraPackage = extraPackage;
-    }
+  public void setExtraPackage(List<String> extraPackage) {
+    this.extraPackage = extraPackage;
+  }
 }

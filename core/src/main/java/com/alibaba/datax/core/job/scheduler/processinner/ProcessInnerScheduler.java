@@ -28,7 +28,8 @@ public abstract class ProcessInnerScheduler extends AbstractScheduler {
         this.taskGroupContainerExecutorService = Executors.newFixedThreadPool(configurations.size());
 
         for (Configuration taskGroupConfiguration : configurations) {
-            TaskGroupContainerRunner taskGroupContainerRunner = newTaskGroupContainerRunner(taskGroupConfiguration);
+            TaskGroupContainerRunner taskGroupContainerRunner = newTaskGroupContainerRunner(
+                    taskGroupConfiguration);
             this.taskGroupContainerExecutorService.execute(taskGroupContainerRunner);
         }
 
@@ -37,7 +38,9 @@ public abstract class ProcessInnerScheduler extends AbstractScheduler {
     }
 
     @Override
-    public void dealFailedStat(AbstractContainerCommunicator frameworkCollector, Throwable throwable) {
+    public void dealFailedStat(
+            AbstractContainerCommunicator frameworkCollector,
+            Throwable throwable) {
         this.taskGroupContainerExecutorService.shutdownNow();
 
         throw DataXException.asDataXException(FrameworkErrorCode.PLUGIN_RUNTIME_ERROR, throwable);
@@ -48,7 +51,9 @@ public abstract class ProcessInnerScheduler extends AbstractScheduler {
         // 通过进程退出返回码标示状态
         this.taskGroupContainerExecutorService.shutdownNow();
 
-        throw DataXException.asDataXException(FrameworkErrorCode.KILLED_EXIT_VALUE, "job killed status");
+        throw DataXException.asDataXException(
+                FrameworkErrorCode.KILLED_EXIT_VALUE,
+                "job killed status");
     }
 
     // 初始化一个 runner，每个 runner 持有一个 container

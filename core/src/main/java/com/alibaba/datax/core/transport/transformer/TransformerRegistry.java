@@ -52,13 +52,17 @@ public class TransformerRegistry {
                     loadTransformer(each);
                 }
             } catch (Exception e) {
-                LOG.error(String.format("skip transformer(%s) loadTransformer has Exception(%s)", each, e.getMessage()), e);
+                LOG.error(String.format(
+                        "skip transformer(%s) loadTransformer has Exception(%s)",
+                        each,
+                        e.getMessage()), e);
             }
         }
     }
 
     public static void loadTransformer(String each) {
-        String transformerPath = CoreConstant.DATAX_STORAGE_TRANSFORMER_HOME + File.separator + each;
+        String transformerPath =
+                CoreConstant.DATAX_STORAGE_TRANSFORMER_HOME + File.separator + each;
         Configuration transformerConfiguration;
         try {
             transformerConfiguration = loadTransFormerConfig(transformerPath);
@@ -77,9 +81,13 @@ public class TransformerRegistry {
 
         String funName = transformerConfiguration.getString("name");
         if (!each.equals(funName)) {
-            LOG.warn(String.format("transformer(%s) name not match transformer.json config name[%s], " +
+            LOG.warn(String.format(
+                    "transformer(%s) name not match transformer.json config name[%s], " +
                             "will ignore json's name, path = %s, config = %s",
-                    each, funName, transformerPath, transformerConfiguration.beautify()));
+                    each,
+                    funName,
+                    transformerPath,
+                    transformerConfiguration.beautify()));
         }
 
         JarLoader jarLoader = new JarLoader(new String[]{transformerPath});
@@ -94,7 +102,10 @@ public class TransformerRegistry {
                 ((Transformer) transformer).setTransformerName(each);
                 registTransformer((Transformer) transformer, jarLoader, false);
             } else {
-                LOG.error(String.format("load Transformer class(%s) error, path = %s", className, transformerPath));
+                LOG.error(String.format(
+                        "load Transformer class(%s) error, path = %s",
+                        className,
+                        transformerPath));
             }
         } catch (Exception e) {
             // 错误 function 跳过
@@ -121,13 +132,15 @@ public class TransformerRegistry {
         registTransformer(transformer, null, true);
     }
 
-    public static synchronized void registTransformer(Transformer transformer,
-                                                      ClassLoader classLoader, boolean isNative) {
+    public static synchronized void registTransformer(
+            Transformer transformer,
+            ClassLoader classLoader, boolean isNative) {
 
         checkName(transformer.getTransformerName(), isNative);
 
         if (registedTransformer.containsKey(transformer.getTransformerName())) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_DUPLICATE_ERROR,
+            throw DataXException.asDataXException(
+                    TransformerErrorCode.TRANSFORMER_DUPLICATE_ERROR,
                     " name=" + transformer.getTransformerName());
         }
 
@@ -135,17 +148,21 @@ public class TransformerRegistry {
                 new ComplexTransformerProxy(transformer), isNative, classLoader));
     }
 
-    public static synchronized void registComplexTransformer(ComplexTransformer complexTransformer,
-                                                             ClassLoader classLoader, boolean isNative) {
+    public static synchronized void registComplexTransformer(
+            ComplexTransformer complexTransformer,
+            ClassLoader classLoader, boolean isNative) {
         checkName(complexTransformer.getTransformerName(), isNative);
 
         if (registedTransformer.containsKey(complexTransformer.getTransformerName())) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_DUPLICATE_ERROR,
+            throw DataXException.asDataXException(
+                    TransformerErrorCode.TRANSFORMER_DUPLICATE_ERROR,
                     " name=" + complexTransformer.getTransformerName());
         }
 
-        registedTransformer.put(complexTransformer.getTransformerName(), buildTransformerInfo(complexTransformer,
-                isNative, classLoader));
+        registedTransformer.put(
+                complexTransformer.getTransformerName(),
+                buildTransformerInfo(complexTransformer,
+                        isNative, classLoader));
     }
 
     private static void checkName(String functionName, boolean isNative) {
@@ -161,13 +178,15 @@ public class TransformerRegistry {
         }
 
         if (!checkResult) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_NAME_ERROR,
+            throw DataXException.asDataXException(
+                    TransformerErrorCode.TRANSFORMER_NAME_ERROR,
                     " name=" + functionName + ": isNative=" + isNative);
         }
     }
 
-    private static TransformerInfo buildTransformerInfo(ComplexTransformer complexTransformer,
-                                                        boolean isNative, ClassLoader classLoader) {
+    private static TransformerInfo buildTransformerInfo(
+            ComplexTransformer complexTransformer,
+            boolean isNative, ClassLoader classLoader) {
         TransformerInfo transformerInfo = new TransformerInfo();
         transformerInfo.setClassLoader(classLoader);
         transformerInfo.setIsNative(isNative);

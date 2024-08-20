@@ -34,9 +34,10 @@ public abstract class TransformerExchanger {
 
     private ClassLoaderSwapper classLoaderSwapper = ClassLoaderSwapper.newCurrentThreadClassLoaderSwapper();
 
-    public TransformerExchanger(int taskGroupId, int taskId, Communication communication,
-                                List<TransformerExecution> transformerExecs,
-                                final TaskPluginCollector pluginCollector) {
+    public TransformerExchanger(
+            int taskGroupId, int taskId, Communication communication,
+            List<TransformerExecution> transformerExecs,
+            final TaskPluginCollector pluginCollector) {
         this.transformerExecs = transformerExecs;
         this.pluginCollector = pluginCollector;
         this.taskGroupId = taskGroupId;
@@ -67,7 +68,8 @@ public abstract class TransformerExchanger {
             if (!transformerInfoExec.isChecked()) {
                 if (transformerInfoExec.getColumnIndex() != null &&
                         transformerInfoExec.getColumnIndex() >= record.getColumnNumber()) {
-                    throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER,
+                    throw DataXException.asDataXException(
+                            TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER,
                             String.format("columnIndex[%s] out of bound[%s]. name=%s",
                                     transformerInfoExec.getColumnIndex(), record.getColumnNumber(),
                                     transformerInfoExec.getTransformerName()));
@@ -77,10 +79,13 @@ public abstract class TransformerExchanger {
             }
 
             try {
-                result = transformerInfoExec.getTransformer().evaluate(result, transformerInfoExec.gettContext(),
-                        transformerInfoExec.getFinalParas());
+                result = transformerInfoExec
+                        .getTransformer()
+                        .evaluate(result, transformerInfoExec.gettContext(),
+                                transformerInfoExec.getFinalParas());
             } catch (Exception e) {
-                errorMsg = String.format("transformer(%s) has Exception(%s)", transformerInfoExec.getTransformerName(),
+                errorMsg = String.format("transformer(%s) has Exception(%s)",
+                        transformerInfoExec.getTransformerName(),
                         e.getMessage());
                 failed = true;
                 //LOG.error(errorMsg, e);
@@ -129,9 +134,17 @@ public abstract class TransformerExchanger {
 //                currentCommunication.setLongCounter(CommunicationTool.TRANSFORMER_NAME_PREFIX + transformerInfoExec.getTransformerName(), transformerInfoExec.getExaustedTime());
 //            }
 //        }
-        currentCommunication.setLongCounter(CommunicationTool.TRANSFORMER_SUCCEED_RECORDS, totalSuccessRecords);
-        currentCommunication.setLongCounter(CommunicationTool.TRANSFORMER_FAILED_RECORDS, totalFailedRecords);
-        currentCommunication.setLongCounter(CommunicationTool.TRANSFORMER_FILTER_RECORDS, totalFilterRecords);
-        currentCommunication.setLongCounter(CommunicationTool.TRANSFORMER_USED_TIME, totalExaustedTime);
+        currentCommunication.setLongCounter(
+                CommunicationTool.TRANSFORMER_SUCCEED_RECORDS,
+                totalSuccessRecords);
+        currentCommunication.setLongCounter(
+                CommunicationTool.TRANSFORMER_FAILED_RECORDS,
+                totalFailedRecords);
+        currentCommunication.setLongCounter(
+                CommunicationTool.TRANSFORMER_FILTER_RECORDS,
+                totalFilterRecords);
+        currentCommunication.setLongCounter(
+                CommunicationTool.TRANSFORMER_USED_TIME,
+                totalExaustedTime);
     }
 }

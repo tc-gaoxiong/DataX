@@ -83,7 +83,9 @@ public class ReaderRunner extends AbstractRunner implements Runnable {
             super.destroy();
             desPerfRecord.end();
 
-            channelWaitWrite.end(super.getRunnerCommunication().getLongCounter(CommunicationTool.WAIT_WRITER_TIME));
+            channelWaitWrite.end(super
+                    .getRunnerCommunication()
+                    .getLongCounter(CommunicationTool.WAIT_WRITER_TIME));
 
             long transformerUsedTime = super.getRunnerCommunication()
                     .getLongCounter(CommunicationTool.TRANSFORMER_USED_TIME);

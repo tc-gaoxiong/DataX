@@ -43,7 +43,8 @@ public class HookInvoker {
 
     public void invokeAll() {
         if (!baseDir.exists() || baseDir.isFile()) {
-            LOG.info("No hook invoked, because base dir not exists or is a file: " + baseDir.getAbsolutePath());
+            LOG.info("No hook invoked, because base dir not exists or is a file: "
+                    + baseDir.getAbsolutePath());
             return;
         }
 
@@ -55,7 +56,9 @@ public class HookInvoker {
         });
 
         if (subDirs == null) {
-            throw DataXException.asDataXException(FrameworkErrorCode.HOOK_LOAD_ERROR, "获取HOOK子目录返回null");
+            throw DataXException.asDataXException(
+                    FrameworkErrorCode.HOOK_LOAD_ERROR,
+                    "获取HOOK子目录返回null");
         }
 
         for (String subDir : subDirs) {

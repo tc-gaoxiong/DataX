@@ -72,7 +72,8 @@ public class MemoryChannel extends Channel {
             long startTime = System.nanoTime();
             lock.lockInterruptibly();
             int bytes = getRecordBytes(rs);
-            while (memoryBytes.get() + bytes > this.byteCapacity || rs.size() > this.queue.remainingCapacity()) {
+            while (memoryBytes.get() + bytes > this.byteCapacity
+                    || rs.size() > this.queue.remainingCapacity()) {
                 notSufficient.await(200L, TimeUnit.MILLISECONDS);
             }
             this.queue.addAll(rs);

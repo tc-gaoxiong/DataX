@@ -42,16 +42,21 @@ public class DigestTransformer extends Transformer {
             type = (String) paras[1];
             charType = (String) paras[2];
 
-            if (!StringUtils.equalsIgnoreCase(MD5, type) && !StringUtils.equalsIgnoreCase(SHA1, type)) {
+            if (!StringUtils.equalsIgnoreCase(MD5, type) && !StringUtils.equalsIgnoreCase(
+                    SHA1,
+                    type)) {
                 throw new RuntimeException("dx_digest paras index 1 must be md5 or sha1");
             }
             if (!StringUtils.equalsIgnoreCase(TO_UPPER_CASE, charType) &&
                     !StringUtils.equalsIgnoreCase(TO_LOWER_CASE, charType)) {
-                throw new RuntimeException("dx_digest paras index 2 must be toUpperCase or toLowerCase");
+                throw new RuntimeException(
+                        "dx_digest paras index 2 must be toUpperCase or toLowerCase");
             }
         } catch (Exception e) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER, "paras:"
-                    + Arrays.asList(paras) + " => " + e.getMessage());
+            throw DataXException.asDataXException(
+                    TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER,
+                    "paras:"
+                            + Arrays.asList(paras) + " => " + e.getMessage());
         }
 
         Column column = record.getColumn(columnIndex);
@@ -78,7 +83,10 @@ public class DigestTransformer extends Transformer {
 
             record.setColumn(columnIndex, new StringColumn(newValue));
         } catch (Exception e) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_RUN_EXCEPTION, e.getMessage(), e);
+            throw DataXException.asDataXException(
+                    TransformerErrorCode.TRANSFORMER_RUN_EXCEPTION,
+                    e.getMessage(),
+                    e);
         }
 
         return record;

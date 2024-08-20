@@ -58,7 +58,8 @@ public abstract class AbstractRunner {
         this.runnerCommunication.setState(state);
         if (state == State.SUCCEEDED) {
             // 对 stage + 1
-            this.runnerCommunication.setLongCounter(CommunicationTool.STAGE,
+            this.runnerCommunication.setLongCounter(
+                    CommunicationTool.STAGE,
                     this.runnerCommunication.getLongCounter(CommunicationTool.STAGE) + 1);
         }
     }

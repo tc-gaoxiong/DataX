@@ -31,10 +31,11 @@ public class BufferedRecordTransformerExchanger extends TransformerExchanger imp
     private volatile boolean shutdown = false;
 
     @SuppressWarnings("unchecked")
-    public BufferedRecordTransformerExchanger(final int taskGroupId, final int taskId,
-                                              final Channel channel, final Communication communication,
-                                              final TaskPluginCollector pluginCollector,
-                                              final List<TransformerExecution> tInfoExecs) {
+    public BufferedRecordTransformerExchanger(
+            final int taskGroupId, final int taskId,
+            final Channel channel, final Communication communication,
+            final TaskPluginCollector pluginCollector,
+            final List<TransformerExecution> tInfoExecs) {
         super(taskGroupId, taskId, communication, tInfoExecs, pluginCollector);
         assert null != channel;
         assert null != channel.getConfiguration();
@@ -84,11 +85,15 @@ public class BufferedRecordTransformerExchanger extends TransformerExchanger imp
         }
 
         if (record.getMemorySize() > this.byteCapacity) {
-            this.pluginCollector.collectDirtyRecord(record, new Exception(String.format("单条记录超过大小限制，当前限制为:%s", this.byteCapacity)));
+            this.pluginCollector.collectDirtyRecord(record,
+                    new Exception(String.format(
+                            "单条记录超过大小限制，当前限制为:%s",
+                            this.byteCapacity)));
             return;
         }
 
-        boolean isFull = (this.bufferIndex >= this.bufferSize || this.memoryBytes.get() + record.getMemorySize() > this.byteCapacity);
+        boolean isFull = (this.bufferIndex >= this.bufferSize
+                || this.memoryBytes.get() + record.getMemorySize() > this.byteCapacity);
         if (isFull) {
             flush();
         }

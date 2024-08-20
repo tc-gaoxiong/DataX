@@ -17,11 +17,8 @@ import java.util.List;
 
 public abstract class AbstractScheduler {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractScheduler.class);
-
-    private ErrorRecordChecker errorLimit;
-
     private final AbstractContainerCommunicator containerCommunicator;
-
+    private ErrorRecordChecker errorLimit;
     private Long jobId;
 
     public AbstractScheduler(AbstractContainerCommunicator containerCommunicator) {
@@ -77,7 +74,10 @@ public abstract class AbstractScheduler {
                 long now = System.currentTimeMillis();
                 if (now - lastReportTimeStamp > jobReportIntervalInMillSec) {
                     Communication reportCommunication = CommunicationTool
-                            .getReportCommunication(nowJobContainerCommunication, lastJobContainerCommunication, totalTasks);
+                            .getReportCommunication(
+                                    nowJobContainerCommunication,
+                                    lastJobContainerCommunication,
+                                    totalTasks);
 
                     this.containerCommunicator.report(reportCommunication);
                     lastReportTimeStamp = now;
@@ -94,7 +94,9 @@ public abstract class AbstractScheduler {
                 if (isJobKilling(this.getJobId())) {
                     dealKillingStat(this.containerCommunicator, totalTasks);
                 } else if (nowJobContainerCommunication.getState() == State.FAILED) {
-                    dealFailedStat(this.containerCommunicator, nowJobContainerCommunication.getThrowable());
+                    dealFailedStat(
+                            this.containerCommunicator,
+                            nowJobContainerCommunication.getThrowable());
                 }
 
                 Thread.sleep(jobSleepIntervalInMillSec);
@@ -109,14 +111,20 @@ public abstract class AbstractScheduler {
 
     protected abstract void startAllTaskGroup(List<Configuration> configurations);
 
-    protected abstract void dealFailedStat(AbstractContainerCommunicator frameworkCollector, Throwable throwable);
+    protected abstract void dealFailedStat(
+            AbstractContainerCommunicator frameworkCollector,
+            Throwable throwable);
 
-    protected abstract void dealKillingStat(AbstractContainerCommunicator frameworkCollector, int totalTasks);
+    protected abstract void dealKillingStat(
+            AbstractContainerCommunicator frameworkCollector,
+            int totalTasks);
 
     private int calculateTaskCount(List<Configuration> configurations) {
         int totalTasks = 0;
         for (Configuration taskGroupConfiguration : configurations) {
-            totalTasks += taskGroupConfiguration.getListConfiguration(CoreConstant.DATAX_JOB_CONTENT).size();
+            totalTasks += taskGroupConfiguration
+                    .getListConfiguration(CoreConstant.DATAX_JOB_CONTENT)
+                    .size();
         }
         return totalTasks;
     }

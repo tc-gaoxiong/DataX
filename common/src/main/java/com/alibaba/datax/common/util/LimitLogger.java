@@ -11,24 +11,24 @@ import java.util.Map;
  */
 public class LimitLogger {
 
-    private static Map<String, Long> lastPrintTime = new HashMap<>();
+  private static Map<String, Long> lastPrintTime = new HashMap<>();
 
-    public static void limit(String name, long limit, LoggerFunction function) {
-        if (StringUtils.isBlank(name)) {
-            name = "__all__";
-        }
-        if (limit <= 0) {
-            function.apply();
-        } else {
-            if (!lastPrintTime.containsKey(name)) {
-                lastPrintTime.put(name, System.currentTimeMillis());
-                function.apply();
-            } else {
-                if (System.currentTimeMillis() > lastPrintTime.get(name) + limit) {
-                    lastPrintTime.put(name, System.currentTimeMillis());
-                    function.apply();
-                }
-            }
-        }
+  public static void limit(String name, long limit, LoggerFunction function) {
+    if (StringUtils.isBlank(name)) {
+      name = "__all__";
     }
+    if (limit <= 0) {
+      function.apply();
+    } else {
+      if (!lastPrintTime.containsKey(name)) {
+        lastPrintTime.put(name, System.currentTimeMillis());
+        function.apply();
+      } else {
+        if (System.currentTimeMillis() > lastPrintTime.get(name) + limit) {
+          lastPrintTime.put(name, System.currentTimeMillis());
+          function.apply();
+        }
+      }
+    }
+  }
 }

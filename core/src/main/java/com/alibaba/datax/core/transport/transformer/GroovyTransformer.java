@@ -26,12 +26,17 @@ public class GroovyTransformer extends Transformer {
         if (groovyTransformer == null) {
             // 全局唯一
             if (paras.length < 1 || paras.length > 2) {
-                throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER, "dx_groovy paras must be 1 or 2 . now paras is: " + Arrays.asList(paras).toString());
+                throw DataXException.asDataXException(
+                        TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER,
+                        "dx_groovy paras must be 1 or 2 . now paras is: " + Arrays
+                                .asList(paras)
+                                .toString());
             }
             synchronized (this) {
                 if (groovyTransformer == null) {
                     String code = (String) paras[0];
-                    @SuppressWarnings("unchecked") List<String> extraPackage = paras.length == 2 ? (List<String>) paras[1] : null;
+                    @SuppressWarnings("unchecked") List<String> extraPackage =
+                            paras.length == 2 ? (List<String>) paras[1] : null;
                     initGroovyTransformer(code, extraPackage);
                 }
             }
@@ -48,18 +53,23 @@ public class GroovyTransformer extends Transformer {
         try {
             groovyClass = loader.parseClass(groovyRule);
         } catch (CompilationFailedException cfe) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_GROOVY_INIT_EXCEPTION, cfe);
+            throw DataXException.asDataXException(
+                    TransformerErrorCode.TRANSFORMER_GROOVY_INIT_EXCEPTION,
+                    cfe);
         }
 
         try {
             Object t = groovyClass.newInstance();
             if (!(t instanceof Transformer)) {
-                throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_GROOVY_INIT_EXCEPTION,
+                throw DataXException.asDataXException(
+                        TransformerErrorCode.TRANSFORMER_GROOVY_INIT_EXCEPTION,
                         "datax bug! contact askdatax");
             }
             this.groovyTransformer = (Transformer) t;
         } catch (Throwable ex) {
-            throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_GROOVY_INIT_EXCEPTION, ex);
+            throw DataXException.asDataXException(
+                    TransformerErrorCode.TRANSFORMER_GROOVY_INIT_EXCEPTION,
+                    ex);
         }
     }
 
@@ -72,7 +82,8 @@ public class GroovyTransformer extends Transformer {
                 }
             }
         }
-        sb.append("import static com.alibaba.datax.core.transport.transformer.GroovyTransformerStaticUtil.*;");
+        sb.append(
+                "import static com.alibaba.datax.core.transport.transformer.GroovyTransformerStaticUtil.*;");
         sb.append("import com.alibaba.datax.common.element.*;");
         sb.append("import com.alibaba.datax.common.exception.DataXException;");
         sb.append("import com.alibaba.datax.transformer.Transformer;");

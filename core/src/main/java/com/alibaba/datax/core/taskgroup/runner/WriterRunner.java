@@ -82,7 +82,9 @@ public class WriterRunner extends AbstractRunner implements Runnable {
             super.destroy();
             desPerfRecord.end();
 
-            channelWaitRead.end(super.getRunnerCommunication().getLongCounter(CommunicationTool.WAIT_READER_TIME));
+            channelWaitRead.end(super
+                    .getRunnerCommunication()
+                    .getLongCounter(CommunicationTool.WAIT_READER_TIME));
         }
     }
 

@@ -6,7 +6,13 @@ import com.alibaba.datax.core.util.container.CoreConstant;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 public final class JobAssignUtil {
     private JobAssignUtil() {
@@ -17,15 +23,20 @@ public final class JobAssignUtil {
      * 公平体现在：会考虑 task 中对资源负载作的 load 标识进行更均衡的作业分配操作。
      * TODO 具体文档举例说明
      */
-    public static List<Configuration> assignFairly(Configuration configuration, int channelNumber, int channelsPerTaskGroup) {
+    public static List<Configuration> assignFairly(
+            Configuration configuration,
+            int channelNumber,
+            int channelsPerTaskGroup) {
         Validate.isTrue(configuration != null, "框架获得的 Job 不能为 null.");
 
         List<Configuration> contentConfig = configuration.getListConfiguration(CoreConstant.DATAX_JOB_CONTENT);
         Validate.isTrue(!contentConfig.isEmpty(), "框架获得的切分后的 Job 无内容.");
 
-        Validate.isTrue(channelNumber > 0 && channelsPerTaskGroup > 0,
+        Validate.isTrue(
+                channelNumber > 0 && channelsPerTaskGroup > 0,
                 "每个 channel 的平均 task 数 [averTaskPerChannel]，channel 数目 [channelNumber]，每个 taskGroup 的平均 channel 数 [channelsPerTaskGroup] 都应该为正数");
 
+        // 计算 taskGroup 数量，总的 channel 数量 / 每个 taskGroup 中 channel 数量
         int taskGroupNumber = (int) Math.ceil(1.0 * channelNumber / channelsPerTaskGroup);
 
         Configuration aTaskConfig = contentConfig.get(0);
@@ -41,22 +52,30 @@ public final class JobAssignUtil {
         if (!hasLoadBalanceResourceMark) {
             // fake 一个固定的 key 作为资源标识（在 reader 或者 writer 上均可，此处选择在 reader 上进行 fake）
             for (Configuration conf : contentConfig) {
-                conf.set(CoreConstant.JOB_READER_PARAMETER + "." +
-                        CommonConstant.LOAD_BALANCE_RESOURCE_MARK, "aFakeResourceMarkForLoadBalance");
+                conf.set(
+                        CoreConstant.JOB_READER_PARAMETER + "." +
+                                CommonConstant.LOAD_BALANCE_RESOURCE_MARK,
+                        "aFakeResourceMarkForLoadBalance");
             }
             // 是为了避免某些插件没有设置资源标识 而进行了一次随机打乱操作
             Collections.shuffle(contentConfig, new Random(System.currentTimeMillis()));
         }
 
-        LinkedHashMap<String, List<Integer>> resourceMarkAndTaskIdMap = parseAndGetResourceMarkAndTaskIdMap(contentConfig);
-        List<Configuration> taskGroupConfig = doAssign(resourceMarkAndTaskIdMap, configuration, taskGroupNumber);
+        LinkedHashMap<String, List<Integer>> resourceMarkAndTaskIdMap = parseAndGetResourceMarkAndTaskIdMap(
+                contentConfig);
+        List<Configuration> taskGroupConfig = doAssign(
+                resourceMarkAndTaskIdMap,
+                configuration,
+                taskGroupNumber);
 
         // 调整每个 taskGroup 对应的 Channel 个数（属于优化范畴）
         adjustChannelNumPerTaskGroup(taskGroupConfig, channelNumber);
         return taskGroupConfig;
     }
 
-    private static void adjustChannelNumPerTaskGroup(List<Configuration> taskGroupConfig, int channelNumber) {
+    private static void adjustChannelNumPerTaskGroup(
+            List<Configuration> taskGroupConfig,
+            int channelNumber) {
         int taskGroupNumber = taskGroupConfig.size();
         int avgChannelsPerTaskGroup = channelNumber / taskGroupNumber;
         int remainderChannelCount = channelNumber % taskGroupNumber;
@@ -66,11 +85,19 @@ public final class JobAssignUtil {
 
         int i = 0;
         for (; i < remainderChannelCount; i++) {
-            taskGroupConfig.get(i).set(CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL, avgChannelsPerTaskGroup + 1);
+            taskGroupConfig
+                    .get(i)
+                    .set(
+                            CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL,
+                            avgChannelsPerTaskGroup + 1);
         }
 
         for (int j = 0; j < taskGroupNumber - remainderChannelCount; j++) {
-            taskGroupConfig.get(i + j).set(CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL, avgChannelsPerTaskGroup);
+            taskGroupConfig
+                    .get(i + j)
+                    .set(
+                            CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL,
+                            avgChannelsPerTaskGroup);
         }
     }
 
@@ -86,16 +113,18 @@ public final class JobAssignUtil {
         for (Configuration aTaskConfig : contentConfig) {
             int taskId = aTaskConfig.getInt(CoreConstant.TASK_ID);
             // 把 readerResourceMark 加到 readerResourceMarkAndTaskIdMap 中
-            String readerResourceMark = aTaskConfig.getString(CoreConstant.JOB_READER_PARAMETER + "."
-                    + CommonConstant.LOAD_BALANCE_RESOURCE_MARK);
+            String readerResourceMark = aTaskConfig.getString(
+                    CoreConstant.JOB_READER_PARAMETER + "."
+                            + CommonConstant.LOAD_BALANCE_RESOURCE_MARK);
             if (readerResourceMarkAndTaskIdMap.get(readerResourceMark) == null) {
                 readerResourceMarkAndTaskIdMap.put(readerResourceMark, new LinkedList<>());
             }
             readerResourceMarkAndTaskIdMap.get(readerResourceMark).add(taskId);
 
             // 把 writerResourceMark 加到 writerResourceMarkAndTaskIdMap 中
-            String writerResourceMark = aTaskConfig.getString(CoreConstant.JOB_WRITER_PARAMETER + "."
-                    + CommonConstant.LOAD_BALANCE_RESOURCE_MARK);
+            String writerResourceMark = aTaskConfig.getString(
+                    CoreConstant.JOB_WRITER_PARAMETER + "."
+                            + CommonConstant.LOAD_BALANCE_RESOURCE_MARK);
             if (writerResourceMarkAndTaskIdMap.get(writerResourceMark) == null) {
                 writerResourceMarkAndTaskIdMap.put(writerResourceMark, new LinkedList<>());
             }
@@ -127,8 +156,9 @@ public final class JobAssignUtil {
      * taskGroup-3: 1,  7
      * </pre>
      */
-    private static List<Configuration> doAssign(LinkedHashMap<String, List<Integer>> resourceMarkAndTaskIdMap,
-                                                Configuration jobConfiguration, int taskGroupNumber) {
+    private static List<Configuration> doAssign(
+            LinkedHashMap<String, List<Integer>> resourceMarkAndTaskIdMap,
+            Configuration jobConfiguration, int taskGroupNumber) {
         List<Configuration> contentConfig = jobConfiguration.getListConfiguration(CoreConstant.DATAX_JOB_CONTENT);
 
         Configuration taskGroupTemplate = jobConfiguration.clone();
@@ -156,7 +186,9 @@ public final class JobAssignUtil {
             for (String resourceMark : resourceMarks) {
                 if (resourceMarkAndTaskIdMap.get(resourceMark).size() > 0) {
                     int taskId = resourceMarkAndTaskIdMap.get(resourceMark).get(0);
-                    taskGroupConfigList.get(taskGroupIndex % taskGroupNumber).add(contentConfig.get(taskId));
+                    taskGroupConfigList
+                            .get(taskGroupIndex % taskGroupNumber)
+                            .add(contentConfig.get(taskId));
                     taskGroupIndex++;
 
                     resourceMarkAndTaskIdMap.get(resourceMark).remove(0);

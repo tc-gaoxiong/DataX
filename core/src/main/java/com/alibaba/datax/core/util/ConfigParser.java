@@ -49,7 +49,11 @@ public final class ConfigParser {
             configuration.merge(parsePluginConfig(new ArrayList<String>(pluginList)), false);
         } catch (Exception e) {
             //吞掉异常，保持log干净。这里message足够。
-            LOG.warn(String.format("插件[%s,%s]加载失败，1s后重试... Exception:%s ", readerPluginName, writerPluginName, e.getMessage()));
+            LOG.warn(String.format(
+                    "插件[%s,%s]加载失败，1s后重试... Exception:%s ",
+                    readerPluginName,
+                    writerPluginName,
+                    e.getMessage()));
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e1) {
@@ -92,19 +96,27 @@ public final class ConfigParser {
 
                 jobContent = httpClientUtil.executeAndGetWithFailedRetry(httpGet, 1, 1000l);
             } catch (Exception e) {
-                throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, "获取作业配置信息失败:" + jobResource, e);
+                throw DataXException.asDataXException(
+                        FrameworkErrorCode.CONFIG_ERROR,
+                        "获取作业配置信息失败:" + jobResource,
+                        e);
             }
         } else {
             // jobResource 是本地文件绝对路径
             try {
                 jobContent = FileUtils.readFileToString(new File(jobResource));
             } catch (IOException e) {
-                throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, "获取作业配置信息失败:" + jobResource, e);
+                throw DataXException.asDataXException(
+                        FrameworkErrorCode.CONFIG_ERROR,
+                        "获取作业配置信息失败:" + jobResource,
+                        e);
             }
         }
 
         if (jobContent == null) {
-            throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, "获取作业配置信息失败:" + jobResource);
+            throw DataXException.asDataXException(
+                    FrameworkErrorCode.CONFIG_ERROR,
+                    "获取作业配置信息失败:" + jobResource);
         }
         return jobContent;
     }
@@ -116,7 +128,11 @@ public final class ConfigParser {
         int complete = 0;
         for (final String each : ConfigParser
                 .getDirAsList(CoreConstant.DATAX_PLUGIN_READER_HOME)) {
-            Configuration eachReaderConfig = ConfigParser.parseOnePluginConfig(each, "reader", replicaCheckPluginSet, wantPluginNames);
+            Configuration eachReaderConfig = ConfigParser.parseOnePluginConfig(
+                    each,
+                    "reader",
+                    replicaCheckPluginSet,
+                    wantPluginNames);
             if (eachReaderConfig != null) {
                 configuration.merge(eachReaderConfig, true);
                 complete += 1;
@@ -125,24 +141,32 @@ public final class ConfigParser {
 
         for (final String each : ConfigParser
                 .getDirAsList(CoreConstant.DATAX_PLUGIN_WRITER_HOME)) {
-            Configuration eachWriterConfig = ConfigParser.parseOnePluginConfig(each, "writer", replicaCheckPluginSet, wantPluginNames);
+            Configuration eachWriterConfig = ConfigParser.parseOnePluginConfig(
+                    each,
+                    "writer",
+                    replicaCheckPluginSet,
+                    wantPluginNames);
             if (eachWriterConfig != null) {
                 configuration.merge(eachWriterConfig, true);
                 complete += 1;
             }
         }
 
-        if (wantPluginNames != null && wantPluginNames.size() > 0 && wantPluginNames.size() != complete) {
-            throw DataXException.asDataXException(FrameworkErrorCode.PLUGIN_INIT_ERROR, "插件加载失败，未完成指定插件加载:" + wantPluginNames);
+        if (wantPluginNames != null && wantPluginNames.size() > 0
+                && wantPluginNames.size() != complete) {
+            throw DataXException.asDataXException(
+                    FrameworkErrorCode.PLUGIN_INIT_ERROR,
+                    "插件加载失败，未完成指定插件加载:" + wantPluginNames);
         }
 
         return configuration;
     }
 
 
-    public static Configuration parseOnePluginConfig(final String path,
-                                                     final String type,
-                                                     Set<String> pluginSet, List<String> wantPluginNames) {
+    public static Configuration parseOnePluginConfig(
+            final String path,
+            final String type,
+            Set<String> pluginSet, List<String> wantPluginNames) {
         String filePath = path + File.separator + "plugin.json";
         Configuration configuration = Configuration.from(new File(filePath));
 
@@ -151,11 +175,14 @@ public final class ConfigParser {
         if (!pluginSet.contains(pluginName)) {
             pluginSet.add(pluginName);
         } else {
-            throw DataXException.asDataXException(FrameworkErrorCode.PLUGIN_INIT_ERROR, "插件加载失败,存在重复插件:" + filePath);
+            throw DataXException.asDataXException(
+                    FrameworkErrorCode.PLUGIN_INIT_ERROR,
+                    "插件加载失败,存在重复插件:" + filePath);
         }
 
         //不是想要的插件，返回null
-        if (wantPluginNames != null && wantPluginNames.size() > 0 && !wantPluginNames.contains(pluginName)) {
+        if (wantPluginNames != null && wantPluginNames.size() > 0 && !wantPluginNames.contains(
+                pluginName)) {
             return null;
         }
 

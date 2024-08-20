@@ -82,8 +82,13 @@ public class TaskMonitor {
             } else if (isExpired(lastUpdateComunicationTS)) {
                 communication.setState(State.FAILED);
                 communication.setTimestamp(ttl);
-                communication.setThrowable(DataXException.asDataXException(CommonErrorCode.TASK_HUNG_EXPIRED,
-                        String.format("task(%s) hung expired [allReadRecord(%s), elased(%s)]", taskId, lastAllReadRecords, (ttl - lastUpdateComunicationTS))));
+                communication.setThrowable(DataXException.asDataXException(
+                        CommonErrorCode.TASK_HUNG_EXPIRED,
+                        String.format(
+                                "task(%s) hung expired [allReadRecord(%s), elased(%s)]",
+                                taskId,
+                                lastAllReadRecords,
+                                (ttl - lastUpdateComunicationTS))));
             }
         }
 

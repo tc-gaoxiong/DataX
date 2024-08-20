@@ -26,7 +26,8 @@ public class ClassSize {
         ARRAYLIST = align(OBJECT + align(REFERENCE) + align(ARRAY) +
                 (2 * Long.SIZE / Byte.SIZE));
         // 8+64+8
-        DefaultRecordHead = align(align(REFERENCE) + ClassSize.ARRAYLIST + 2 * Integer.SIZE / Byte.SIZE);
+        DefaultRecordHead = align(
+                align(REFERENCE) + ClassSize.ARRAYLIST + 2 * Integer.SIZE / Byte.SIZE);
         //16+4
         ColumnHead = align(2 * REFERENCE + Integer.SIZE / Byte.SIZE);
     }

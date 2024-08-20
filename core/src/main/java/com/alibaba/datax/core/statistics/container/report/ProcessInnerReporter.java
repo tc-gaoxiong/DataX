@@ -5,13 +5,13 @@ import com.alibaba.datax.core.statistics.communication.LocalTGCommunicationManag
 
 public class ProcessInnerReporter extends AbstractReporter {
 
-    @Override
-    public void reportJobCommunication(Long jobId, Communication communication) {
-        // do nothing
-    }
+  @Override
+  public void reportJobCommunication(Long jobId, Communication communication) {
+    // do nothing
+  }
 
-    @Override
-    public void reportTGCommunication(Integer taskGroupId, Communication communication) {
-        LocalTGCommunicationManager.updateTaskGroupCommunication(taskGroupId, communication);
-    }
+  @Override
+  public void reportTGCommunication(Integer taskGroupId, Communication communication) {
+    LocalTGCommunicationManager.updateTaskGroupCommunication(taskGroupId, communication);
+  }
 }
