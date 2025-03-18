@@ -26,7 +26,8 @@ public enum MysqlWriterErrorCode implements ErrorCode {
 
   @Override
   public String toString() {
-    return String.format("Code:[%s], Describe:[%s]. ", this.code,
-        this.describe);
+    return String.format(
+            "Code:[%s], Describe:[%s]. ", this.code,
+            this.describe);
   }
 }

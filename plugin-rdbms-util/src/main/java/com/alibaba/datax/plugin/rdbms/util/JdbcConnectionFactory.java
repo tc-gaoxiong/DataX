@@ -15,7 +15,11 @@ public class JdbcConnectionFactory implements ConnectionFactory {
 
   private String password;
 
-  public JdbcConnectionFactory(DataBaseType dataBaseType, String jdbcUrl, String userName, String password) {
+  public JdbcConnectionFactory(
+          DataBaseType dataBaseType,
+          String jdbcUrl,
+          String userName,
+          String password) {
     this.dataBaseType = dataBaseType;
     this.jdbcUrl = jdbcUrl;
     this.userName = userName;

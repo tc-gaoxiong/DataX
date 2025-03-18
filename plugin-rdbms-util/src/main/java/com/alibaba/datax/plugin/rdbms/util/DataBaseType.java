@@ -92,7 +92,9 @@ public enum DataBaseType {
       case GaussDB:
         break;
       default:
-        throw DataXException.asDataXException(DBUtilErrorCode.UNSUPPORTED_TYPE, "unsupported database type.");
+        throw DataXException.asDataXException(
+                DBUtilErrorCode.UNSUPPORTED_TYPE,
+                "unsupported database type.");
     }
 
     return result;
@@ -155,7 +157,9 @@ public enum DataBaseType {
       case GaussDB:
         break;
       default:
-        throw DataXException.asDataXException(DBUtilErrorCode.UNSUPPORTED_TYPE, "unsupported database type.");
+        throw DataXException.asDataXException(
+                DBUtilErrorCode.UNSUPPORTED_TYPE,
+                "unsupported database type.");
     }
 
     return result;
@@ -184,7 +188,9 @@ public enum DataBaseType {
       case GaussDB:
         break;
       default:
-        throw DataXException.asDataXException(DBUtilErrorCode.UNSUPPORTED_TYPE, "unsupported database type.");
+        throw DataXException.asDataXException(
+                DBUtilErrorCode.UNSUPPORTED_TYPE,
+                "unsupported database type.");
     }
 
     return result;
@@ -210,7 +216,9 @@ public enum DataBaseType {
       case GaussDB:
         break;
       default:
-        throw DataXException.asDataXException(DBUtilErrorCode.UNSUPPORTED_TYPE, "unsupported database type");
+        throw DataXException.asDataXException(
+                DBUtilErrorCode.UNSUPPORTED_TYPE,
+                "unsupported database type");
     }
 
     return result;
@@ -238,7 +246,9 @@ public enum DataBaseType {
       case GaussDB:
         break;
       default:
-        throw DataXException.asDataXException(DBUtilErrorCode.UNSUPPORTED_TYPE, "unsupported database type");
+        throw DataXException.asDataXException(
+                DBUtilErrorCode.UNSUPPORTED_TYPE,
+                "unsupported database type");
     }
 
     return result;

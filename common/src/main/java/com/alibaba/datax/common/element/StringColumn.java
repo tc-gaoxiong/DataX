@@ -18,8 +18,9 @@ public class StringColumn extends Column {
   }
 
   public StringColumn(final String rawData) {
-    super(rawData, Column.Type.STRING, (null == rawData ? 0 : rawData
-        .length()));
+    super(
+            rawData, Column.Type.STRING, (null == rawData ? 0 : rawData
+                    .length()));
   }
 
   @Override
@@ -33,10 +34,10 @@ public class StringColumn extends Column {
 
   private void validateDoubleSpecific(final String data) {
     if ("NaN".equals(data) || "Infinity".equals(data)
-        || "-Infinity".equals(data)) {
+            || "-Infinity".equals(data)) {
       throw DataXException.asDataXException(
-          CommonErrorCode.CONVERT_NOT_SUPPORT,
-          String.format("String[\"%s\"]属于Double特殊类型，不能转为其他类型 .", data));
+              CommonErrorCode.CONVERT_NOT_SUPPORT,
+              String.format("String[\"%s\"]属于Double特殊类型，不能转为其他类型 .", data));
     }
 
     return;
@@ -54,8 +55,8 @@ public class StringColumn extends Column {
       return this.asBigDecimal().toBigInteger();
     } catch (Exception e) {
       throw DataXException.asDataXException(
-          CommonErrorCode.CONVERT_NOT_SUPPORT, String.format(
-              "String[\"%s\"]不能转为BigInteger .", this.asString()));
+              CommonErrorCode.CONVERT_NOT_SUPPORT, String.format(
+                      "String[\"%s\"]不能转为BigInteger .", this.asString()));
     }
   }
 
@@ -73,8 +74,8 @@ public class StringColumn extends Column {
       return integer.longValue();
     } catch (Exception e) {
       throw DataXException.asDataXException(
-          CommonErrorCode.CONVERT_NOT_SUPPORT,
-          String.format("String[\"%s\"]不能转为Long .", this.asString()));
+              CommonErrorCode.CONVERT_NOT_SUPPORT,
+              String.format("String[\"%s\"]不能转为Long .", this.asString()));
     }
   }
 
@@ -90,8 +91,8 @@ public class StringColumn extends Column {
       return new BigDecimal(this.asString());
     } catch (Exception e) {
       throw DataXException.asDataXException(
-          CommonErrorCode.CONVERT_NOT_SUPPORT, String.format(
-              "String [\"%s\"] 不能转为BigDecimal .", this.asString()));
+              CommonErrorCode.CONVERT_NOT_SUPPORT, String.format(
+                      "String [\"%s\"] 不能转为BigDecimal .", this.asString()));
     }
   }
 
@@ -135,8 +136,8 @@ public class StringColumn extends Column {
     }
 
     throw DataXException.asDataXException(
-        CommonErrorCode.CONVERT_NOT_SUPPORT,
-        String.format("String[\"%s\"]不能转为Bool .", this.asString()));
+            CommonErrorCode.CONVERT_NOT_SUPPORT,
+            String.format("String[\"%s\"]不能转为Bool .", this.asString()));
   }
 
   @Override
@@ -145,8 +146,8 @@ public class StringColumn extends Column {
       return ColumnCast.string2Date(this);
     } catch (Exception e) {
       throw DataXException.asDataXException(
-          CommonErrorCode.CONVERT_NOT_SUPPORT,
-          String.format("String[\"%s\"]不能转为Date .", this.asString()));
+              CommonErrorCode.CONVERT_NOT_SUPPORT,
+              String.format("String[\"%s\"]不能转为Date .", this.asString()));
     }
   }
 
@@ -155,8 +156,9 @@ public class StringColumn extends Column {
     try {
       return ColumnCast.string2Date(this, dateFormat);
     } catch (Exception e) {
-      throw DataXException.asDataXException(CommonErrorCode.CONVERT_NOT_SUPPORT,
-          String.format("String[\"%s\"]不能转为Date .", this.asString()));
+      throw DataXException.asDataXException(
+              CommonErrorCode.CONVERT_NOT_SUPPORT,
+              String.format("String[\"%s\"]不能转为Date .", this.asString()));
     }
   }
 
@@ -166,8 +168,8 @@ public class StringColumn extends Column {
       return ColumnCast.string2Bytes(this);
     } catch (Exception e) {
       throw DataXException.asDataXException(
-          CommonErrorCode.CONVERT_NOT_SUPPORT,
-          String.format("String[\"%s\"]不能转为Bytes .", this.asString()));
+              CommonErrorCode.CONVERT_NOT_SUPPORT,
+              String.format("String[\"%s\"]不能转为Bytes .", this.asString()));
     }
   }
 }

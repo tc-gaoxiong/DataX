@@ -15,11 +15,13 @@ import java.util.List;
  */
 public final class ListUtil {
 
-  public static boolean checkIfValueDuplicate(List<String> aList,
-                                              boolean caseSensitive) {
+  public static boolean checkIfValueDuplicate(
+          List<String> aList,
+          boolean caseSensitive) {
     if (null == aList || aList.isEmpty()) {
-      throw DataXException.asDataXException(CommonErrorCode.CONFIG_ERROR,
-          "您提供的作业配置有误，List不能为空.");
+      throw DataXException.asDataXException(
+              CommonErrorCode.CONFIG_ERROR,
+              "您提供的作业配置有误，List不能为空.");
     }
 
     try {
@@ -30,8 +32,9 @@ public final class ListUtil {
     return false;
   }
 
-  public static void makeSureNoValueDuplicate(List<String> aList,
-                                              boolean caseSensitive) {
+  public static void makeSureNoValueDuplicate(
+          List<String> aList,
+          boolean caseSensitive) {
     if (null == aList || aList.isEmpty()) {
       throw new IllegalArgumentException("您提供的作业配置有误, List不能为空.");
     }
@@ -51,21 +54,22 @@ public final class ListUtil {
       for (int i = 0, len = list.size() - 1; i < len; i++) {
         if (list.get(i).equals(list.get(i + 1))) {
           throw DataXException
-              .asDataXException(
-                  CommonErrorCode.CONFIG_ERROR,
-                  String.format(
-                      "您提供的作业配置信息有误, String:[%s] 不允许重复出现在列表中: [%s].",
-                      list.get(i),
-                      StringUtils.join(aList, ",")));
+                  .asDataXException(
+                          CommonErrorCode.CONFIG_ERROR,
+                          String.format(
+                                  "您提供的作业配置信息有误, String:[%s] 不允许重复出现在列表中: [%s].",
+                                  list.get(i),
+                                  StringUtils.join(aList, ",")));
         }
       }
     }
   }
 
-  public static boolean checkIfBInA(List<String> aList, List<String> bList,
-                                    boolean caseSensitive) {
+  public static boolean checkIfBInA(
+          List<String> aList, List<String> bList,
+          boolean caseSensitive) {
     if (null == aList || aList.isEmpty() || null == bList
-        || bList.isEmpty()) {
+            || bList.isEmpty()) {
       throw new IllegalArgumentException("您提供的作业配置有误, List不能为空.");
     }
 
@@ -77,10 +81,11 @@ public final class ListUtil {
     return true;
   }
 
-  public static void makeSureBInA(List<String> aList, List<String> bList,
-                                  boolean caseSensitive) {
+  public static void makeSureBInA(
+          List<String> aList, List<String> bList,
+          boolean caseSensitive) {
     if (null == aList || aList.isEmpty() || null == bList
-        || bList.isEmpty()) {
+            || bList.isEmpty()) {
       throw new IllegalArgumentException("您提供的作业配置有误, List不能为空.");
     }
 
@@ -98,11 +103,11 @@ public final class ListUtil {
     for (String oneValue : part) {
       if (!all.contains(oneValue)) {
         throw DataXException
-            .asDataXException(
-                CommonErrorCode.CONFIG_ERROR,
-                String.format(
-                    "您提供的作业配置信息有误, String:[%s] 不存在于列表中:[%s].",
-                    oneValue, StringUtils.join(aList, ",")));
+                .asDataXException(
+                        CommonErrorCode.CONFIG_ERROR,
+                        String.format(
+                                "您提供的作业配置信息有误, String:[%s] 不存在于列表中:[%s].",
+                                oneValue, StringUtils.join(aList, ",")));
       }
     }
 
@@ -153,7 +158,8 @@ public final class ListUtil {
   }
 
   public static boolean checkIfAllSameValue(List<String> listA, List<String> listB) {
-    if (null == listA || listA.isEmpty() || null == listB || listB.isEmpty() || listA.size() != listB.size()) {
+    if (null == listA || listA.isEmpty() || null == listB || listB.isEmpty()
+            || listA.size() != listB.size()) {
       return false;
     }
     return new HashSet<>(listA).containsAll(new HashSet<>(listB));

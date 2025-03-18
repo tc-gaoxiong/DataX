@@ -12,8 +12,18 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Configuration 提供多级 JSON 配置信息无损存储 <br>
@@ -65,9 +75,11 @@ public class Configuration {
     try {
       this.root = JSON.parse(json);
     } catch (Exception e) {
-      throw DataXException.asDataXException(CommonErrorCode.CONFIG_ERROR,
-          String.format("配置信息错误。您提供的配置信息不是合法的 JSON 格式: %s。请按照标准 json 格式提供配置信息。",
-              e.getMessage()));
+      throw DataXException.asDataXException(
+              CommonErrorCode.CONFIG_ERROR,
+              String.format(
+                      "配置信息错误。您提供的配置信息不是合法的 JSON 格式: %s。请按照标准 json 格式提供配置信息。",
+                      e.getMessage()));
     }
   }
 
@@ -100,13 +112,17 @@ public class Configuration {
     try {
       return Configuration.from(IOUtils.toString(new FileInputStream(file)));
     } catch (FileNotFoundException e) {
-      throw DataXException.asDataXException(CommonErrorCode.CONFIG_ERROR,
-          String.format("配置信息错误，您提供的配置文件[%s]不存在。请检查您的配置文件。", file.getAbsolutePath()));
+      throw DataXException.asDataXException(
+              CommonErrorCode.CONFIG_ERROR,
+              String.format(
+                      "配置信息错误，您提供的配置文件[%s]不存在。请检查您的配置文件。",
+                      file.getAbsolutePath()));
     } catch (IOException e) {
       throw DataXException.asDataXException(
-          CommonErrorCode.CONFIG_ERROR,
-          String.format("配置信息错误。您提供配置文件[%s]读取失败，错误原因: %s。请检查您的配置文件的权限设置。",
-              file.getAbsolutePath(), e));
+              CommonErrorCode.CONFIG_ERROR,
+              String.format(
+                      "配置信息错误。您提供配置文件[%s]读取失败，错误原因: %s。请检查您的配置文件的权限设置。",
+                      file.getAbsolutePath(), e));
     }
   }
 
@@ -117,8 +133,11 @@ public class Configuration {
     try {
       return Configuration.from(IOUtils.toString(is));
     } catch (IOException e) {
-      throw DataXException.asDataXException(CommonErrorCode.CONFIG_ERROR,
-          String.format("请检查您的配置文件. 您提供的配置文件读取失败，错误原因: %s. 请检查您的配置文件的权限设置.", e));
+      throw DataXException.asDataXException(
+              CommonErrorCode.CONFIG_ERROR,
+              String.format(
+                      "请检查您的配置文件. 您提供的配置文件读取失败，错误原因: %s. 请检查您的配置文件的权限设置.",
+                      e));
     }
   }
 
@@ -141,8 +160,9 @@ public class Configuration {
    */
   private static void checkJSON(final String json) {
     if (StringUtils.isBlank(json)) {
-      throw DataXException.asDataXException(CommonErrorCode.CONFIG_ERROR,
-          "配置信息错误. 因为您提供的配置信息不是合法的JSON格式, JSON不能为空白. 请按照标准json格式提供配置信息.");
+      throw DataXException.asDataXException(
+              CommonErrorCode.CONFIG_ERROR,
+              "配置信息错误. 因为您提供的配置信息不是合法的JSON格式, JSON不能为空白. 请按照标准json格式提供配置信息.");
     }
   }
 
@@ -153,8 +173,9 @@ public class Configuration {
   public String getNecessaryValue(String key, ErrorCode errorCode) {
     String value = this.getString(key, null);
     if (StringUtils.isBlank(value)) {
-      throw DataXException.asDataXException(errorCode,
-          String.format("您提供配置文件有误，[%s]是必填参数，不允许为空或者留白。", key));
+      throw DataXException.asDataXException(
+              errorCode,
+              String.format("您提供配置文件有误，[%s]是必填参数，不允许为空或者留白。", key));
     }
 
     return value;
@@ -171,8 +192,9 @@ public class Configuration {
   public Boolean getNecessaryBool(String key, ErrorCode errorCode) {
     Boolean value = this.getBool(key);
     if (value == null) {
-      throw DataXException.asDataXException(errorCode,
-          String.format("您提供配置文件有误，[%s]是必填参数，不允许为空或者留白。", key));
+      throw DataXException.asDataXException(
+              errorCode,
+              String.format("您提供配置文件有误，[%s]是必填参数，不允许为空或者留白。", key));
     }
 
     return value;
@@ -266,9 +288,10 @@ public class Configuration {
       return CharUtils.toChar(result);
     } catch (Exception e) {
       throw DataXException.asDataXException(
-          CommonErrorCode.CONFIG_ERROR,
-          String.format("任务读取配置文件出错。 因为配置文件路径[%s] 值非法，期望是字符类型: %s. 请检查您的配置并作出修改。",
-              path, e.getMessage()));
+              CommonErrorCode.CONFIG_ERROR,
+              String.format(
+                      "任务读取配置文件出错。 因为配置文件路径[%s] 值非法，期望是字符类型: %s. 请检查您的配置并作出修改。",
+                      path, e.getMessage()));
     }
   }
 
@@ -301,9 +324,11 @@ public class Configuration {
     } else if ("false".equalsIgnoreCase(result)) {
       return Boolean.FALSE;
     } else {
-      throw DataXException.asDataXException(CommonErrorCode.CONFIG_ERROR,
-          String.format("您提供的配置信息有误，因为从[%s]获取的值[%s]无法转换为bool类型. 请检查源表的配置并且做出相应的修改.",
-              path, result));
+      throw DataXException.asDataXException(
+              CommonErrorCode.CONFIG_ERROR,
+              String.format(
+                      "您提供的配置信息有误，因为从[%s]获取的值[%s]无法转换为bool类型. 请检查源表的配置并且做出相应的修改.",
+                      path, result));
     }
 
   }
@@ -336,9 +361,11 @@ public class Configuration {
       return Integer.valueOf(result);
     } catch (Exception e) {
       throw DataXException.asDataXException(
-          CommonErrorCode.CONFIG_ERROR,
-          String.format("任务读取配置文件出错. 配置文件路径[%s] 值非法, 期望是整数类型: %s. 请检查您的配置并作出修改.", path,
-              e.getMessage()));
+              CommonErrorCode.CONFIG_ERROR,
+              String.format(
+                      "任务读取配置文件出错. 配置文件路径[%s] 值非法, 期望是整数类型: %s. 请检查您的配置并作出修改.",
+                      path,
+                      e.getMessage()));
     }
   }
 
@@ -370,9 +397,11 @@ public class Configuration {
       return Long.valueOf(result);
     } catch (Exception e) {
       throw DataXException.asDataXException(
-          CommonErrorCode.CONFIG_ERROR,
-          String.format("任务读取配置文件出错. 配置文件路径[%s] 值非法, 期望是整数类型: %s. 请检查您的配置并作出修改.", path,
-              e.getMessage()));
+              CommonErrorCode.CONFIG_ERROR,
+              String.format(
+                      "任务读取配置文件出错. 配置文件路径[%s] 值非法, 期望是整数类型: %s. 请检查您的配置并作出修改.",
+                      path,
+                      e.getMessage()));
     }
   }
 
@@ -404,9 +433,11 @@ public class Configuration {
       return Double.valueOf(result);
     } catch (Exception e) {
       throw DataXException.asDataXException(
-          CommonErrorCode.CONFIG_ERROR,
-          String.format("任务读取配置文件出错. 配置文件路径[%s] 值非法, 期望是浮点类型: %s. 请检查您的配置并作出修改.", path,
-              e.getMessage()));
+              CommonErrorCode.CONFIG_ERROR,
+              String.format(
+                      "任务读取配置文件出错. 配置文件路径[%s] 值非法, 期望是浮点类型: %s. 请检查您的配置并作出修改.",
+                      path,
+                      e.getMessage()));
     }
   }
 
@@ -464,8 +495,9 @@ public class Configuration {
    * 根据用户提供的json path，寻址List对象，如果对象不存在，返回默认List
    */
   @SuppressWarnings("unchecked")
-  public List<Object> getList(final String path,
-                              final List<Object> defaultList) {
+  public List<Object> getList(
+          final String path,
+          final List<Object> defaultList) {
     Object object = this.getList(path);
     if (null == object) {
       return defaultList;
@@ -564,8 +596,9 @@ public class Configuration {
 
     Map<String, Configuration> result = new HashMap<>();
     for (final String key : map.keySet()) {
-      result.put(key, Configuration.from(Configuration.toJSONString(map
-          .get(key))));
+      result.put(
+              key, Configuration.from(Configuration.toJSONString(map
+                      .get(key))));
     }
 
     return result;
@@ -619,8 +652,9 @@ public class Configuration {
    * 对于插入对象，Configuration 不做任何限制，但是请务必保证该对象是简单对象(包括Map<String,
    * Object>、List<Object>)，不要使用自定义对象，否则后续对于JSON序列化等情况会出现未定义行为。
    *
-   * @param path   JSON path 对象
+   * @param path JSON path 对象
    * @param object 需要插入的对象
+   *
    * @return Java 表示的 JSON 对象
    */
   public Object set(final String path, final Object object) {
@@ -657,8 +691,10 @@ public class Configuration {
     final Object result = this.get(path);
     if (null == result) {
       throw DataXException.asDataXException(
-          CommonErrorCode.RUNTIME_ERROR,
-          String.format("配置文件对应Key[%s]并不存在，该情况是代码编程错误. 请联系DataX团队的同学.", path));
+              CommonErrorCode.RUNTIME_ERROR,
+              String.format(
+                      "配置文件对应Key[%s]并不存在，该情况是代码编程错误. 请联系DataX团队的同学.",
+                      path));
     }
 
     this.set(path, null);
@@ -668,8 +704,9 @@ public class Configuration {
   /**
    * 合并其他 Configuration，并修改两者冲突的 KV 配置
    *
-   * @param another            合并加入的第三方 Configuration
+   * @param another 合并加入的第三方 Configuration
    * @param updateWhenConflict 当合并双方出现 KV 冲突时候，选择更新当前 KV，或者忽略该 KV
+   *
    * @return 返回合并后对象
    */
   public Configuration merge(final Configuration another, boolean updateWhenConflict) {
@@ -792,9 +829,11 @@ public class Configuration {
       return;
     }
 
-    throw DataXException.asDataXException(CommonErrorCode.RUNTIME_ERROR,
-        String.format("值[%s]无法适配您提供[%s]， 该异常代表系统编程错误, 请联系DataX开发团队!",
-            ToStringBuilder.reflectionToString(object), path));
+    throw DataXException.asDataXException(
+            CommonErrorCode.RUNTIME_ERROR,
+            String.format(
+                    "值[%s]无法适配您提供[%s]， 该异常代表系统编程错误, 请联系DataX开发团队!",
+                    ToStringBuilder.reflectionToString(object), path));
   }
 
   @SuppressWarnings("unchecked")
@@ -815,8 +854,9 @@ public class Configuration {
     if (object instanceof Map) {
       Map<String, Object> result = new HashMap<>();
       for (final String key : ((Map<String, Object>) object).keySet()) {
-        result.put(key,
-            extractFromConfiguration(((Map<String, Object>) object).get(key)));
+        result.put(
+                key,
+                extractFromConfiguration(((Map<String, Object>) object).get(key)));
       }
 
       return result;
@@ -836,8 +876,8 @@ public class Configuration {
   Object buildObject(final List<String> paths, final Object object) {
     if (null == paths) {
       throw DataXException.asDataXException(
-          CommonErrorCode.RUNTIME_ERROR,
-          "Path不能为null，该异常代表系统编程错误，请联系DataX开发团队！");
+              CommonErrorCode.RUNTIME_ERROR,
+              "Path不能为null，该异常代表系统编程错误，请联系DataX开发团队！");
     }
 
     if (1 == paths.size() && StringUtils.isBlank(paths.get(0))) {
@@ -864,16 +904,20 @@ public class Configuration {
       }
 
       throw DataXException.asDataXException(
-          CommonErrorCode.RUNTIME_ERROR, String.format(
-              "路径[%s]出现非法值类型[%s]，该异常代表系统编程错误，请联系DataX开发团队！",
-              StringUtils.join(paths, "."), path));
+              CommonErrorCode.RUNTIME_ERROR, String.format(
+                      "路径[%s]出现非法值类型[%s]，该异常代表系统编程错误，请联系DataX开发团队！",
+                      StringUtils.join(paths, "."), path));
     }
 
     return child;
   }
 
   @SuppressWarnings("unchecked")
-  Object setObjectRecursive(Object current, final List<String> paths, int index, final Object value) {
+  Object setObjectRecursive(
+          Object current,
+          final List<String> paths,
+          int index,
+          final Object value) {
     // 如果是已经超出path，我们就返回value即可，作为最底层叶子节点
     boolean isLastIndex = index == paths.size();
     if (isLastIndex) {
@@ -937,7 +981,9 @@ public class Configuration {
       return lists;
     }
 
-    throw DataXException.asDataXException(CommonErrorCode.RUNTIME_ERROR, "该异常代表系统编程错误，请联系DataX开发团队！");
+    throw DataXException.asDataXException(
+            CommonErrorCode.RUNTIME_ERROR,
+            "该异常代表系统编程错误，请联系DataX开发团队！");
   }
 
   private Object findObject(final String path) {
@@ -968,14 +1014,15 @@ public class Configuration {
     boolean isMap = (target instanceof Map);
     if (!isMap) {
       throw new IllegalArgumentException(String.format(
-          "您提供的配置文件有误。路径[%s]需要配置Json格式的Map对象，但该节点发现实际类型是[%s]。请检查您的配置并作出修改。",
-          index, target.getClass()));
+              "您提供的配置文件有误。路径[%s]需要配置Json格式的Map对象，但该节点发现实际类型是[%s]。请检查您的配置并作出修改。",
+              index, target.getClass()));
     }
 
     Object result = ((Map<String, Object>) target).get(index);
     if (null == result) {
       throw new IllegalArgumentException(String.format(
-          "您提供的配置文件有误。路径[%s]值为null，datax无法识别该配置。请检查您的配置并作出修改。", index));
+              "您提供的配置文件有误。路径[%s]值为null，datax无法识别该配置。请检查您的配置并作出修改。",
+              index));
     }
 
     return result;
@@ -986,16 +1033,16 @@ public class Configuration {
     boolean isList = (target instanceof List);
     if (!isList) {
       throw new IllegalArgumentException(String.format(
-          "您提供的配置文件有误。路径[%s]需要配置Json格式的Map对象，但该节点发现实际类型是[%s]。请检查您的配置并作出修改。",
-          each, target.getClass()));
+              "您提供的配置文件有误。路径[%s]需要配置Json格式的Map对象，但该节点发现实际类型是[%s]。请检查您的配置并作出修改。",
+              each, target.getClass()));
     }
 
     String index = each.replace("[", "").replace("]", "");
     if (!StringUtils.isNumeric(index)) {
       throw new IllegalArgumentException(
-          String.format(
-              "系统编程错误，列表下标必须为数字类型，但该节点发现实际类型是[%s]，该异常代表系统编程错误，请联系DataX开发团队！",
-              index));
+              String.format(
+                      "系统编程错误，列表下标必须为数字类型，但该节点发现实际类型是[%s]，该异常代表系统编程错误，请联系DataX开发团队！",
+                      index));
     }
 
     return ((List<Object>) target).get(Integer.parseInt(index));
@@ -1034,6 +1081,7 @@ public class Configuration {
    * 将 [ 替换为 .[
    *
    * @param path a.b.c[0]
+   *
    * @return a.b.c.[0]
    */
   private String split(final String path) {
@@ -1044,6 +1092,7 @@ public class Configuration {
    * 将路径切割为列表
    *
    * @param path a.b.c[0]
+   *
    * @return [a, b, c, [0]]
    */
   private List<String> split2List(final String path) {
@@ -1061,7 +1110,7 @@ public class Configuration {
     for (final String each : StringUtils.split(".")) {
       if (StringUtils.isBlank(each)) {
         throw new IllegalArgumentException(String.format(
-            "系统编程错误，路径[%s]不合法，路径层次之间不能出现空白字符。", path));
+                "系统编程错误，路径[%s]不合法，路径层次之间不能出现空白字符。", path));
       }
     }
   }

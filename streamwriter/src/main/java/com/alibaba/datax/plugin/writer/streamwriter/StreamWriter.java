@@ -12,7 +12,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,11 +26,11 @@ public class StreamWriter extends Writer {
     switch (IOUtils.DIR_SEPARATOR) {
       case IOUtils.DIR_SEPARATOR_UNIX:
         isEndWithSeparator = path.endsWith(String
-            .valueOf(IOUtils.DIR_SEPARATOR));
+                .valueOf(IOUtils.DIR_SEPARATOR));
         break;
       case IOUtils.DIR_SEPARATOR_WINDOWS:
         isEndWithSeparator = path.endsWith(String
-            .valueOf(IOUtils.DIR_SEPARATOR_WINDOWS));
+                .valueOf(IOUtils.DIR_SEPARATOR_WINDOWS));
         break;
       default:
         break;
@@ -39,7 +43,7 @@ public class StreamWriter extends Writer {
 
   public static class Job extends Writer.Job {
     private static final Logger LOG = LoggerFactory
-        .getLogger(Job.class);
+            .getLogger(Job.class);
 
     private Configuration originalConfig;
 
@@ -61,20 +65,21 @@ public class StreamWriter extends Writer {
         File dir = new File(path);
         if (dir.isFile()) {
           throw DataXException
-              .asDataXException(
-                  StreamWriterErrorCode.ILLEGAL_VALUE,
-                  String.format(
-                      "您配置的path: [%s] 不是一个合法的目录, 请您注意文件重名, 不合法目录名等情况.",
-                      path));
+                  .asDataXException(
+                          StreamWriterErrorCode.ILLEGAL_VALUE,
+                          String.format(
+                                  "您配置的path: [%s] 不是一个合法的目录, 请您注意文件重名, 不合法目录名等情况.",
+                                  path));
         }
         if (!dir.exists()) {
           boolean createdOk = dir.mkdirs();
           if (!createdOk) {
             throw DataXException
-                .asDataXException(
-                    StreamWriterErrorCode.CONFIG_INVALID_EXCEPTION,
-                    String.format("您指定的文件路径 : [%s] 创建失败.",
-                        path));
+                    .asDataXException(
+                            StreamWriterErrorCode.CONFIG_INVALID_EXCEPTION,
+                            String.format(
+                                    "您指定的文件路径 : [%s] 创建失败.",
+                                    path));
           }
         }
 
@@ -85,14 +90,14 @@ public class StreamWriter extends Writer {
             FileUtils.forceDelete(newFile);
           } catch (IOException e) {
             throw DataXException.asDataXException(
-                StreamWriterErrorCode.RUNTIME_EXCEPTION,
-                String.format("删除文件失败 : [%s] ", fileFullPath), e);
+                    StreamWriterErrorCode.RUNTIME_EXCEPTION,
+                    String.format("删除文件失败 : [%s] ", fileFullPath), e);
           }
         }
       } catch (SecurityException se) {
         throw DataXException.asDataXException(
-            StreamWriterErrorCode.SECURITY_NOT_ENOUGH,
-            String.format("您没有权限创建文件路径 : [%s] ", path), se);
+                StreamWriterErrorCode.SECURITY_NOT_ENOUGH,
+                String.format("您没有权限创建文件路径 : [%s] ", path), se);
       }
     }
 
@@ -121,7 +126,7 @@ public class StreamWriter extends Writer {
 
   public static class Task extends Writer.Task {
     private static final Logger LOG = LoggerFactory
-        .getLogger(Task.class);
+            .getLogger(Task.class);
 
     private static final String NEWLINE_FLAG = System.getProperty("line.separator", "\n");
 
@@ -142,7 +147,7 @@ public class StreamWriter extends Writer {
       this.writerSliceConfig = getPluginJobConf();
 
       this.fieldDelimiter = this.writerSliceConfig.getString(
-          Key.FIELD_DELIMITER, "\t");
+              Key.FIELD_DELIMITER, "\t");
       this.print = this.writerSliceConfig.getBool(Key.PRINT, true);
 
       this.path = this.writerSliceConfig.getString(Key.PATH, null);
@@ -150,10 +155,14 @@ public class StreamWriter extends Writer {
       this.recordNumBeforSleep = this.writerSliceConfig.getLong(Key.RECORD_NUM_BEFORE_SLEEP, 0);
       this.sleepTime = this.writerSliceConfig.getLong(Key.SLEEP_TIME, 0);
       if (recordNumBeforSleep < 0) {
-        throw DataXException.asDataXException(StreamWriterErrorCode.CONFIG_INVALID_EXCEPTION, "recordNumber 不能为负值");
+        throw DataXException.asDataXException(
+                StreamWriterErrorCode.CONFIG_INVALID_EXCEPTION,
+                "recordNumber 不能为负值");
       }
       if (sleepTime < 0) {
-        throw DataXException.asDataXException(StreamWriterErrorCode.CONFIG_INVALID_EXCEPTION, "sleep 不能为负值");
+        throw DataXException.asDataXException(
+                StreamWriterErrorCode.CONFIG_INVALID_EXCEPTION,
+                "sleep 不能为负值");
       }
 
     }
@@ -171,7 +180,7 @@ public class StreamWriter extends Writer {
       } else {
         try {
           BufferedWriter writer = new BufferedWriter(
-              new OutputStreamWriter(System.out, "UTF-8"));
+                  new OutputStreamWriter(System.out, "UTF-8"));
 
           Record record;
           while ((record = recordReceiver.getFromReader()) != null) {
@@ -189,8 +198,9 @@ public class StreamWriter extends Writer {
       }
     }
 
-    private void writeToFile(RecordReceiver recordReceiver, String path, String fileName,
-                             long recordNumBeforSleep, long sleepTime) {
+    private void writeToFile(
+            RecordReceiver recordReceiver, String path, String fileName,
+            long recordNumBeforSleep, long sleepTime) {
 
       LOG.info("begin do write...");
       String fileFullPath = buildFilePath(path, fileName);
@@ -201,13 +211,16 @@ public class StreamWriter extends Writer {
         newFile.createNewFile();
 
         writer = new BufferedWriter(
-            new OutputStreamWriter(new FileOutputStream(newFile, true), "UTF-8"));
+                new OutputStreamWriter(new FileOutputStream(newFile, true), "UTF-8"));
 
         Record record;
         int count = 0;
         while ((record = recordReceiver.getFromReader()) != null) {
           if (recordNumBeforSleep > 0 && sleepTime > 0 && count == recordNumBeforSleep) {
-            LOG.info("StreamWriter start to sleep ... recordNumBeforSleep={},sleepTime={}", recordNumBeforSleep, sleepTime);
+            LOG.info(
+                    "StreamWriter start to sleep ... recordNumBeforSleep={},sleepTime={}",
+                    recordNumBeforSleep,
+                    sleepTime);
             try {
               Thread.sleep(sleepTime * 1000l);
             } catch (InterruptedException e) {

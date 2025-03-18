@@ -9,10 +9,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class LocalTGCommunicationManager {
   private static Map<Integer, Communication> taskGroupCommunicationMap =
-      new ConcurrentHashMap<Integer, Communication>();
+          new ConcurrentHashMap<Integer, Communication>();
 
   public static void registerTaskGroupCommunication(
-      int taskGroupId, Communication communication) {
+          int taskGroupId, Communication communication) {
     taskGroupCommunicationMap.put(taskGroupId, communication);
   }
 
@@ -21,7 +21,7 @@ public final class LocalTGCommunicationManager {
     communication.setState(State.SUCCEEDED);
 
     for (Communication taskGroupCommunication :
-        taskGroupCommunicationMap.values()) {
+            taskGroupCommunicationMap.values()) {
       communication.mergeFrom(taskGroupCommunication);
     }
 
@@ -44,11 +44,14 @@ public final class LocalTGCommunicationManager {
     return taskGroupCommunicationMap.get(taskGroupId);
   }
 
-  public static void updateTaskGroupCommunication(final int taskGroupId,
-                                                  final Communication communication) {
-    Validate.isTrue(taskGroupCommunicationMap.containsKey(
-        taskGroupId), String.format("taskGroupCommunicationMap中没有注册taskGroupId[%d]的Communication，" +
-        "无法更新该taskGroup的信息", taskGroupId));
+  public static void updateTaskGroupCommunication(
+          final int taskGroupId,
+          final Communication communication) {
+    Validate.isTrue(
+            taskGroupCommunicationMap.containsKey(
+                    taskGroupId), String.format(
+                    "taskGroupCommunicationMap中没有注册taskGroupId[%d]的Communication，" +
+                            "无法更新该taskGroup的信息", taskGroupId));
     taskGroupCommunicationMap.put(taskGroupId, communication);
   }
 

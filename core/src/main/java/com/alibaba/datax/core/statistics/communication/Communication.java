@@ -259,7 +259,7 @@ public class Communication extends BaseObject implements Cloneable {
     }
 
     if (this.state == State.FAILED || otherComm.getState() == State.FAILED
-        || this.state == State.KILLED || otherComm.getState() == State.KILLED) {
+            || this.state == State.KILLED || otherComm.getState() == State.KILLED) {
       retState = State.FAILED;
     } else if (this.state.isRunning() || otherComm.state.isRunning()) {
       retState = State.RUNNING;
@@ -271,7 +271,7 @@ public class Communication extends BaseObject implements Cloneable {
 
   public synchronized boolean isFinished() {
     return this.state == State.SUCCEEDED || this.state == State.FAILED
-        || this.state == State.KILLED;
+            || this.state == State.KILLED;
   }
 
 }

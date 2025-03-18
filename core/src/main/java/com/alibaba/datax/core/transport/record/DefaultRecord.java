@@ -16,114 +16,114 @@ import java.util.Map;
  * Created by jingxing on 14-8-24.
  */
 public class DefaultRecord implements Record {
-    private static final int RECORD_AVERGAE_COLUMN_NUMBER = 16;
+  private static final int RECORD_AVERGAE_COLUMN_NUMBER = 16;
 
-    private List<Column> columns;
+  private List<Column> columns;
 
-    private int byteSize;
+  private int byteSize;
 
-    // 首先是 Record 本身需要的内存
-    private int memorySize = ClassSize.DefaultRecordHead;
+  // 首先是 Record 本身需要的内存
+  private int memorySize = ClassSize.DefaultRecordHead;
 
-    private Map<String, String> meta;
+  private Map<String, String> meta;
 
-    public DefaultRecord() {
-        this.columns = new ArrayList<Column>(RECORD_AVERGAE_COLUMN_NUMBER);
+  public DefaultRecord() {
+    this.columns = new ArrayList<Column>(RECORD_AVERGAE_COLUMN_NUMBER);
+  }
+
+  @Override
+  public void addColumn(Column column) {
+    columns.add(column);
+    incrByteSize(column);
+  }
+
+  @Override
+  public Column getColumn(int i) {
+    if (i < 0 || i >= columns.size()) {
+      return null;
+    }
+    return columns.get(i);
+  }
+
+  @Override
+  public void setColumn(int i, final Column column) {
+    if (i < 0) {
+      throw DataXException.asDataXException(
+              FrameworkErrorCode.ARGUMENT_ERROR,
+              "不能给index小于0的column设置值");
     }
 
-    @Override
-    public void addColumn(Column column) {
-        columns.add(column);
-        incrByteSize(column);
+    if (i >= columns.size()) {
+      expandCapacity(i + 1);
     }
 
-    @Override
-    public Column getColumn(int i) {
-        if (i < 0 || i >= columns.size()) {
-            return null;
-        }
-        return columns.get(i);
+    decrByteSize(getColumn(i));
+    this.columns.set(i, column);
+    incrByteSize(getColumn(i));
+  }
+
+  @Override
+  public String toString() {
+    Map<String, Object> json = new HashMap<String, Object>();
+    json.put("size", this.getColumnNumber());
+    json.put("data", this.columns);
+    return JSON.toJSONString(json);
+  }
+
+  @Override
+  public int getColumnNumber() {
+    return this.columns.size();
+  }
+
+  @Override
+  public int getByteSize() {
+    return byteSize;
+  }
+
+  public int getMemorySize() {
+    return memorySize;
+  }
+
+  @Override
+  public Map<String, String> getMeta() {
+    return this.meta;
+  }
+
+  @Override
+  public void setMeta(Map<String, String> meta) {
+    this.meta = meta;
+  }
+
+  private void decrByteSize(final Column column) {
+    if (null == column) {
+      return;
     }
 
-    @Override
-    public void setColumn(int i, final Column column) {
-        if (i < 0) {
-            throw DataXException.asDataXException(
-                    FrameworkErrorCode.ARGUMENT_ERROR,
-                    "不能给index小于0的column设置值");
-        }
+    byteSize -= column.getByteSize();
 
-        if (i >= columns.size()) {
-            expandCapacity(i + 1);
-        }
+    // 内存的占用是 column 对象的头 再加实际大小
+    memorySize = memorySize - ClassSize.ColumnHead - column.getByteSize();
+  }
 
-        decrByteSize(getColumn(i));
-        this.columns.set(i, column);
-        incrByteSize(getColumn(i));
+  private void incrByteSize(final Column column) {
+    if (null == column) {
+      return;
     }
 
-    @Override
-    public String toString() {
-        Map<String, Object> json = new HashMap<String, Object>();
-        json.put("size", this.getColumnNumber());
-        json.put("data", this.columns);
-        return JSON.toJSONString(json);
+    byteSize += column.getByteSize();
+
+    // 内存的占用是 column 对象的头 再加实际大小
+    memorySize = memorySize + ClassSize.ColumnHead + column.getByteSize();
+  }
+
+  private void expandCapacity(int totalSize) {
+    if (totalSize <= 0) {
+      return;
     }
 
-    @Override
-    public int getColumnNumber() {
-        return this.columns.size();
+    int needToExpand = totalSize - columns.size();
+    while (needToExpand-- > 0) {
+      this.columns.add(null);
     }
-
-    @Override
-    public int getByteSize() {
-        return byteSize;
-    }
-
-    public int getMemorySize() {
-        return memorySize;
-    }
-
-    @Override
-    public Map<String, String> getMeta() {
-        return this.meta;
-    }
-
-    @Override
-    public void setMeta(Map<String, String> meta) {
-        this.meta = meta;
-    }
-
-    private void decrByteSize(final Column column) {
-        if (null == column) {
-            return;
-        }
-
-        byteSize -= column.getByteSize();
-
-        // 内存的占用是 column 对象的头 再加实际大小
-        memorySize = memorySize - ClassSize.ColumnHead - column.getByteSize();
-    }
-
-    private void incrByteSize(final Column column) {
-        if (null == column) {
-            return;
-        }
-
-        byteSize += column.getByteSize();
-
-        // 内存的占用是 column 对象的头 再加实际大小
-        memorySize = memorySize + ClassSize.ColumnHead + column.getByteSize();
-    }
-
-    private void expandCapacity(int totalSize) {
-        if (totalSize <= 0) {
-            return;
-        }
-
-        int needToExpand = totalSize - columns.size();
-        while (needToExpand-- > 0) {
-            this.columns.add(null);
-        }
-    }
+  }
 }

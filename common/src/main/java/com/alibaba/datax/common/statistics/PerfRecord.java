@@ -31,7 +31,12 @@ public class PerfRecord implements Comparable<PerfRecord> {
     this.phase = phase;
   }
 
-  public static void addPerfRecord(int taskGroupId, int taskId, PHASE phase, long startTime, long elapsedTimeInNs) {
+  public static void addPerfRecord(
+          int taskGroupId,
+          int taskId,
+          PHASE phase,
+          long startTime,
+          long elapsedTimeInNs) {
     if (PerfTrace.getInstance().isEnable()) {
       PerfRecord perfRecord = new PerfRecord(taskGroupId, taskId, phase);
       perfRecord.elapsedTimeInNs = elapsedTimeInNs;
@@ -81,9 +86,19 @@ public class PerfRecord implements Comparable<PerfRecord> {
   }
 
   public String toString() {
-    return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
-        , getInstId(), taskGroupId, taskId, phase, action,
-        DateFormatUtils.format(startTime, datetimeFormat), elapsedTimeInNs, count, size, getHostIP());
+    return String.format(
+            "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
+            ,
+            getInstId(),
+            taskGroupId,
+            taskId,
+            phase,
+            action,
+            DateFormatUtils.format(startTime, datetimeFormat),
+            elapsedTimeInNs,
+            count,
+            size,
+            getHostIP());
   }
 
   @Override
@@ -91,7 +106,8 @@ public class PerfRecord implements Comparable<PerfRecord> {
     if (o == null) {
       return 1;
     }
-    return this.elapsedTimeInNs > o.elapsedTimeInNs ? 1 : this.elapsedTimeInNs == o.elapsedTimeInNs ? 0 : -1;
+    return this.elapsedTimeInNs > o.elapsedTimeInNs ? 1 :
+            this.elapsedTimeInNs == o.elapsedTimeInNs ? 0 : -1;
   }
 
   @Override

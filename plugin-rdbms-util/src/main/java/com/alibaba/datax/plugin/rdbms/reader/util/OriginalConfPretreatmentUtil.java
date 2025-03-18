@@ -18,16 +18,18 @@ import java.util.List;
 
 public final class OriginalConfPretreatmentUtil {
   private static final Logger LOG = LoggerFactory
-      .getLogger(OriginalConfPretreatmentUtil.class);
+          .getLogger(OriginalConfPretreatmentUtil.class);
 
   public static DataBaseType DATABASE_TYPE;
 
   public static void doPretreatment(Configuration originalConfig) {
     // 检查 username/password 配置（必填）
-    originalConfig.getNecessaryValue(Key.USERNAME,
-        DBUtilErrorCode.REQUIRED_VALUE);
-    originalConfig.getNecessaryValue(Key.PASSWORD,
-        DBUtilErrorCode.REQUIRED_VALUE);
+    originalConfig.getNecessaryValue(
+            Key.USERNAME,
+            DBUtilErrorCode.REQUIRED_VALUE);
+    originalConfig.getNecessaryValue(
+            Key.PASSWORD,
+            DBUtilErrorCode.REQUIRED_VALUE);
     dealWhere(originalConfig);
 
     simplifyConf(originalConfig);
@@ -68,36 +70,42 @@ public final class OriginalConfPretreatmentUtil {
     boolean isTableMode = originalConfig.getBool(Constant.IS_TABLE_MODE);
     boolean isPreCheck = originalConfig.getBool(Key.DRYRUN, false);
 
-    List<Object> conns = originalConfig.getList(Constant.CONN_MARK,
-        Object.class);
+    List<Object> conns = originalConfig.getList(
+            Constant.CONN_MARK,
+            Object.class);
     List<String> preSql = originalConfig.getList(Key.PRE_SQL, String.class);
 
     int tableNum = 0;
 
     for (int i = 0, len = conns.size(); i < len; i++) {
       Configuration connConf = Configuration
-          .from(conns.get(i).toString());
+              .from(conns.get(i).toString());
 
-      connConf.getNecessaryValue(Key.JDBC_URL,
-          DBUtilErrorCode.REQUIRED_VALUE);
+      connConf.getNecessaryValue(
+              Key.JDBC_URL,
+              DBUtilErrorCode.REQUIRED_VALUE);
 
       List<String> jdbcUrls = connConf
-          .getList(Key.JDBC_URL, String.class);
+              .getList(Key.JDBC_URL, String.class);
 
       String jdbcUrl;
       if (isPreCheck) {
-        jdbcUrl = DBUtil.chooseJdbcUrlWithoutRetry(DATABASE_TYPE, jdbcUrls,
-            username, password, preSql, checkSlave);
+        jdbcUrl = DBUtil.chooseJdbcUrlWithoutRetry(
+                DATABASE_TYPE, jdbcUrls,
+                username, password, preSql, checkSlave);
       } else {
-        jdbcUrl = DBUtil.chooseJdbcUrl(DATABASE_TYPE, jdbcUrls,
-            username, password, preSql, checkSlave);
+        jdbcUrl = DBUtil.chooseJdbcUrl(
+                DATABASE_TYPE, jdbcUrls,
+                username, password, preSql, checkSlave);
       }
 
       jdbcUrl = DATABASE_TYPE.appendJDBCSuffixForReader(jdbcUrl);
 
       // 回写到connection[i].jdbcUrl
-      originalConfig.set(String.format("%s[%d].%s", Constant.CONN_MARK,
-          i, Key.JDBC_URL), jdbcUrl);
+      originalConfig.set(
+              String.format(
+                      "%s[%d].%s", Constant.CONN_MARK,
+                      i, Key.JDBC_URL), jdbcUrl);
 
       LOG.info("Available jdbcUrl:{}.", jdbcUrl);
 
@@ -107,18 +115,22 @@ public final class OriginalConfPretreatmentUtil {
         List<String> tables = connConf.getList(Key.TABLE, String.class);
 
         List<String> expandedTables = TableExpandUtil.expandTableConf(
-            DATABASE_TYPE, tables);
+                DATABASE_TYPE, tables);
 
         if (null == expandedTables || expandedTables.isEmpty()) {
           throw DataXException.asDataXException(
-              DBUtilErrorCode.ILLEGAL_VALUE, String.format("您所配置的读取数据库表:%s 不正确. 因为DataX根据您的配置找不到这张表. 请检查您的配置并作出修改." +
-                  "请先了解 DataX 配置.", StringUtils.join(tables, ",")));
+                  DBUtilErrorCode.ILLEGAL_VALUE, String.format(
+                          "您所配置的读取数据库表:%s 不正确. 因为DataX根据您的配置找不到这张表. 请检查您的配置并作出修改."
+                                  +
+                                  "请先了解 DataX 配置.", StringUtils.join(tables, ",")));
         }
 
         tableNum += expandedTables.size();
 
-        originalConfig.set(String.format("%s[%d].%s",
-            Constant.CONN_MARK, i, Key.TABLE), expandedTables);
+        originalConfig.set(
+                String.format(
+                        "%s[%d].%s",
+                        Constant.CONN_MARK, i, Key.TABLE), expandedTables);
       } else {
         // 说明是配置的 querySql 方式，不做处理.
       }
@@ -130,37 +142,41 @@ public final class OriginalConfPretreatmentUtil {
   private static void dealColumnConf(Configuration originalConfig) {
     boolean isTableMode = originalConfig.getBool(Constant.IS_TABLE_MODE);
 
-    List<String> userConfiguredColumns = originalConfig.getList(Key.COLUMN,
-        String.class);
+    List<String> userConfiguredColumns = originalConfig.getList(
+            Key.COLUMN,
+            String.class);
 
     if (isTableMode) {
       if (null == userConfiguredColumns
-          || userConfiguredColumns.isEmpty()) {
-        throw DataXException.asDataXException(DBUtilErrorCode.REQUIRED_VALUE, "您未配置读取数据库表的列信息. " +
-            "正确的配置方式是给 column 配置上您需要读取的列名称,用英文逗号分隔. 例如: \"column\": [\"id\", \"name\"],请参考上述配置并作出修改.");
+              || userConfiguredColumns.isEmpty()) {
+        throw DataXException.asDataXException(
+                DBUtilErrorCode.REQUIRED_VALUE, "您未配置读取数据库表的列信息. " +
+                        "正确的配置方式是给 column 配置上您需要读取的列名称,用英文逗号分隔. 例如: \"column\": [\"id\", \"name\"],请参考上述配置并作出修改.");
       } else {
         String splitPk = originalConfig.getString(Key.SPLIT_PK, null);
 
         if (1 == userConfiguredColumns.size()
-            && "*".equals(userConfiguredColumns.get(0))) {
-          LOG.warn("您的配置文件中的列配置存在一定的风险. 因为您未配置读取数据库表的列，当您的表字段个数、类型有变动时，可能影响任务正确性甚至会运行出错。请检查您的配置并作出修改.");
+                && "*".equals(userConfiguredColumns.get(0))) {
+          LOG.warn(
+                  "您的配置文件中的列配置存在一定的风险. 因为您未配置读取数据库表的列，当您的表字段个数、类型有变动时，可能影响任务正确性甚至会运行出错。请检查您的配置并作出修改.");
           // 回填其值，需要以 String 的方式转交后续处理
           originalConfig.set(Key.COLUMN, "*");
         } else {
           String jdbcUrl = originalConfig.getString(String.format(
-              "%s[0].%s", Constant.CONN_MARK, Key.JDBC_URL));
+                  "%s[0].%s", Constant.CONN_MARK, Key.JDBC_URL));
 
           String username = originalConfig.getString(Key.USERNAME);
           String password = originalConfig.getString(Key.PASSWORD);
 
           String tableName = originalConfig.getString(String.format(
-              "%s[0].%s[0]", Constant.CONN_MARK, Key.TABLE));
+                  "%s[0].%s[0]", Constant.CONN_MARK, Key.TABLE));
 
           List<String> allColumns = DBUtil.getTableColumns(
-              DATABASE_TYPE, jdbcUrl, username, password,
-              tableName);
-          LOG.info("table:[{}] has columns:[{}].",
-              tableName, StringUtils.join(allColumns, ","));
+                  DATABASE_TYPE, jdbcUrl, username, password,
+                  tableName);
+          LOG.info(
+                  "table:[{}] has columns:[{}].",
+                  tableName, StringUtils.join(allColumns, ","));
           // warn:注意mysql表名区分大小写
           allColumns = ListUtil.valueToLowerCase(allColumns);
           List<String> quotedColumns = new ArrayList<String>();
@@ -168,8 +184,8 @@ public final class OriginalConfPretreatmentUtil {
           for (String column : userConfiguredColumns) {
             if ("*".equals(column)) {
               throw DataXException.asDataXException(
-                  DBUtilErrorCode.ILLEGAL_VALUE,
-                  "您的配置文件中的列配置信息有误. 因为根据您的配置，数据库表的列中存在多个*. 请检查您的配置并作出修改. ");
+                      DBUtilErrorCode.ILLEGAL_VALUE,
+                      "您的配置文件中的列配置信息有误. 因为根据您的配置，数据库表的列中存在多个*. 请检查您的配置并作出修改. ");
             }
 
             quotedColumns.add(column);
@@ -187,12 +203,17 @@ public final class OriginalConfPretreatmentUtil {
           }
 
           originalConfig.set(Key.COLUMN_LIST, quotedColumns);
-          originalConfig.set(Key.COLUMN,
-              StringUtils.join(quotedColumns, ","));
+          originalConfig.set(
+                  Key.COLUMN,
+                  StringUtils.join(quotedColumns, ","));
           if (StringUtils.isNotBlank(splitPk)) {
             if (!allColumns.contains(splitPk.toLowerCase())) {
-              throw DataXException.asDataXException(DBUtilErrorCode.ILLEGAL_SPLIT_PK,
-                  String.format("您的配置文件中的列配置信息有误. 因为根据您的配置，您读取的数据库表:%s 中没有主键名为:%s. 请检查您的配置并作出修改.", tableName, splitPk));
+              throw DataXException.asDataXException(
+                      DBUtilErrorCode.ILLEGAL_SPLIT_PK,
+                      String.format(
+                              "您的配置文件中的列配置信息有误. 因为根据您的配置，您读取的数据库表:%s 中没有主键名为:%s. 请检查您的配置并作出修改.",
+                              tableName,
+                              splitPk));
             }
           }
 
@@ -201,8 +222,9 @@ public final class OriginalConfPretreatmentUtil {
     } else {
       // querySql模式，不希望配制 column，那样是混淆不清晰的
       if (null != userConfiguredColumns
-          && userConfiguredColumns.size() > 0) {
-        LOG.warn("您的配置有误. 由于您读取数据库表采用了querySql的方式, 所以您不需要再配置 column. 如果您不想看到这条提醒，请移除您源头表中配置中的 column.");
+              && userConfiguredColumns.size() > 0) {
+        LOG.warn(
+                "您的配置有误. 由于您读取数据库表采用了querySql的方式, 所以您不需要再配置 column. 如果您不想看到这条提醒，请移除您源头表中配置中的 column.");
         originalConfig.remove(Key.COLUMN);
       }
 
@@ -216,7 +238,8 @@ public final class OriginalConfPretreatmentUtil {
       // querySql模式，不希望配制 splitPk，那样是混淆不清晰的
       String splitPk = originalConfig.getString(Key.SPLIT_PK, null);
       if (StringUtils.isNotBlank(splitPk)) {
-        LOG.warn("您的配置有误. 由于您读取数据库表采用了querySql的方式, 所以您不需要再配置 splitPk. 如果您不想看到这条提醒，请移除您源头表中配置中的 splitPk.");
+        LOG.warn(
+                "您的配置有误. 由于您读取数据库表采用了querySql的方式, 所以您不需要再配置 splitPk. 如果您不想看到这条提醒，请移除您源头表中配置中的 splitPk.");
         originalConfig.remove(Key.SPLIT_PK);
       }
     }
@@ -224,9 +247,10 @@ public final class OriginalConfPretreatmentUtil {
   }
 
   private static boolean recognizeTableOrQuerySqlMode(
-      Configuration originalConfig) {
-    List<Object> conns = originalConfig.getList(Constant.CONN_MARK,
-        Object.class);
+          Configuration originalConfig) {
+    List<Object> conns = originalConfig.getList(
+            Constant.CONN_MARK,
+            Object.class);
 
     List<Boolean> tableModeFlags = new ArrayList<Boolean>();
     List<Boolean> querySqlModeFlags = new ArrayList<Boolean>();
@@ -238,7 +262,7 @@ public final class OriginalConfPretreatmentUtil {
     boolean isQuerySqlMode = false;
     for (int i = 0, len = conns.size(); i < len; i++) {
       Configuration connConf = Configuration
-          .from(conns.get(i).toString());
+              .from(conns.get(i).toString());
       table = connConf.getString(Key.TABLE, null);
       querySql = connConf.getString(Key.QUERY_SQL, null);
 
@@ -251,19 +275,22 @@ public final class OriginalConfPretreatmentUtil {
       if (false == isTableMode && false == isQuerySqlMode) {
         // table 和 querySql 二者均未配制
         throw DataXException.asDataXException(
-            DBUtilErrorCode.TABLE_QUERYSQL_MISSING, "您的配置有误. 因为table和querySql应该配置并且只能配置一个. 请检查您的配置并作出修改.");
+                DBUtilErrorCode.TABLE_QUERYSQL_MISSING,
+                "您的配置有误. 因为table和querySql应该配置并且只能配置一个. 请检查您的配置并作出修改.");
       } else if (true == isTableMode && true == isQuerySqlMode) {
         // table 和 querySql 二者均配置
-        throw DataXException.asDataXException(DBUtilErrorCode.TABLE_QUERYSQL_MIXED,
-            "您的配置凌乱了. 因为datax不能同时既配置table又配置querySql.请检查您的配置并作出修改.");
+        throw DataXException.asDataXException(
+                DBUtilErrorCode.TABLE_QUERYSQL_MIXED,
+                "您的配置凌乱了. 因为datax不能同时既配置table又配置querySql.请检查您的配置并作出修改.");
       }
     }
 
     // 混合配制 table 和 querySql
     if (!ListUtil.checkIfValueSame(tableModeFlags)
-        || !ListUtil.checkIfValueSame(querySqlModeFlags)) {
-      throw DataXException.asDataXException(DBUtilErrorCode.TABLE_QUERYSQL_MIXED,
-          "您配置凌乱了. 不能同时既配置table又配置querySql. 请检查您的配置并作出修改.");
+            || !ListUtil.checkIfValueSame(querySqlModeFlags)) {
+      throw DataXException.asDataXException(
+              DBUtilErrorCode.TABLE_QUERYSQL_MIXED,
+              "您配置凌乱了. 不能同时既配置table又配置querySql. 请检查您的配置并作出修改.");
     }
 
     return tableModeFlags.get(0);

@@ -130,7 +130,15 @@ public class DataXCsvWriter {
       var1 = var1.trim();
     }
 
-    if (!var3 && this.userSettings.UseTextQualifier && (var1.indexOf(this.userSettings.TextQualifier) > -1 || var1.indexOf(this.userSettings.Delimiter) > -1 || !this.useCustomRecordDelimiter && (var1.indexOf(10) > -1 || var1.indexOf(13) > -1) || this.useCustomRecordDelimiter && var1.indexOf(this.userSettings.RecordDelimiter) > -1 || this.firstColumn && var1.length() > 0 && var1.charAt(0) == this.userSettings.Comment || this.firstColumn && var1.length() == 0)) {
+    if (!var3 && this.userSettings.UseTextQualifier && (
+            var1.indexOf(this.userSettings.TextQualifier) > -1
+                    || var1.indexOf(this.userSettings.Delimiter) > -1
+                    || !this.useCustomRecordDelimiter && (var1.indexOf(10) > -1
+                    || var1.indexOf(13) > -1) || this.useCustomRecordDelimiter
+                    && var1.indexOf(this.userSettings.RecordDelimiter) > -1
+                    || this.firstColumn && var1.length() > 0
+                    && var1.charAt(0) == this.userSettings.Comment
+                    || this.firstColumn && var1.length() == 0)) {
       var3 = true;
     }
 
@@ -152,15 +160,24 @@ public class DataXCsvWriter {
       this.writer.write(this.userSettings.TextQualifier);
       if (this.userSettings.EscapeMode == 2) {
         var1 = replace(var1, "\\", "\\\\");
-        var1 = replace(var1, "" + this.userSettings.TextQualifier, "\\" + this.userSettings.TextQualifier);
+        var1 = replace(
+                var1,
+                "" + this.userSettings.TextQualifier,
+                "\\" + this.userSettings.TextQualifier);
       } else {
-        var1 = replace(var1, "" + this.userSettings.TextQualifier, "" + this.userSettings.TextQualifier + this.userSettings.TextQualifier);
+        var1 = replace(
+                var1,
+                "" + this.userSettings.TextQualifier,
+                "" + this.userSettings.TextQualifier + this.userSettings.TextQualifier);
       }
     } else if (this.userSettings.EscapeMode == 2) {
       var1 = replace(var1, "\\", "\\\\");
       var1 = replace(var1, "" + this.userSettings.Delimiter, "\\" + this.userSettings.Delimiter);
       if (this.useCustomRecordDelimiter) {
-        var1 = replace(var1, "" + this.userSettings.RecordDelimiter, "\\" + this.userSettings.RecordDelimiter);
+        var1 = replace(
+                var1,
+                "" + this.userSettings.RecordDelimiter,
+                "\\" + this.userSettings.RecordDelimiter);
       } else {
         var1 = replace(var1, "\r", "\\\r");
         var1 = replace(var1, "\n", "\\\n");

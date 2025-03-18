@@ -33,8 +33,9 @@ public abstract class UnstructuredSplitUtil {
     this.needInnerSplit = needInnerSplit;
   }
 
-  public List<Configuration> getSplitConfiguration(Configuration originConfiguration, List<String> sourceObjectList,
-                                                   int adviceNumber) {
+  public List<Configuration> getSplitConfiguration(
+          Configuration originConfiguration, List<String> sourceObjectList,
+          int adviceNumber) {
 
     List<Configuration> splitConfiguration = new ArrayList<Configuration>();
     List<StartEndPair> regulateSplitStartEndPairList = new ArrayList<StartEndPair>();
@@ -57,10 +58,12 @@ public abstract class UnstructuredSplitUtil {
           StartEndPair startEndPair = startEndPairList.get(i);
           InputStream inputStream = this.getFileInputStream(startEndPair);
           Triple<Long, Long, InputStream> startEndInputStreamTriple = new ImmutableTriple<Long, Long, InputStream>(
-              startEndPair.getStart(), startEndPair.getEnd(), inputStream);
+                  startEndPair.getStart(), startEndPair.getEnd(), inputStream);
           startEndInputStreamTripleList.add(startEndInputStreamTriple);
         }
-        regulateSplitStartEndPairList.addAll(regulateSplitStartEndPair(startEndInputStreamTripleList, object));
+        regulateSplitStartEndPairList.addAll(regulateSplitStartEndPair(
+                startEndInputStreamTripleList,
+                object));
       } else {
         // 如果指定的Range无效(比如开始位置、结束位置为负数，大于文件大小)，则会下载整个文件；
         StartEndPair startEndPair = new StartEndPair(0L, -1L, object);
@@ -69,7 +72,9 @@ public abstract class UnstructuredSplitUtil {
     }
 
     // merge task 将多个文件merge到一个task中执行
-    List<List<StartEndPair>> splitResult = RangeSplitUtil.doListSplit(regulateSplitStartEndPairList, adviceNumber);
+    List<List<StartEndPair>> splitResult = RangeSplitUtil.doListSplit(
+            regulateSplitStartEndPairList,
+            adviceNumber);
     // at here this.objects is not null and not empty
     for (List<StartEndPair> eachSlice : splitResult) {
       Configuration splitedConfig = originConfiguration.clone();
@@ -84,10 +89,11 @@ public abstract class UnstructuredSplitUtil {
    * 对原始的切分点位进行调节校准, 将点位落在每一行数据的换行符处
    *
    * @param startEndInputStreamTripleList 原始的切分点位及inputstream (start, end, inputStream)
+   *
    * @return
    */
   private List<StartEndPair> regulateSplitStartEndPair(
-      List<Triple<Long, Long, InputStream>> startEndInputStreamTripleList, String filePath) {
+          List<Triple<Long, Long, InputStream>> startEndInputStreamTripleList, String filePath) {
     List<StartEndPair> regulatedStartEndPairList = new ArrayList<StartEndPair>();
 
     for (int i = 0; i < startEndInputStreamTripleList.size(); i++) {
@@ -113,7 +119,10 @@ public abstract class UnstructuredSplitUtil {
         regulatedStartEndPairList.add(new StartEndPair(regulatedPoint + 1, null, filePath));
       } else {
         // 调节最后一个block, 调节起始点位, 结束点位就用文件的字节总长度
-        regulatedStartEndPairList.add(new StartEndPair(regulatedPoint + 1, block.getMiddle(), filePath));
+        regulatedStartEndPairList.add(new StartEndPair(
+                regulatedPoint + 1,
+                block.getMiddle(),
+                filePath));
       }
     }
     return regulatedStartEndPairList;
@@ -124,6 +133,7 @@ public abstract class UnstructuredSplitUtil {
    * 对文件切分的最后一个分块不会调用该方法
    *
    * @param inputStream 输入流
+   *
    * @return
    */
   private Long getLFIndex(InputStream inputStream) {
@@ -133,8 +143,9 @@ public abstract class UnstructuredSplitUtil {
       try {
         ch = inputStream.read();
       } catch (IOException e) {
-        throw DataXException.asDataXException(UnstructuredStorageReaderErrorCode.READ_FILE_IO_ERROR,
-            String.format("inputstream read Byte has exception: %s", e.getMessage()), e);
+        throw DataXException.asDataXException(
+                UnstructuredStorageReaderErrorCode.READ_FILE_IO_ERROR,
+                String.format("inputstream read Byte has exception: %s", e.getMessage()), e);
       }
       hasReadByteIndex++;
       if (ch == '\n') {
@@ -148,6 +159,7 @@ public abstract class UnstructuredSplitUtil {
    * 得到一个文件最多能拆分成的份数
    *
    * @param fileTotalLength
+   *
    * @return
    */
   private List<StartEndPair> getSplitStartEndPairList(Long fileTotalLength, String filePath) {
@@ -175,6 +187,7 @@ public abstract class UnstructuredSplitUtil {
    * 判断文件是否需要切分, 切分的条件是必须要大于 transport.channel.byteCapacity
    *
    * @param fileTotalLength: 文件总字节数
+   *
    * @return
    */
   private boolean isNeedSplit(Long fileTotalLength) {

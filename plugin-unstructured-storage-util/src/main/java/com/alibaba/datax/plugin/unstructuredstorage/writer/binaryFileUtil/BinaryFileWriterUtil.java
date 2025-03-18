@@ -21,7 +21,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.alibaba.datax.plugin.unstructuredstorage.writer.Constant.*;
+import static com.alibaba.datax.plugin.unstructuredstorage.writer.Constant.NOCONFLICT;
+import static com.alibaba.datax.plugin.unstructuredstorage.writer.Constant.SOURCE_FILE;
+import static com.alibaba.datax.plugin.unstructuredstorage.writer.Constant.TRUNCATE;
 
 /**
  * @Author: guxuan
@@ -35,10 +37,12 @@ public class BinaryFileWriterUtil {
   /**
    * 从RecordReceiver获取源文件Bytes数组, 写到目的端
    *
-   * @param outputStream:   写文件流
+   * @param outputStream: 写文件流
    * @param recordReceiver: RecordReceiver
    */
-  public static void writeFileFromRecordReceiver(OutputStream outputStream, RecordReceiver recordReceiver) {
+  public static void writeFileFromRecordReceiver(
+          OutputStream outputStream,
+          RecordReceiver recordReceiver) {
     try {
       Record record;
       while ((record = recordReceiver.getFromReader()) != null) {
@@ -48,7 +52,9 @@ public class BinaryFileWriterUtil {
       outputStream.flush();
       LOG.info("End write!!!");
     } catch (IOException e) {
-      throw DataXException.asDataXException(UnstructuredStorageReaderErrorCode.READ_FILE_IO_ERROR, e);
+      throw DataXException.asDataXException(
+              UnstructuredStorageReaderErrorCode.READ_FILE_IO_ERROR,
+              e);
     }
   }
 
@@ -60,15 +66,17 @@ public class BinaryFileWriterUtil {
   public static void validateParameter(Configuration writerConfiguration) {
     // writeMode check
     String writeMode = writerConfiguration.getNecessaryValue(
-        Key.WRITE_MODE,
-        UnstructuredStorageWriterErrorCode.REQUIRED_VALUE);
+            Key.WRITE_MODE,
+            UnstructuredStorageWriterErrorCode.REQUIRED_VALUE);
     writeMode = writeMode.trim();
     Set<String> supportedWriteModes = Sets.newHashSet(TRUNCATE, NOCONFLICT);
     if (!supportedWriteModes.contains(writeMode)) {
       throw DataXException
-          .asDataXException(
-              BinaryFileWriterErrorCode.ILLEGAL_VALUE,
-              String.format("Synchronous binary format file, only supports truncate and nonConflict modes, does not support the writeMode mode you configured: %s", writeMode));
+              .asDataXException(
+                      BinaryFileWriterErrorCode.ILLEGAL_VALUE,
+                      String.format(
+                              "Synchronous binary format file, only supports truncate and nonConflict modes, does not support the writeMode mode you configured: %s",
+                              writeMode));
     }
     writerConfiguration.set(Key.WRITE_MODE, writeMode);
   }
@@ -84,8 +92,9 @@ public class BinaryFileWriterUtil {
       if (!sourceFileNameSet.contains(fileName)) {
         sourceFileNameSet.add(fileName);
       } else {
-        throw DataXException.asDataXException(BinaryFileWriterErrorCode.REPEATED_FILE_NAME,
-            String.format("Source File Name [%s] is repeated!", fileName));
+        throw DataXException.asDataXException(
+                BinaryFileWriterErrorCode.REPEATED_FILE_NAME,
+                String.format("Source File Name [%s] is repeated!", fileName));
       }
     }
   }
@@ -93,18 +102,21 @@ public class BinaryFileWriterUtil {
   /**
    * @param readerSplitConfigs
    * @param writerSliceConfig
+   *
    * @return 切分后的结果
    */
-  public static List<Configuration> split(List<Configuration> readerSplitConfigs, Configuration writerSliceConfig) {
+  public static List<Configuration> split(
+          List<Configuration> readerSplitConfigs,
+          Configuration writerSliceConfig) {
     List<Configuration> writerSplitConfigs = new ArrayList<Configuration>();
 
     for (Configuration readerSliceConfig : readerSplitConfigs) {
       Configuration splitedTaskConfig = writerSliceConfig.clone();
       String fileName = getFileName(readerSliceConfig.getString(SOURCE_FILE));
       splitedTaskConfig
-          .set(com.alibaba.datax.plugin.unstructuredstorage.writer.Key.FILE_NAME, fileName);
+              .set(com.alibaba.datax.plugin.unstructuredstorage.writer.Key.FILE_NAME, fileName);
       splitedTaskConfig.
-          set(com.alibaba.datax.plugin.unstructuredstorage.writer.Constant.BINARY, true);
+              set(com.alibaba.datax.plugin.unstructuredstorage.writer.Constant.BINARY, true);
       writerSplitConfigs.add(splitedTaskConfig);
     }
     LOG.info("end do split.");

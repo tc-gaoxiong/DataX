@@ -24,67 +24,68 @@ import java.util.ServiceLoader;
  * 加载里头的 jar，使用 ServiceLoader 机制调用。
  */
 public class HookInvoker {
-    private static final Logger LOG = LoggerFactory.getLogger(HookInvoker.class);
-    private final Map<String, Number> msg;
-    private final Configuration conf;
+  private static final Logger LOG = LoggerFactory.getLogger(HookInvoker.class);
+  private final Map<String, Number> msg;
+  private final Configuration conf;
 
-    private File baseDir;
+  private File baseDir;
 
-    public HookInvoker(String baseDirName, Configuration conf, Map<String, Number> msg) {
-        this.baseDir = new File(baseDirName);
-        this.conf = conf;
-        this.msg = msg;
+  public HookInvoker(String baseDirName, Configuration conf, Map<String, Number> msg) {
+    this.baseDir = new File(baseDirName);
+    this.conf = conf;
+    this.msg = msg;
+  }
+
+  public static void main(String[] args) {
+    new HookInvoker(
+            "/Users/xiafei/workspace/datax3/target/datax/datax/hook",
+            null, new HashMap<String, Number>()).invokeAll();
+  }
+
+  public void invokeAll() {
+    if (!baseDir.exists() || baseDir.isFile()) {
+      LOG.info("No hook invoked, because base dir not exists or is a file: "
+              + baseDir.getAbsolutePath());
+      return;
     }
 
-    public static void main(String[] args) {
-        new HookInvoker("/Users/xiafei/workspace/datax3/target/datax/datax/hook",
-                null, new HashMap<String, Number>()).invokeAll();
+    String[] subDirs = baseDir.list(new FilenameFilter() {
+      @Override
+      public boolean accept(File dir, String name) {
+        return new File(dir, name).isDirectory();
+      }
+    });
+
+    if (subDirs == null) {
+      throw DataXException.asDataXException(
+              FrameworkErrorCode.HOOK_LOAD_ERROR,
+              "获取HOOK子目录返回null");
     }
 
-    public void invokeAll() {
-        if (!baseDir.exists() || baseDir.isFile()) {
-            LOG.info("No hook invoked, because base dir not exists or is a file: "
-                    + baseDir.getAbsolutePath());
-            return;
-        }
-
-        String[] subDirs = baseDir.list(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return new File(dir, name).isDirectory();
-            }
-        });
-
-        if (subDirs == null) {
-            throw DataXException.asDataXException(
-                    FrameworkErrorCode.HOOK_LOAD_ERROR,
-                    "获取HOOK子目录返回null");
-        }
-
-        for (String subDir : subDirs) {
-            doInvoke(new File(baseDir, subDir).getAbsolutePath());
-        }
+    for (String subDir : subDirs) {
+      doInvoke(new File(baseDir, subDir).getAbsolutePath());
     }
+  }
 
-    private void doInvoke(String path) {
-        ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
-        try {
-            JarLoader jarLoader = new JarLoader(new String[]{path});
-            Thread.currentThread().setContextClassLoader(jarLoader);
-            Iterator<Hook> hookIt = ServiceLoader.load(Hook.class).iterator();
-            if (!hookIt.hasNext()) {
-                LOG.warn("No hook defined under path: " + path);
-            } else {
-                Hook hook = hookIt.next();
-                LOG.info("Invoke hook [{}], path: {}", hook.getName(), path);
-                hook.invoke(conf, msg);
-            }
-        } catch (Exception e) {
-            LOG.error("Exception when invoke hook", e);
-            throw DataXException.asDataXException(
-                    CommonErrorCode.HOOK_INTERNAL_ERROR, "Exception when invoke hook", e);
-        } finally {
-            Thread.currentThread().setContextClassLoader(oldClassLoader);
-        }
+  private void doInvoke(String path) {
+    ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
+    try {
+      JarLoader jarLoader = new JarLoader(new String[]{path});
+      Thread.currentThread().setContextClassLoader(jarLoader);
+      Iterator<Hook> hookIt = ServiceLoader.load(Hook.class).iterator();
+      if (!hookIt.hasNext()) {
+        LOG.warn("No hook defined under path: " + path);
+      } else {
+        Hook hook = hookIt.next();
+        LOG.info("Invoke hook [{}], path: {}", hook.getName(), path);
+        hook.invoke(conf, msg);
+      }
+    } catch (Exception e) {
+      LOG.error("Exception when invoke hook", e);
+      throw DataXException.asDataXException(
+              CommonErrorCode.HOOK_INTERNAL_ERROR, "Exception when invoke hook", e);
+    } finally {
+      Thread.currentThread().setContextClassLoader(oldClassLoader);
     }
+  }
 }

@@ -4,7 +4,11 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 提供通用的根据数字范围、字符串范围等进行切分的通用功能.
@@ -14,8 +18,9 @@ public final class RangeSplitUtil {
   public static String[] doAsciiStringSplit(String left, String right, int expectSliceNumber) {
     int radix = 128;
 
-    BigInteger[] tempResult = doBigIntegerSplit(stringToBigInteger(left, radix),
-        stringToBigInteger(right, radix), expectSliceNumber);
+    BigInteger[] tempResult = doBigIntegerSplit(
+            stringToBigInteger(left, radix),
+            stringToBigInteger(right, radix), expectSliceNumber);
     String[] result = new String[tempResult.length];
 
     //处理第一个字符串（因为：在转换为数字，再还原的时候，如果首字符刚好是 basic,则不知道应该添加多少个 basic）
@@ -31,8 +36,9 @@ public final class RangeSplitUtil {
 
 
   public static long[] doLongSplit(long left, long right, int expectSliceNumber) {
-    BigInteger[] result = doBigIntegerSplit(BigInteger.valueOf(left),
-        BigInteger.valueOf(right), expectSliceNumber);
+    BigInteger[] result = doBigIntegerSplit(
+            BigInteger.valueOf(left),
+            BigInteger.valueOf(right), expectSliceNumber);
     long[] returnResult = new long[result.length];
     for (int i = 0, len = result.length; i < len; i++) {
       returnResult[i] = result[i].longValue();
@@ -40,15 +46,20 @@ public final class RangeSplitUtil {
     return returnResult;
   }
 
-  public static BigInteger[] doBigIntegerSplit(BigInteger left, BigInteger right, int expectSliceNumber) {
+  public static BigInteger[] doBigIntegerSplit(
+          BigInteger left,
+          BigInteger right,
+          int expectSliceNumber) {
     if (expectSliceNumber < 1) {
       throw new IllegalArgumentException(String.format(
-          "切分份数不能小于1. 此处:expectSliceNumber=[%s].", expectSliceNumber));
+              "切分份数不能小于1. 此处:expectSliceNumber=[%s].", expectSliceNumber));
     }
 
     if (null == left || null == right) {
       throw new IllegalArgumentException(String.format(
-          "对 BigInteger 进行切分时，其左右区间不能为 null. 此处:left=[%s],right=[%s].", left, right));
+              "对 BigInteger 进行切分时，其左右区间不能为 null. 此处:left=[%s],right=[%s].",
+              left,
+              right));
     }
 
     if (left.compareTo(right) == 0) {
@@ -84,7 +95,7 @@ public final class RangeSplitUtil {
         lowerBound = upperBound;
         upperBound = lowerBound.add(step);
         upperBound = upperBound.add((remainder.compareTo(BigInteger.valueOf(i)) >= 0)
-            ? BigInteger.ONE : BigInteger.ZERO);
+                ? BigInteger.ONE : BigInteger.ZERO);
         result[i] = upperBound;
       }
 
@@ -94,8 +105,9 @@ public final class RangeSplitUtil {
 
   private static void checkIfBetweenRange(int value, int left, int right) {
     if (value < left || value > right) {
-      throw new IllegalArgumentException(String.format("parameter can not <[%s] or >[%s].",
-          left, right));
+      throw new IllegalArgumentException(String.format(
+              "parameter can not <[%s] or >[%s].",
+              left, right));
     }
   }
 
@@ -118,7 +130,9 @@ public final class RangeSplitUtil {
     for (int i = aString.length() - 1; i >= 0; i--) {
       tempChar = aString.charAt(i);
       if (tempChar >= 128) {
-        throw new IllegalArgumentException(String.format("根据字符串进行切分时仅支持 ASCII 字符串，而字符串:[%s]非 ASCII 字符串.", aString));
+        throw new IllegalArgumentException(String.format(
+                "根据字符串进行切分时仅支持 ASCII 字符串，而字符串:[%s]非 ASCII 字符串.",
+                aString));
       }
       result = result.add(BigInteger.valueOf(tempChar).multiply(radixBigInteger.pow(k)));
       k++;
@@ -176,7 +190,9 @@ public final class RangeSplitUtil {
    */
   public static Pair<Character, Character> getMinAndMaxCharacter(String aString) {
     if (!isPureAscii(aString)) {
-      throw new IllegalArgumentException(String.format("根据字符串进行切分时仅支持 ASCII 字符串，而字符串:[%s]非 ASCII 字符串.", aString));
+      throw new IllegalArgumentException(String.format(
+              "根据字符串进行切分时仅支持 ASCII 字符串，而字符串:[%s]非 ASCII 字符串.",
+              aString));
     }
 
     char min = aString.charAt(0);

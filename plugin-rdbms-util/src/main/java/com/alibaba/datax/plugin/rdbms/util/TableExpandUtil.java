@@ -10,7 +10,7 @@ public final class TableExpandUtil {
   // schema.table[0-2]more
   // 1 2 3 4 5
   public static Pattern pattern = Pattern
-      .compile("(\\w+\\.)?(\\w+)\\[(\\d+)-(\\d+)\\](.*)");
+          .compile("(\\w+\\.)?(\\w+)\\[(\\d+)-(\\d+)\\](.*)");
 
   private TableExpandUtil() {
   }
@@ -21,12 +21,14 @@ public final class TableExpandUtil {
    * `table1`, `table2`, ... ,`table32` in {@link List}
    *
    * @param tables a string contains table name(one or many).
+   *
    * @return a split result of table name.
-   * <p/>
-   *         TODO 删除参数 DataBaseType
+   *         <p/>
+   *                 TODO 删除参数 DataBaseType
    */
-  public static List<String> splitTables(DataBaseType dataBaseType,
-                                         String tables) {
+  public static List<String> splitTables(
+          DataBaseType dataBaseType,
+          String tables) {
     List<String> splittedTables = new ArrayList<String>();
 
     String[] tableArrays = tables.split(",");
@@ -50,16 +52,16 @@ public final class TableExpandUtil {
         String schema = null;
         for (int k = Integer.valueOf(start); k <= Integer.valueOf(end); k++) {
           schema = (null == matcher.group(1)) ? "" : matcher.group(1)
-              .trim();
+                  .trim();
           if (start.startsWith("0")) {
             tableName = schema + matcher.group(2).trim()
-                + String.format("%0" + len + "d", k)
-                + matcher.group(5).trim();
+                    + String.format("%0" + len + "d", k)
+                    + matcher.group(5).trim();
             splittedTables.add(tableName);
           } else {
             tableName = schema + matcher.group(2).trim()
-                + String.format("%d", k)
-                + matcher.group(5).trim();
+                    + String.format("%d", k)
+                    + matcher.group(5).trim();
             splittedTables.add(tableName);
           }
         }
@@ -68,8 +70,9 @@ public final class TableExpandUtil {
     return splittedTables;
   }
 
-  public static List<String> expandTableConf(DataBaseType dataBaseType,
-                                             List<String> tables) {
+  public static List<String> expandTableConf(
+          DataBaseType dataBaseType,
+          List<String> tables) {
     List<String> parsedTables = new ArrayList<String>();
     for (String table : tables) {
       List<String> splittedTables = splitTables(dataBaseType, table);

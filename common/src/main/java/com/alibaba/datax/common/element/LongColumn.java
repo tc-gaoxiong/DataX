@@ -24,7 +24,7 @@ public class LongColumn extends Column {
 
     try {
       BigInteger rawData = NumberUtils.createBigDecimal(data)
-          .toBigInteger();
+              .toBigInteger();
       super.setRawData(rawData);
 
       // 当 rawData 为[0-127]时，rawData.bitLength() < 8，导致其 byteSize = 0，简单起见，直接认为其长度为 data.length()
@@ -32,8 +32,8 @@ public class LongColumn extends Column {
       super.setByteSize(data.length());
     } catch (Exception e) {
       throw DataXException.asDataXException(
-          CommonErrorCode.CONVERT_NOT_SUPPORT,
-          String.format("String[%s]不能转为Long .", data));
+              CommonErrorCode.CONVERT_NOT_SUPPORT,
+              String.format("String[%s]不能转为Long .", data));
     }
   }
 
@@ -97,7 +97,7 @@ public class LongColumn extends Column {
     }
 
     return this.asBigInteger().compareTo(BigInteger.ZERO) != 0 ? true
-        : false;
+            : false;
   }
 
   @Override
@@ -133,7 +133,7 @@ public class LongColumn extends Column {
   @Override
   public byte[] asBytes() {
     throw DataXException.asDataXException(
-        CommonErrorCode.CONVERT_NOT_SUPPORT, "Long类型不能转为Bytes .");
+            CommonErrorCode.CONVERT_NOT_SUPPORT, "Long类型不能转为Bytes .");
   }
 
 }

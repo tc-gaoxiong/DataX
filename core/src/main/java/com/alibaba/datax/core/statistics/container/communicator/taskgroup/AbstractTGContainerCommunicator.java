@@ -30,10 +30,10 @@ public abstract class AbstractTGContainerCommunicator extends AbstractContainerC
   public AbstractTGContainerCommunicator(Configuration configuration) {
     super(configuration);
     this.jobId = configuration.getInt(
-        CoreConstant.DATAX_CORE_CONTAINER_JOB_ID);
+            CoreConstant.DATAX_CORE_CONTAINER_JOB_ID);
     super.setCollector(new ProcessInnerCollector(this.jobId));
     this.taskGroupId = configuration.getInt(
-        CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID);
+            CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID);
   }
 
   @Override
@@ -52,7 +52,7 @@ public abstract class AbstractTGContainerCommunicator extends AbstractContainerC
     communication.setState(State.SUCCEEDED);
 
     for (Communication taskCommunication :
-        super.getCollector().getTaskCommunicationMap().values()) {
+            super.getCollector().getTaskCommunicationMap().values()) {
       communication.mergeStateFrom(taskCommunication);
     }
 

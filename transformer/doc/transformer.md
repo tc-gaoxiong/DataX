@@ -62,7 +62,8 @@ dx_replace(1,"5","10","****")  column 1的value为“dataxTest”=>"datax****"
     * 第二个参数：运算符，支持一下运算符：like, not like, >, =, <, >=, !=, <=
     * 第三个参数：正则表达式（java正则表达式）、值。
 * 返回：
-    * 如果匹配正则表达式，返回Null，表示过滤该行。不匹配表达式时，表示保留该行。（注意是该行）。对于>=<都是对字段直接compare的结果.
+    * 如果匹配正则表达式，返回Null，表示过滤该行。不匹配表达式时，表示保留该行。（注意是该行）。对于>=<
+      都是对字段直接compare的结果.
     * like ， not like是将字段转换成String，然后和目标正则表达式进行全匹配。
     *  > , =, <, >=, !=, <=
        对于DoubleColumn比较double值，对于LongColumn和DateColumn比较long值，其他StringColumn，BooleanColumn以及ByteColumn均比较的是StringColumn值。

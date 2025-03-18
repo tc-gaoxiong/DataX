@@ -54,7 +54,8 @@ public class VMInfo {
     garbageCollectorMXBeanList = java.lang.management.ManagementFactory.getGarbageCollectorMXBeans();
     memoryPoolMXBeanList = java.lang.management.ManagementFactory.getMemoryPoolMXBeans();
 
-    jvmInfo = runtimeMXBean.getVmVendor() + " " + runtimeMXBean.getSpecVersion() + " " + runtimeMXBean.getVmVersion();
+    jvmInfo = runtimeMXBean.getVmVendor() + " " + runtimeMXBean.getSpecVersion() + " "
+            + runtimeMXBean.getVmVersion();
     osInfo = osMXBean.getName() + " " + osMXBean.getArch() + " " + osMXBean.getVersion();
     totalProcessorCount = osMXBean.getAvailableProcessors();
 
@@ -63,10 +64,18 @@ public class VMInfo {
     LOG.info("VMInfo# operatingSystem class => " + osMXBean.getClass().getName());
     if (VMInfo.isSunOsMBean(osMXBean)) {
       {
-        startPhyOSStatus.totalPhysicalMemory = VMInfo.getLongFromOperatingSystem(osMXBean, "getTotalPhysicalMemorySize");
-        startPhyOSStatus.freePhysicalMemory = VMInfo.getLongFromOperatingSystem(osMXBean, "getFreePhysicalMemorySize");
-        startPhyOSStatus.maxFileDescriptorCount = VMInfo.getLongFromOperatingSystem(osMXBean, "getMaxFileDescriptorCount");
-        startPhyOSStatus.currentOpenFileDescriptorCount = VMInfo.getLongFromOperatingSystem(osMXBean, "getOpenFileDescriptorCount");
+        startPhyOSStatus.totalPhysicalMemory = VMInfo.getLongFromOperatingSystem(
+                osMXBean,
+                "getTotalPhysicalMemorySize");
+        startPhyOSStatus.freePhysicalMemory = VMInfo.getLongFromOperatingSystem(
+                osMXBean,
+                "getFreePhysicalMemorySize");
+        startPhyOSStatus.maxFileDescriptorCount = VMInfo.getLongFromOperatingSystem(
+                osMXBean,
+                "getMaxFileDescriptorCount");
+        startPhyOSStatus.currentOpenFileDescriptorCount = VMInfo.getLongFromOperatingSystem(
+                osMXBean,
+                "getOpenFileDescriptorCount");
       }
     }
 
@@ -114,13 +123,18 @@ public class VMInfo {
     return "com.sun.management.UnixOperatingSystem".equals(className);
   }
 
-  public static long getLongFromOperatingSystem(OperatingSystemMXBean operatingSystem, String methodName) {
+  public static long getLongFromOperatingSystem(
+          OperatingSystemMXBean operatingSystem,
+          String methodName) {
     try {
       final Method method = operatingSystem.getClass().getMethod(methodName, (Class<?>[]) null);
       method.setAccessible(true);
       return (Long) method.invoke(operatingSystem, (Object[]) null);
     } catch (final Exception e) {
-      LOG.info(String.format("OperatingSystemMXBean %s failed, Exception = %s ", methodName, e.getMessage()));
+      LOG.info(String.format(
+              "OperatingSystemMXBean %s failed, Exception = %s ",
+              methodName,
+              e.getMessage()));
     }
 
     return -1;
@@ -128,12 +142,12 @@ public class VMInfo {
 
   public String toString() {
     return "the machine info  => \n\n"
-        + "\tosInfo:\t" + osInfo + "\n"
-        + "\tjvmInfo:\t" + jvmInfo + "\n"
-        + "\tcpu num:\t" + totalProcessorCount + "\n\n"
-        + startPhyOSStatus.toString() + "\n"
-        + processGCStatus.toString() + "\n"
-        + processMomoryStatus.toString() + "\n";
+            + "\tosInfo:\t" + osInfo + "\n"
+            + "\tjvmInfo:\t" + jvmInfo + "\n"
+            + "\tcpu num:\t" + totalProcessorCount + "\n\n"
+            + startPhyOSStatus.toString() + "\n"
+            + processGCStatus.toString() + "\n"
+            + processMomoryStatus.toString() + "\n";
   }
 
   public String totalString() {
@@ -152,9 +166,12 @@ public class VMInfo {
         long curProcessTime = getLongFromOperatingSystem(osMXBean, "getProcessCpuTime");
         //百分比， uptime是ms，processTime是nano
         if ((curUptime > lastUpTime) && (curProcessTime >= lastProcessCpuTime)) {
-          float curDeltaCpu = (float) (curProcessTime - lastProcessCpuTime) / ((curUptime - lastUpTime) * totalProcessorCount * 10000);
+          float curDeltaCpu =
+                  (float) (curProcessTime - lastProcessCpuTime) / ((curUptime - lastUpTime)
+                          * totalProcessorCount * 10000);
           processCpuStatus.setMaxMinCpu(curDeltaCpu);
-          processCpuStatus.averageCpu = (float) curProcessTime / (curUptime * totalProcessorCount * 10000);
+          processCpuStatus.averageCpu =
+                  (float) curProcessTime / (curUptime * totalProcessorCount * 10000);
 
           lastUpTime = curUptime;
           lastProcessCpuTime = curProcessTime;
@@ -188,13 +205,16 @@ public class VMInfo {
           }
           memoryStatus.commitedSize = pool.getUsage().getCommitted();
           memoryStatus.setMaxMinUsedSize(pool.getUsage().getUsed());
-          long maxMemory = memoryStatus.commitedSize > 0 ? memoryStatus.commitedSize : memoryStatus.maxSize;
-          memoryStatus.setMaxMinPercent(maxMemory > 0 ? (float) 100 * memoryStatus.usedSize / maxMemory : -1);
+          long maxMemory =
+                  memoryStatus.commitedSize > 0 ? memoryStatus.commitedSize : memoryStatus.maxSize;
+          memoryStatus.setMaxMinPercent(
+                  maxMemory > 0 ? (float) 100 * memoryStatus.usedSize / maxMemory : -1);
         }
       }
 
       if (print) {
-        LOG.info(processCpuStatus.getDeltaString() + processMomoryStatus.getDeltaString() + processGCStatus.getDeltaString());
+        LOG.info(processCpuStatus.getDeltaString() + processMomoryStatus.getDeltaString()
+                + processGCStatus.getDeltaString());
       }
 
     } catch (Exception e) {
@@ -209,11 +229,15 @@ public class VMInfo {
     long currentOpenFileDescriptorCount = -1;
 
     public String toString() {
-      return String.format("\ttotalPhysicalMemory:\t%,.2fG\n"
-              + "\tfreePhysicalMemory:\t%,.2fG\n"
-              + "\tmaxFileDescriptorCount:\t%s\n"
-              + "\tcurrentOpenFileDescriptorCount:\t%s\n",
-          (float) totalPhysicalMemory / GB, (float) freePhysicalMemory / GB, maxFileDescriptorCount, currentOpenFileDescriptorCount);
+      return String.format(
+              "\ttotalPhysicalMemory:\t%,.2fG\n"
+                      + "\tfreePhysicalMemory:\t%,.2fG\n"
+                      + "\tmaxFileDescriptorCount:\t%s\n"
+                      + "\tcurrentOpenFileDescriptorCount:\t%s\n",
+              (float) totalPhysicalMemory / GB,
+              (float) freePhysicalMemory / GB,
+              maxFileDescriptorCount,
+              currentOpenFileDescriptorCount);
     }
   }
 
@@ -239,13 +263,19 @@ public class VMInfo {
       StringBuilder sb = new StringBuilder();
       sb.append("\n\t [delta cpu info] => \n");
       sb.append("\t\t");
-      sb.append(String.format("%-30s | %-30s | %-30s | %-30s \n", "curDeltaCpu", "averageCpu", "maxDeltaCpu", "minDeltaCpu"));
+      sb.append(String.format(
+              "%-30s | %-30s | %-30s | %-30s \n",
+              "curDeltaCpu",
+              "averageCpu",
+              "maxDeltaCpu",
+              "minDeltaCpu"));
       sb.append("\t\t");
-      sb.append(String.format("%-30s | %-30s | %-30s | %-30s \n",
-          String.format("%,.2f%%", processCpuStatus.curDeltaCpu),
-          String.format("%,.2f%%", processCpuStatus.averageCpu),
-          String.format("%,.2f%%", processCpuStatus.maxDeltaCpu),
-          String.format("%,.2f%%\n", processCpuStatus.minDeltaCpu)));
+      sb.append(String.format(
+              "%-30s | %-30s | %-30s | %-30s \n",
+              String.format("%,.2f%%", processCpuStatus.curDeltaCpu),
+              String.format("%,.2f%%", processCpuStatus.averageCpu),
+              String.format("%,.2f%%", processCpuStatus.maxDeltaCpu),
+              String.format("%,.2f%%\n", processCpuStatus.minDeltaCpu)));
 
       return sb.toString();
     }
@@ -254,12 +284,17 @@ public class VMInfo {
       StringBuilder sb = new StringBuilder();
       sb.append("\n\t [total cpu info] => \n");
       sb.append("\t\t");
-      sb.append(String.format("%-30s | %-30s | %-30s \n", "averageCpu", "maxDeltaCpu", "minDeltaCpu"));
+      sb.append(String.format(
+              "%-30s | %-30s | %-30s \n",
+              "averageCpu",
+              "maxDeltaCpu",
+              "minDeltaCpu"));
       sb.append("\t\t");
-      sb.append(String.format("%-30s | %-30s | %-30s \n",
-          String.format("%,.2f%%", processCpuStatus.averageCpu),
-          String.format("%,.2f%%", processCpuStatus.maxDeltaCpu),
-          String.format("%,.2f%%\n", processCpuStatus.minDeltaCpu)));
+      sb.append(String.format(
+              "%-30s | %-30s | %-30s \n",
+              String.format("%,.2f%%", processCpuStatus.averageCpu),
+              String.format("%,.2f%%", processCpuStatus.maxDeltaCpu),
+              String.format("%,.2f%%\n", processCpuStatus.minDeltaCpu)));
 
       return sb.toString();
     }
@@ -277,15 +312,30 @@ public class VMInfo {
       StringBuilder sb = new StringBuilder();
       sb.append("\n\t [delta gc info] => \n");
       sb.append("\t\t ");
-      sb.append(String.format("%-20s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s \n", "NAME", "curDeltaGCCount", "totalGCCount", "maxDeltaGCCount", "minDeltaGCCount", "curDeltaGCTime", "totalGCTime", "maxDeltaGCTime", "minDeltaGCTime"));
+      sb.append(String.format(
+              "%-20s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s \n",
+              "NAME",
+              "curDeltaGCCount",
+              "totalGCCount",
+              "maxDeltaGCCount",
+              "minDeltaGCCount",
+              "curDeltaGCTime",
+              "totalGCTime",
+              "maxDeltaGCTime",
+              "minDeltaGCTime"));
       for (GCStatus gc : gcStatusMap.values()) {
         sb.append("\t\t ");
-        sb.append(String.format("%-20s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s \n",
-            gc.name, gc.curDeltaGCCount, gc.totalGCCount, gc.maxDeltaGCCount, gc.minDeltaGCCount,
-            String.format("%,.3fs", (float) gc.curDeltaGCTime / 1000),
-            String.format("%,.3fs", (float) gc.totalGCTime / 1000),
-            String.format("%,.3fs", (float) gc.maxDeltaGCTime / 1000),
-            String.format("%,.3fs", (float) gc.minDeltaGCTime / 1000)));
+        sb.append(String.format(
+                "%-20s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s \n",
+                gc.name,
+                gc.curDeltaGCCount,
+                gc.totalGCCount,
+                gc.maxDeltaGCCount,
+                gc.minDeltaGCCount,
+                String.format("%,.3fs", (float) gc.curDeltaGCTime / 1000),
+                String.format("%,.3fs", (float) gc.totalGCTime / 1000),
+                String.format("%,.3fs", (float) gc.maxDeltaGCTime / 1000),
+                String.format("%,.3fs", (float) gc.minDeltaGCTime / 1000)));
 
       }
       return sb.toString();
@@ -295,14 +345,23 @@ public class VMInfo {
       StringBuilder sb = new StringBuilder();
       sb.append("\n\t [total gc info] => \n");
       sb.append("\t\t ");
-      sb.append(String.format("%-20s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s \n", "NAME", "totalGCCount", "maxDeltaGCCount", "minDeltaGCCount", "totalGCTime", "maxDeltaGCTime", "minDeltaGCTime"));
+      sb.append(String.format(
+              "%-20s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s \n",
+              "NAME",
+              "totalGCCount",
+              "maxDeltaGCCount",
+              "minDeltaGCCount",
+              "totalGCTime",
+              "maxDeltaGCTime",
+              "minDeltaGCTime"));
       for (GCStatus gc : gcStatusMap.values()) {
         sb.append("\t\t ");
-        sb.append(String.format("%-20s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s \n",
-            gc.name, gc.totalGCCount, gc.maxDeltaGCCount, gc.minDeltaGCCount,
-            String.format("%,.3fs", (float) gc.totalGCTime / 1000),
-            String.format("%,.3fs", (float) gc.maxDeltaGCTime / 1000),
-            String.format("%,.3fs", (float) gc.minDeltaGCTime / 1000)));
+        sb.append(String.format(
+                "%-20s | %-18s | %-18s | %-18s | %-18s | %-18s | %-18s \n",
+                gc.name, gc.totalGCCount, gc.maxDeltaGCCount, gc.minDeltaGCCount,
+                String.format("%,.3fs", (float) gc.totalGCTime / 1000),
+                String.format("%,.3fs", (float) gc.maxDeltaGCTime / 1000),
+                String.format("%,.3fs", (float) gc.minDeltaGCTime / 1000)));
 
       }
       return sb.toString();
@@ -315,11 +374,18 @@ public class VMInfo {
     public String toString() {
       StringBuilder sb = new StringBuilder();
       sb.append("\t");
-      sb.append(String.format("%-30s | %-30s | %-30s \n", "MEMORY_NAME", "allocation_size", "init_size"));
+      sb.append(String.format(
+              "%-30s | %-30s | %-30s \n",
+              "MEMORY_NAME",
+              "allocation_size",
+              "init_size"));
       for (MemoryStatus ms : memoryStatusMap.values()) {
         sb.append("\t");
-        sb.append(String.format("%-30s | %-30s | %-30s \n",
-            ms.name, String.format("%,.2fMB", (float) ms.maxSize / MB), String.format("%,.2fMB", (float) ms.initSize / MB)));
+        sb.append(String.format(
+                "%-30s | %-30s | %-30s \n",
+                ms.name,
+                String.format("%,.2fMB", (float) ms.maxSize / MB),
+                String.format("%,.2fMB", (float) ms.initSize / MB)));
       }
       return sb.toString();
     }
@@ -328,14 +394,21 @@ public class VMInfo {
       StringBuilder sb = new StringBuilder();
       sb.append("\n\t [delta memory info] => \n");
       sb.append("\t\t ");
-      sb.append(String.format("%-30s | %-30s | %-30s | %-30s | %-30s \n", "NAME", "used_size", "used_percent", "max_used_size", "max_percent"));
+      sb.append(String.format(
+              "%-30s | %-30s | %-30s | %-30s | %-30s \n",
+              "NAME",
+              "used_size",
+              "used_percent",
+              "max_used_size",
+              "max_percent"));
       for (MemoryStatus ms : memoryStatusMap.values()) {
         sb.append("\t\t ");
-        sb.append(String.format("%-30s | %-30s | %-30s | %-30s | %-30s \n",
-            ms.name, String.format("%,.2f", (float) ms.usedSize / MB) + "MB",
-            String.format("%,.2f", (float) ms.percent) + "%",
-            String.format("%,.2f", (float) ms.maxUsedSize / MB) + "MB",
-            String.format("%,.2f", (float) ms.maxpercent) + "%"));
+        sb.append(String.format(
+                "%-30s | %-30s | %-30s | %-30s | %-30s \n",
+                ms.name, String.format("%,.2f", (float) ms.usedSize / MB) + "MB",
+                String.format("%,.2f", (float) ms.percent) + "%",
+                String.format("%,.2f", (float) ms.maxUsedSize / MB) + "MB",
+                String.format("%,.2f", (float) ms.maxpercent) + "%"));
 
       }
       return sb.toString();

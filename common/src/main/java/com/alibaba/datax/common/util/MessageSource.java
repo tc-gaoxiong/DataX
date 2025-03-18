@@ -6,7 +6,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
+import java.util.TimeZone;
 
 
 public class MessageSource {
@@ -22,12 +27,14 @@ public class MessageSource {
 
   /**
    * @param baseName demo: javax.servlet.http.LocalStrings
+   *
    * @throws MissingResourceException - if no resource bundle for the specified base name can be
-   *                                  found
+   *         found
    */
   public static MessageSource loadResourceBundle(String baseName) {
-    return loadResourceBundle(baseName, MessageSource.locale,
-        MessageSource.timeZone);
+    return loadResourceBundle(
+            baseName, MessageSource.locale,
+            MessageSource.timeZone);
   }
 
   /**
@@ -40,10 +47,12 @@ public class MessageSource {
   /**
    * @param clazz 根据其获取package name
    */
-  public static <T> MessageSource loadResourceBundle(Class<T> clazz,
-                                                     Locale locale, TimeZone timeZone) {
-    return loadResourceBundle(clazz.getPackage().getName(), locale,
-        timeZone);
+  public static <T> MessageSource loadResourceBundle(
+          Class<T> clazz,
+          Locale locale, TimeZone timeZone) {
+    return loadResourceBundle(
+            clazz.getPackage().getName(), locale,
+            timeZone);
   }
 
   /**
@@ -52,11 +61,13 @@ public class MessageSource {
    * error: ResourceBundle.getBundle("xxx.LocalStrings", Locale.getDefault(), LoadUtil.getJarLoader(PluginType.WRITER, "odpswriter"))
    *
    * @param baseName demo: javax.servlet.http.LocalStrings
+   *
    * @throws MissingResourceException - if no resource bundle for the specified base name can be
-   *                                  found
+   *         found
    */
-  public static MessageSource loadResourceBundle(String baseName,
-                                                 Locale locale, TimeZone timeZone) {
+  public static MessageSource loadResourceBundle(
+          String baseName,
+          Locale locale, TimeZone timeZone) {
     ResourceBundle resourceBundle = null;
     if (null == locale) {
       locale = LocaleUtils.toLocale("en_US");
@@ -66,23 +77,25 @@ public class MessageSource {
     }
     String resourceBaseName = String.format("%s.LocalStrings", baseName);
     LOG.debug(
-        "initEnvironment MessageSource.locale[{}], MessageSource.timeZone[{}]",
-        MessageSource.locale, MessageSource.timeZone);
+            "initEnvironment MessageSource.locale[{}], MessageSource.timeZone[{}]",
+            MessageSource.locale, MessageSource.timeZone);
     LOG.debug(
-        "loadResourceBundle with locale[{}], timeZone[{}], baseName[{}]",
-        locale, timeZone, resourceBaseName);
+            "loadResourceBundle with locale[{}], timeZone[{}], baseName[{}]",
+            locale, timeZone, resourceBaseName);
     // warn: 这个map的维护需要考虑Local吗, no?
     if (!MessageSource.resourceBundleCache.containsKey(resourceBaseName)) {
       ClassLoader clazzLoader = Thread.currentThread()
-          .getContextClassLoader();
+              .getContextClassLoader();
       LOG.debug("loadResourceBundle classLoader:{}", clazzLoader);
-      resourceBundle = ResourceBundle.getBundle(resourceBaseName, locale,
-          clazzLoader);
-      MessageSource.resourceBundleCache.put(resourceBaseName,
-          resourceBundle);
+      resourceBundle = ResourceBundle.getBundle(
+              resourceBaseName, locale,
+              clazzLoader);
+      MessageSource.resourceBundleCache.put(
+              resourceBaseName,
+              resourceBundle);
     } else {
       resourceBundle = MessageSource.resourceBundleCache
-          .get(resourceBaseName);
+              .get(resourceBaseName);
     }
 
     return new MessageSource(resourceBundle);
@@ -147,18 +160,21 @@ public class MessageSource {
   }
 
   public String message(String code, String args1) {
-    return this.messageWithDefaultMessage(code, null,
-        new Object[]{args1});
+    return this.messageWithDefaultMessage(
+            code, null,
+            new Object[]{args1});
   }
 
   public String message(String code, String args1, String args2) {
-    return this.messageWithDefaultMessage(code, null, new Object[]{args1,
-        args2});
+    return this.messageWithDefaultMessage(
+            code, null, new Object[]{args1,
+                    args2});
   }
 
   public String message(String code, String args1, String args2, String args3) {
-    return this.messageWithDefaultMessage(code, null, new Object[]{args1,
-        args2, args3});
+    return this.messageWithDefaultMessage(
+            code, null, new Object[]{args1,
+                    args2, args3});
   }
 
   // 上面几个重载可以应对大多数情况, 避免使用这个可以提高性能的
@@ -167,15 +183,17 @@ public class MessageSource {
   }
 
   public String messageWithDefaultMessage(String code, String defaultMessage) {
-    return this.messageWithDefaultMessage(code, defaultMessage,
-        new Object[]{});
+    return this.messageWithDefaultMessage(
+            code, defaultMessage,
+            new Object[]{});
   }
 
   /**
    * @param args MessageFormat会依次调用对应对象的toString方法
    */
-  public String messageWithDefaultMessage(String code, String defaultMessage,
-                                          Object... args) {
+  public String messageWithDefaultMessage(
+          String code, String defaultMessage,
+          Object... args) {
     String messageStr = null;
     try {
       messageStr = this.resourceBundle.getString(code);

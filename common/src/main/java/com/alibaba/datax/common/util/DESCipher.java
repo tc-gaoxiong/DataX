@@ -23,6 +23,7 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
+
 import java.security.SecureRandom;
 
 /**
@@ -42,7 +43,9 @@ public class DESCipher {
    *
    * @param src 明文(字节)
    * @param key 密钥，长度必须是8的倍数
+   *
    * @return 密文(字节)
+   *
    * @throws Exception
    */
   public static byte[] encrypt(byte[] src, byte[] key) throws Exception {
@@ -104,7 +107,9 @@ public class DESCipher {
    * 加密
    *
    * @param src * 明文(字节)
+   *
    * @return 密文(字节)
+   *
    * @throws Exception
    */
   public static byte[] encrypt(byte[] src) throws Exception {
@@ -115,7 +120,9 @@ public class DESCipher {
    * 解密
    *
    * @param src 密文(字节)
+   *
    * @return 明文(字节)
+   *
    * @throws Exception
    */
   public static byte[] decrypt(byte[] src) throws Exception {
@@ -126,7 +133,9 @@ public class DESCipher {
    * 加密
    *
    * @param src 明文(字符串)
+   *
    * @return 密文(16进制字符串)
+   *
    * @throws Exception
    */
   public final static String encrypt(String src) {
@@ -141,9 +150,11 @@ public class DESCipher {
   /**
    * 加密
    *
-   * @param src        明文(字符串)
+   * @param src 明文(字符串)
    * @param encryptKey 加密用的秘钥
+   *
    * @return 密文(16进制字符串)
+   *
    * @throws Exception
    */
   public final static String encrypt(String src, String encryptKey) {
@@ -159,7 +170,9 @@ public class DESCipher {
    * 解密
    *
    * @param src 密文(字符串)
+   *
    * @return 明文(字符串)
+   *
    * @throws Exception
    */
   public final static String decrypt(String src) {
@@ -174,9 +187,11 @@ public class DESCipher {
   /**
    * 解密
    *
-   * @param src        密文(字符串)
+   * @param src 密文(字符串)
    * @param decryptKey 解密用的秘钥
+   *
    * @return 明文(字符串)
+   *
    * @throws Exception
    */
   public final static String decrypt(String src, String decryptKey) {
@@ -192,7 +207,9 @@ public class DESCipher {
    * 加密
    *
    * @param src 明文(字节)
+   *
    * @return 密文(16进制字符串)
+   *
    * @throws Exception
    */
   public static String encryptToString(byte[] src) throws Exception {
@@ -203,7 +220,9 @@ public class DESCipher {
    * 解密
    *
    * @param src 密文(字节)
+   *
    * @return 明文(字符串)
+   *
    * @throws Exception
    */
   public static String decryptToString(byte[] src) throws Exception {

@@ -1,6 +1,13 @@
 package com.alibaba.datax.plugin.reader.streamreader;
 
-import com.alibaba.datax.common.element.*;
+import com.alibaba.datax.common.element.BoolColumn;
+import com.alibaba.datax.common.element.BytesColumn;
+import com.alibaba.datax.common.element.Column;
+import com.alibaba.datax.common.element.DateColumn;
+import com.alibaba.datax.common.element.DoubleColumn;
+import com.alibaba.datax.common.element.LongColumn;
+import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.StringColumn;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.plugin.RecordSender;
 import com.alibaba.datax.common.spi.Reader;
@@ -45,27 +52,33 @@ public class StreamReader extends Reader {
     public void init() {
       this.originalConfig = super.getPluginJobConf();
       // warn: 忽略大小写
-      this.mixupFunctionPattern = Pattern.compile(Constant.MIXUP_FUNCTION_PATTERN, Pattern.CASE_INSENSITIVE);
+      this.mixupFunctionPattern = Pattern.compile(
+              Constant.MIXUP_FUNCTION_PATTERN,
+              Pattern.CASE_INSENSITIVE);
       dealColumn(this.originalConfig);
 
       Long sliceRecordCount = this.originalConfig
-          .getLong(Key.SLICE_RECORD_COUNT);
+              .getLong(Key.SLICE_RECORD_COUNT);
       if (null == sliceRecordCount) {
-        throw DataXException.asDataXException(StreamReaderErrorCode.REQUIRED_VALUE,
-            "没有设置参数[sliceRecordCount].");
+        throw DataXException.asDataXException(
+                StreamReaderErrorCode.REQUIRED_VALUE,
+                "没有设置参数[sliceRecordCount].");
       } else if (sliceRecordCount < 1) {
-        throw DataXException.asDataXException(StreamReaderErrorCode.ILLEGAL_VALUE,
-            "参数[sliceRecordCount]不能小于1.");
+        throw DataXException.asDataXException(
+                StreamReaderErrorCode.ILLEGAL_VALUE,
+                "参数[sliceRecordCount]不能小于1.");
       }
 
     }
 
     private void dealColumn(Configuration originalConfig) {
-      List<JSONObject> columns = originalConfig.getList(Key.COLUMN,
-          JSONObject.class);
+      List<JSONObject> columns = originalConfig.getList(
+              Key.COLUMN,
+              JSONObject.class);
       if (null == columns || columns.isEmpty()) {
-        throw DataXException.asDataXException(StreamReaderErrorCode.REQUIRED_VALUE,
-            "没有设置参数[column].");
+        throw DataXException.asDataXException(
+                StreamReaderErrorCode.REQUIRED_VALUE,
+                "没有设置参数[column].");
       }
 
       List<String> dealedColumns = new ArrayList<String>();
@@ -74,8 +87,9 @@ public class StreamReader extends Reader {
         try {
           this.parseMixupFunctions(eachColumnConfig);
         } catch (Exception e) {
-          throw DataXException.asDataXException(StreamReaderErrorCode.NOT_SUPPORT_TYPE,
-              String.format("解析混淆函数失败[%s]", e.getMessage()), e);
+          throw DataXException.asDataXException(
+                  StreamReaderErrorCode.NOT_SUPPORT_TYPE,
+                  String.format("解析混淆函数失败[%s]", e.getMessage()), e);
         }
 
         String typeName = eachColumnConfig.getString(Constant.TYPE);
@@ -85,17 +99,18 @@ public class StreamReader extends Reader {
         } else {
           if (Type.DATE.name().equalsIgnoreCase(typeName)) {
             boolean notAssignDateFormat = StringUtils
-                .isBlank(eachColumnConfig
-                    .getString(Constant.DATE_FORMAT_MARK));
+                    .isBlank(eachColumnConfig
+                            .getString(Constant.DATE_FORMAT_MARK));
             if (notAssignDateFormat) {
-              eachColumnConfig.set(Constant.DATE_FORMAT_MARK,
-                  Constant.DEFAULT_DATE_FORMAT);
+              eachColumnConfig.set(
+                      Constant.DATE_FORMAT_MARK,
+                      Constant.DEFAULT_DATE_FORMAT);
             }
           }
           if (!Type.isTypeIllegal(typeName)) {
             throw DataXException.asDataXException(
-                StreamReaderErrorCode.NOT_SUPPORT_TYPE,
-                String.format("不支持类型[%s]", typeName));
+                    StreamReaderErrorCode.NOT_SUPPORT_TYPE,
+                    String.format("不支持类型[%s]", typeName));
           }
         }
         dealedColumns.add(eachColumnConfig.toJSON());
@@ -117,12 +132,16 @@ public class StreamReader extends Reader {
       String columnValue = eachColumnConfig.getString(Constant.VALUE);
       String columnMixup = eachColumnConfig.getString(Constant.RANDOM);
       if (StringUtils.isBlank(columnMixup)) {
-        eachColumnConfig.getNecessaryValue(Constant.VALUE,
-            StreamReaderErrorCode.REQUIRED_VALUE);
+        eachColumnConfig.getNecessaryValue(
+                Constant.VALUE,
+                StreamReaderErrorCode.REQUIRED_VALUE);
       }
       // 2 者都有配置
       if (StringUtils.isNotBlank(columnMixup) && StringUtils.isNotBlank(columnValue)) {
-        LOG.warn(String.format("您配置了streamreader常量列(value:%s)和随机混淆列(random:%s), 常量列优先", columnValue, columnMixup));
+        LOG.warn(String.format(
+                "您配置了streamreader常量列(value:%s)和随机混淆列(random:%s), 常量列优先",
+                columnValue,
+                columnMixup));
         eachColumnConfig.remove(Constant.RANDOM);
       }
       if (StringUtils.isNotBlank(columnMixup)) {
@@ -134,22 +153,34 @@ public class StreamReader extends Reader {
           long param2Int = 0;
           if (StringUtils.isBlank(param1) && StringUtils.isBlank(param2)) {
             throw DataXException.asDataXException(
-                StreamReaderErrorCode.ILLEGAL_VALUE,
-                String.format("random混淆函数不合法[%s], 混淆函数random的参数不能为空:%s, %s", columnMixup, param1, param2));
+                    StreamReaderErrorCode.ILLEGAL_VALUE,
+                    String.format(
+                            "random混淆函数不合法[%s], 混淆函数random的参数不能为空:%s, %s",
+                            columnMixup,
+                            param1,
+                            param2));
           }
           String typeName = eachColumnConfig.getString(Constant.TYPE);
           if (Type.DATE.name().equalsIgnoreCase(typeName)) {
-            String dateFormat = eachColumnConfig.getString(Constant.DATE_FORMAT_MARK, Constant.DEFAULT_DATE_FORMAT);
+            String dateFormat = eachColumnConfig.getString(
+                    Constant.DATE_FORMAT_MARK,
+                    Constant.DEFAULT_DATE_FORMAT);
             try {
               SimpleDateFormat format = new SimpleDateFormat(
-                  eachColumnConfig.getString(Constant.DATE_FORMAT_MARK, Constant.DEFAULT_DATE_FORMAT));
+                      eachColumnConfig.getString(
+                              Constant.DATE_FORMAT_MARK,
+                              Constant.DEFAULT_DATE_FORMAT));
               //warn: do no concern int -> long
               param1Int = format.parse(param1).getTime();//milliseconds
               param2Int = format.parse(param2).getTime();//milliseconds
             } catch (ParseException e) {
               throw DataXException.asDataXException(
-                  StreamReaderErrorCode.ILLEGAL_VALUE,
-                  String.format("dateFormat参数[%s]和混淆函数random的参数不匹配，解析错误:%s, %s", dateFormat, param1, param2), e);
+                      StreamReaderErrorCode.ILLEGAL_VALUE,
+                      String.format(
+                              "dateFormat参数[%s]和混淆函数random的参数不匹配，解析错误:%s, %s",
+                              dateFormat,
+                              param1,
+                              param2), e);
             }
           } else {
             param1Int = Integer.parseInt(param1);
@@ -157,22 +188,30 @@ public class StreamReader extends Reader {
           }
           if (param1Int < 0 || param2Int < 0) {
             throw DataXException.asDataXException(
-                StreamReaderErrorCode.ILLEGAL_VALUE,
-                String.format("random混淆函数不合法[%s], 混淆函数random的参数不能为负数:%s, %s", columnMixup, param1, param2));
+                    StreamReaderErrorCode.ILLEGAL_VALUE,
+                    String.format(
+                            "random混淆函数不合法[%s], 混淆函数random的参数不能为负数:%s, %s",
+                            columnMixup,
+                            param1,
+                            param2));
           }
           if (!Type.BOOL.name().equalsIgnoreCase(typeName)) {
             if (param1Int > param2Int) {
               throw DataXException.asDataXException(
-                  StreamReaderErrorCode.ILLEGAL_VALUE,
-                  String.format("random混淆函数不合法[%s], 混淆函数random的参数需要第一个小于等于第二个:%s, %s", columnMixup, param1, param2));
+                      StreamReaderErrorCode.ILLEGAL_VALUE,
+                      String.format(
+                              "random混淆函数不合法[%s], 混淆函数random的参数需要第一个小于等于第二个:%s, %s",
+                              columnMixup,
+                              param1,
+                              param2));
             }
           }
           eachColumnConfig.set(Constant.MIXUP_FUNCTION_PARAM1, param1Int);
           eachColumnConfig.set(Constant.MIXUP_FUNCTION_PARAM2, param2Int);
         } else {
           throw DataXException.asDataXException(
-              StreamReaderErrorCode.ILLEGAL_VALUE,
-              String.format("random混淆函数不合法[%s], 需要为param1, param2形式", columnMixup));
+                  StreamReaderErrorCode.ILLEGAL_VALUE,
+                  String.format("random混淆函数不合法[%s], 需要为param1, param2形式", columnMixup));
         }
         this.originalConfig.set(Constant.HAVE_MIXUP_FUNCTION, true);
       }
@@ -218,7 +257,7 @@ public class StreamReader extends Reader {
 
       this.sliceRecordCount = this.readerSliceConfig.getLong(Key.SLICE_RECORD_COUNT);
       this.haveMixupFunction = this.readerSliceConfig.getBool(
-          Constant.HAVE_MIXUP_FUNCTION, false);
+              Constant.HAVE_MIXUP_FUNCTION, false);
     }
 
     @Override
@@ -256,7 +295,9 @@ public class StreamReader extends Reader {
       switch (columnType) {
         case STRING:
           if (isColumnMixup) {
-            return new StringColumn(RandomStringUtils.randomAlphanumeric((int) RandomUtils.nextLong(param1Int, param2Int + 1)));
+            return new StringColumn(RandomStringUtils.randomAlphanumeric((int) RandomUtils.nextLong(
+                    param1Int,
+                    param2Int + 1)));
           } else {
             return new StringColumn(columnValue);
           }
@@ -274,7 +315,9 @@ public class StreamReader extends Reader {
           }
         case DATE:
           SimpleDateFormat format = new SimpleDateFormat(
-              eachColumnConfig.getString(Constant.DATE_FORMAT_MARK, Constant.DEFAULT_DATE_FORMAT));
+                  eachColumnConfig.getString(
+                          Constant.DATE_FORMAT_MARK,
+                          Constant.DEFAULT_DATE_FORMAT));
           if (isColumnMixup) {
             return new DateColumn(new Date(RandomUtils.nextLong(param1Int, param2Int + 1)));
           } else {
@@ -300,7 +343,9 @@ public class StreamReader extends Reader {
           }
         case BYTES:
           if (isColumnMixup) {
-            return new BytesColumn(RandomStringUtils.randomAlphanumeric((int) RandomUtils.nextLong(param1Int, param2Int + 1)).getBytes());
+            return new BytesColumn(RandomStringUtils
+                    .randomAlphanumeric((int) RandomUtils.nextLong(param1Int, param2Int + 1))
+                    .getBytes());
           } else {
             return new BytesColumn(columnValue.getBytes());
           }
@@ -326,7 +371,10 @@ public class StreamReader extends Reader {
           record.addColumn(this.buildOneColumn(eachColumnConfig));
         }
       } catch (Exception e) {
-        throw DataXException.asDataXException(StreamReaderErrorCode.ILLEGAL_VALUE, "构造一个record失败.", e);
+        throw DataXException.asDataXException(
+                StreamReaderErrorCode.ILLEGAL_VALUE,
+                "构造一个record失败.",
+                e);
       }
 
       return record;

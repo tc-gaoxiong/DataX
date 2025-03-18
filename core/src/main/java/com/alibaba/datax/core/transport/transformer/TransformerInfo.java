@@ -7,34 +7,34 @@ import com.alibaba.datax.transformer.ComplexTransformer;
  * Created by liqiang on 16/3/9.
  */
 public class TransformerInfo {
-    /**
-     * function 基本信息
-     */
-    private ComplexTransformer transformer;
-    private ClassLoader classLoader;
-    private boolean isNative;
+  /**
+   * function 基本信息
+   */
+  private ComplexTransformer transformer;
+  private ClassLoader classLoader;
+  private boolean isNative;
 
-    public ComplexTransformer getTransformer() {
-        return transformer;
-    }
+  public ComplexTransformer getTransformer() {
+    return transformer;
+  }
 
-    public void setTransformer(ComplexTransformer transformer) {
-        this.transformer = transformer;
-    }
+  public void setTransformer(ComplexTransformer transformer) {
+    this.transformer = transformer;
+  }
 
-    public ClassLoader getClassLoader() {
-        return classLoader;
-    }
+  public ClassLoader getClassLoader() {
+    return classLoader;
+  }
 
-    public void setClassLoader(ClassLoader classLoader) {
-        this.classLoader = classLoader;
-    }
+  public void setClassLoader(ClassLoader classLoader) {
+    this.classLoader = classLoader;
+  }
 
-    public boolean isNative() {
-        return isNative;
-    }
+  public boolean isNative() {
+    return isNative;
+  }
 
-    public void setIsNative(boolean isNative) {
-        this.isNative = isNative;
-    }
+  public void setIsNative(boolean isNative) {
+    this.isNative = isNative;
+  }
 }

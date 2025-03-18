@@ -46,8 +46,9 @@ public class Engine {
       if (conf instanceof String) {
         sensitiveConf.add(String.valueOf(conf));
       } else {
-        throw DataXException.asDataXException(CommonErrorCode.CONFIG_ERROR,
-            String.format("敏感配置参数必须是字符串。请修改配置：%s", conf));
+        throw DataXException.asDataXException(
+                CommonErrorCode.CONFIG_ERROR,
+                String.format("敏感配置参数必须是字符串。请修改配置：%s", conf));
       }
     }
     // 屏蔽敏感信息
@@ -59,7 +60,9 @@ public class Engine {
     return jobConfWithSetting.beautify();
   }
 
-  public static Configuration filterSensitiveConfiguration(Configuration configuration, List<String> sensitiveConf) {
+  public static Configuration filterSensitiveConfiguration(
+          Configuration configuration,
+          List<String> sensitiveConf) {
     Set<String> keys = configuration.getKeys();
 
     for (final String key : keys) {
@@ -102,15 +105,18 @@ public class Engine {
       String dscJobUrlPatternString = "/instance/(\\d{1,})/config.xml";
       String dsJobUrlPatternString = "/inner/job/(\\d{1,})/config";
       String dsTaskGroupUrlPatternString = "/inner/job/(\\d{1,})/taskGroup/";
-      List<String> patternStringList = Arrays.asList(dscJobUrlPatternString,
-          dsJobUrlPatternString, dsTaskGroupUrlPatternString);
+      List<String> patternStringList = Arrays.asList(
+              dscJobUrlPatternString,
+              dsJobUrlPatternString, dsTaskGroupUrlPatternString);
       jobId = parseJobIdFromUrl(patternStringList, jobPath);
     }
 
     boolean isStandAloneMode = "standalone".equalsIgnoreCase(RUNTIME_MODE);
     if (!isStandAloneMode && jobId == -1) {
       // 如果不是 standalone 模式，那么 jobId 一定不能为 -1
-      throw DataXException.asDataXException(FrameworkErrorCode.CONFIG_ERROR, "非 standalone 模式必须在 URL 中提供有效的 jobId。");
+      throw DataXException.asDataXException(
+              FrameworkErrorCode.CONFIG_ERROR,
+              "非 standalone 模式必须在 URL 中提供有效的 jobId。");
     }
     configuration.set(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, jobId);
 

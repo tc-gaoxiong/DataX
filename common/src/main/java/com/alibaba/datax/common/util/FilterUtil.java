@@ -11,8 +11,9 @@ import java.util.regex.Pattern;
 public final class FilterUtil {
 
   //已经去重
-  public static List<String> filterByRegular(List<String> allStrs,
-                                             String regular) {
+  public static List<String> filterByRegular(
+          List<String> allStrs,
+          String regular) {
     List<String> matchedValues = new ArrayList<String>();
 
     // 语法习惯上的兼容处理(pt=* 实际正则应该是：pt=.*)
@@ -32,8 +33,9 @@ public final class FilterUtil {
   }
 
   //已经去重
-  public static List<String> filterByRegulars(List<String> allStrs,
-                                              List<String> regulars) {
+  public static List<String> filterByRegulars(
+          List<String> allStrs,
+          List<String> regulars) {
     List<String> matchedValues = new ArrayList<String>();
 
     List<String> tempMatched = null;

@@ -15,17 +15,17 @@ import java.util.List;
 
 public final class ReaderSplitUtil {
   private static final Logger LOG = LoggerFactory
-      .getLogger(ReaderSplitUtil.class);
+          .getLogger(ReaderSplitUtil.class);
 
   public static List<Configuration> doSplit(
-      Configuration originalSliceConfig, int adviceNumber) {
+          Configuration originalSliceConfig, int adviceNumber) {
     boolean isTableMode = originalSliceConfig.getBool(Constant.IS_TABLE_MODE).booleanValue();
     int eachTableShouldSplittedNumber = -1;
     if (isTableMode) {
       // adviceNumber这里是channel数量大小, 即datax并发task数量
       // eachTableShouldSplittedNumber是单表应该切分的份数, 向上取整可能和adviceNumber没有比例关系了已经
       eachTableShouldSplittedNumber = calculateEachTableShouldSplittedNumber(
-          adviceNumber, originalSliceConfig.getInt(Constant.TABLE_NUMBER_MARK));
+              adviceNumber, originalSliceConfig.getInt(Constant.TABLE_NUMBER_MARK));
     }
 
     String column = originalSliceConfig.getString(Key.COLUMN);
@@ -43,7 +43,9 @@ public final class ReaderSplitUtil {
       sliceConfig.set(Key.JDBC_URL, jdbcUrl);
 
       // 抽取 jdbcUrl 中的 ip/port 进行资源使用的打标，以提供给 core 做有意义的 shuffle 操作
-      sliceConfig.set(CommonConstant.LOAD_BALANCE_RESOURCE_MARK, DataBaseType.parseIpFromJdbcUrl(jdbcUrl));
+      sliceConfig.set(
+              CommonConstant.LOAD_BALANCE_RESOURCE_MARK,
+              DataBaseType.parseIpFromJdbcUrl(jdbcUrl));
 
       sliceConfig.remove(Constant.CONN_MARK);
 
@@ -60,7 +62,7 @@ public final class ReaderSplitUtil {
 
         //最终切分份数不一定等于 eachTableShouldSplittedNumber
         boolean needSplitTable = eachTableShouldSplittedNumber > 1
-            && StringUtils.isNotBlank(splitPk);
+                && StringUtils.isNotBlank(splitPk);
         if (needSplitTable) {
           if (tables.size() == 1) {
             //原来:如果是单表的，主键切分num=num*2+1
@@ -72,7 +74,9 @@ public final class ReaderSplitUtil {
 
             //为避免导入hive小文件 默认基数为5，可以通过 splitFactor 配置基数
             // 最终task数为(channel/tableNum)向上取整*splitFactor
-            Integer splitFactor = originalSliceConfig.getInt(Key.SPLIT_FACTOR, Constant.SPLIT_FACTOR);
+            Integer splitFactor = originalSliceConfig.getInt(
+                    Key.SPLIT_FACTOR,
+                    Constant.SPLIT_FACTOR);
             eachTableShouldSplittedNumber = eachTableShouldSplittedNumber * splitFactor;
           }
           // 尝试对每个表，切分为eachTableShouldSplittedNumber 份
@@ -81,7 +85,7 @@ public final class ReaderSplitUtil {
             tempSlice.set(Key.TABLE, table);
 
             List<Configuration> splittedSlices = SingleTableSplitUtil
-                .splitSingleTable(tempSlice, eachTableShouldSplittedNumber);
+                    .splitSingleTable(tempSlice, eachTableShouldSplittedNumber);
 
             splittedConfigs.addAll(splittedSlices);
           }
@@ -90,7 +94,9 @@ public final class ReaderSplitUtil {
             tempSlice = sliceConfig.clone();
             tempSlice.set(Key.TABLE, table);
             String queryColumn = HintUtil.buildQueryColumn(jdbcUrl, table, column);
-            tempSlice.set(Key.QUERY_SQL, SingleTableSplitUtil.buildQuerySql(queryColumn, table, where));
+            tempSlice.set(
+                    Key.QUERY_SQL,
+                    SingleTableSplitUtil.buildQuerySql(queryColumn, table, where));
             splittedConfigs.add(tempSlice);
           }
         }
@@ -144,8 +150,9 @@ public final class ReaderSplitUtil {
         queryConfig.set(connPath, connConf);
       } else {
         // 说明是配置的 querySql 方式
-        List<String> sqls = connConf.getList(Key.QUERY_SQL,
-            String.class);
+        List<String> sqls = connConf.getList(
+                Key.QUERY_SQL,
+                String.class);
         for (String querySql : sqls) {
           querys.add(querySql);
         }
@@ -156,8 +163,9 @@ public final class ReaderSplitUtil {
     return queryConfig;
   }
 
-  private static int calculateEachTableShouldSplittedNumber(int adviceNumber,
-                                                            int tableNumber) {
+  private static int calculateEachTableShouldSplittedNumber(
+          int adviceNumber,
+          int tableNumber) {
     double tempNum = 1.0 * adviceNumber / tableNumber;
 
     return (int) Math.ceil(tempNum);

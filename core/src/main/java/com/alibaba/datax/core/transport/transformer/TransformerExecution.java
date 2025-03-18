@@ -24,7 +24,9 @@ public class TransformerExecution {
    */
   private boolean isChecked = false;
 
-  public TransformerExecution(TransformerInfo transformerInfo, TransformerExecutionParas transformerExecutionParas) {
+  public TransformerExecution(
+          TransformerInfo transformerInfo,
+          TransformerExecutionParas transformerExecutionParas) {
     this.transformerExecutionParas = transformerExecutionParas;
     this.transformerInfo = transformerInfo;
   }
@@ -41,8 +43,9 @@ public class TransformerExecution {
     if (transformerExecutionParas.getColumnIndex() != null) {
       if (transformerExecutionParas.getParas() != null) {
         finalParas = new Object[transformerExecutionParas.getParas().length + 1];
-        System.arraycopy(transformerExecutionParas.getParas(), 0, finalParas,
-            1, transformerExecutionParas.getParas().length);
+        System.arraycopy(
+                transformerExecutionParas.getParas(), 0, finalParas,
+                1, transformerExecutionParas.getParas().length);
       } else {
         finalParas = new Object[1];
       }

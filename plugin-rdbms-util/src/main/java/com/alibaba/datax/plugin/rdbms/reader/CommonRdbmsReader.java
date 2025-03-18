@@ -1,6 +1,12 @@
 package com.alibaba.datax.plugin.rdbms.reader;
 
-import com.alibaba.datax.common.element.*;
+import com.alibaba.datax.common.element.BoolColumn;
+import com.alibaba.datax.common.element.BytesColumn;
+import com.alibaba.datax.common.element.DateColumn;
+import com.alibaba.datax.common.element.DoubleColumn;
+import com.alibaba.datax.common.element.LongColumn;
+import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.StringColumn;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.plugin.RecordSender;
 import com.alibaba.datax.common.plugin.TaskPluginCollector;
@@ -36,7 +42,7 @@ public class CommonRdbmsReader {
 
   public static class Job {
     private static final Logger LOG = LoggerFactory
-        .getLogger(Job.class);
+            .getLogger(Job.class);
 
     public Job(DataBaseType dataBaseType) {
       OriginalConfPretreatmentUtil.DATABASE_TYPE = dataBaseType;
@@ -47,8 +53,9 @@ public class CommonRdbmsReader {
 
       OriginalConfPretreatmentUtil.doPretreatment(originalConfig);
 
-      LOG.debug("After job init(), job config now is:[\n{}\n]",
-          originalConfig.toJSON());
+      LOG.debug(
+              "After job init(), job config now is:[\n{}\n]",
+              originalConfig.toJSON());
     }
 
     public void preCheck(Configuration originalConfig, DataBaseType dataBaseType) {
@@ -91,8 +98,9 @@ public class CommonRdbmsReader {
     }
 
 
-    public List<Configuration> split(Configuration originalConfig,
-                                     int adviceNumber) {
+    public List<Configuration> split(
+            Configuration originalConfig,
+            int adviceNumber) {
       return ReaderSplitUtil.doSplit(originalConfig, adviceNumber);
     }
 
@@ -108,7 +116,7 @@ public class CommonRdbmsReader {
 
   public static class Task {
     private static final Logger LOG = LoggerFactory
-        .getLogger(Task.class);
+            .getLogger(Task.class);
     private static final boolean IS_DEBUG = LOG.isDebugEnabled();
     protected final byte[] EMPTY_CHAR_ARRAY = new byte[0];
 
@@ -143,12 +151,14 @@ public class CommonRdbmsReader {
       this.jdbcUrl = readerSliceConfig.getString(Key.JDBC_URL);
 
       //ob10的处理
-      if (this.jdbcUrl.startsWith(com.alibaba.datax.plugin.rdbms.writer.Constant.OB10_SPLIT_STRING) && this.dataBaseType == DataBaseType.MySql) {
+      if (this.jdbcUrl.startsWith(com.alibaba.datax.plugin.rdbms.writer.Constant.OB10_SPLIT_STRING)
+              && this.dataBaseType == DataBaseType.MySql) {
         String[] ss = this.jdbcUrl.split(com.alibaba.datax.plugin.rdbms.writer.Constant.OB10_SPLIT_STRING_PATTERN);
         if (ss.length != 3) {
           throw DataXException
-              .asDataXException(
-                  DBUtilErrorCode.JDBC_OB10_ADDRESS_ERROR, "JDBC OB10格式错误，请联系askdatax");
+                  .asDataXException(
+                          DBUtilErrorCode.JDBC_OB10_ADDRESS_ERROR,
+                          "JDBC OB10格式错误，请联系askdatax");
         }
         LOG.info("this is ob1_0 jdbc url.");
         this.username = ss[1].trim() + ":" + this.username;
@@ -162,25 +172,29 @@ public class CommonRdbmsReader {
 
     }
 
-    public void startRead(Configuration readerSliceConfig,
-                          RecordSender recordSender,
-                          TaskPluginCollector taskPluginCollector, int fetchSize) {
+    public void startRead(
+            Configuration readerSliceConfig,
+            RecordSender recordSender,
+            TaskPluginCollector taskPluginCollector, int fetchSize) {
       String querySql = readerSliceConfig.getString(Key.QUERY_SQL);
       String table = readerSliceConfig.getString(Key.TABLE);
 
       PerfTrace.getInstance().addTaskDetails(taskId, table + "," + basicMsg);
 
-      LOG.info("Begin to read record by Sql: [{}\n] {}.",
-          querySql, basicMsg);
+      LOG.info(
+              "Begin to read record by Sql: [{}\n] {}.",
+              querySql, basicMsg);
       PerfRecord queryPerfRecord = new PerfRecord(taskGroupId, taskId, PerfRecord.PHASE.SQL_QUERY);
       queryPerfRecord.start();
 
-      Connection conn = DBUtil.getConnection(this.dataBaseType, jdbcUrl,
-          username, password);
+      Connection conn = DBUtil.getConnection(
+              this.dataBaseType, jdbcUrl,
+              username, password);
 
       // session config .etc related
-      DBUtil.dealWithSessionConfig(conn, readerSliceConfig,
-          this.dataBaseType, basicMsg);
+      DBUtil.dealWithSessionConfig(
+              conn, readerSliceConfig,
+              this.dataBaseType, basicMsg);
 
       int columnNumber = 0;
       ResultSet rs = null;
@@ -192,22 +206,27 @@ public class CommonRdbmsReader {
         columnNumber = metaData.getColumnCount();
 
         //这个统计干净的result_Next时间
-        PerfRecord allResultPerfRecord = new PerfRecord(taskGroupId, taskId, PerfRecord.PHASE.RESULT_NEXT_ALL);
+        PerfRecord allResultPerfRecord = new PerfRecord(
+                taskGroupId,
+                taskId,
+                PerfRecord.PHASE.RESULT_NEXT_ALL);
         allResultPerfRecord.start();
 
         long rsNextUsedTime = 0;
         long lastTime = System.nanoTime();
         while (rs.next()) {
           rsNextUsedTime += (System.nanoTime() - lastTime);
-          this.transportOneRecord(recordSender, rs,
-              metaData, columnNumber, mandatoryEncoding, taskPluginCollector);
+          this.transportOneRecord(
+                  recordSender, rs,
+                  metaData, columnNumber, mandatoryEncoding, taskPluginCollector);
           lastTime = System.nanoTime();
         }
 
         allResultPerfRecord.end(rsNextUsedTime);
         //目前大盘是依赖这个打印，而之前这个Finish read record是包含了sql查询和result next的全部时间
-        LOG.info("Finished read record by Sql: [{}\n] {}.",
-            querySql, basicMsg);
+        LOG.info(
+                "Finished read record by Sql: [{}\n] {}.",
+                querySql, basicMsg);
 
       } catch (Exception e) {
         throw RdbmsException.asQueryException(this.dataBaseType, e, querySql, table, username);
@@ -224,16 +243,28 @@ public class CommonRdbmsReader {
       // do nothing
     }
 
-    protected Record transportOneRecord(RecordSender recordSender, ResultSet rs,
-                                        ResultSetMetaData metaData, int columnNumber, String mandatoryEncoding,
-                                        TaskPluginCollector taskPluginCollector) {
-      Record record = buildRecord(recordSender, rs, metaData, columnNumber, mandatoryEncoding, taskPluginCollector);
+    protected Record transportOneRecord(
+            RecordSender recordSender, ResultSet rs,
+            ResultSetMetaData metaData, int columnNumber, String mandatoryEncoding,
+            TaskPluginCollector taskPluginCollector) {
+      Record record = buildRecord(
+              recordSender,
+              rs,
+              metaData,
+              columnNumber,
+              mandatoryEncoding,
+              taskPluginCollector);
       recordSender.sendToWriter(record);
       return record;
     }
 
-    protected Record buildRecord(RecordSender recordSender, ResultSet rs, ResultSetMetaData metaData, int columnNumber, String mandatoryEncoding,
-                                 TaskPluginCollector taskPluginCollector) {
+    protected Record buildRecord(
+            RecordSender recordSender,
+            ResultSet rs,
+            ResultSetMetaData metaData,
+            int columnNumber,
+            String mandatoryEncoding,
+            TaskPluginCollector taskPluginCollector) {
       Record record = recordSender.createRecord();
 
       try {
@@ -250,8 +281,9 @@ public class CommonRdbmsReader {
               if (StringUtils.isBlank(mandatoryEncoding)) {
                 rawData = rs.getString(i);
               } else {
-                rawData = new String((rs.getBytes(i) == null ? EMPTY_CHAR_ARRAY :
-                    rs.getBytes(i)), mandatoryEncoding);
+                rawData = new String(
+                        (rs.getBytes(i) == null ? EMPTY_CHAR_ARRAY :
+                                rs.getBytes(i)), mandatoryEncoding);
               }
               record.addColumn(new StringColumn(rawData));
               break;
@@ -320,19 +352,20 @@ public class CommonRdbmsReader {
 
             default:
               throw DataXException
-                  .asDataXException(
-                      DBUtilErrorCode.UNSUPPORTED_TYPE,
-                      String.format(
-                          "您的配置文件中的列配置信息有误. 因为DataX 不支持数据库读取这种字段类型. 字段名:[%s], 字段名称:[%s], 字段Java类型:[%s]. 请尝试使用数据库函数将其转换datax支持的类型 或者不同步该字段 .",
-                          metaData.getColumnName(i),
-                          metaData.getColumnType(i),
-                          metaData.getColumnClassName(i)));
+                      .asDataXException(
+                              DBUtilErrorCode.UNSUPPORTED_TYPE,
+                              String.format(
+                                      "您的配置文件中的列配置信息有误. 因为DataX 不支持数据库读取这种字段类型. 字段名:[%s], 字段名称:[%s], 字段Java类型:[%s]. 请尝试使用数据库函数将其转换datax支持的类型 或者不同步该字段 .",
+                                      metaData.getColumnName(i),
+                                      metaData.getColumnType(i),
+                                      metaData.getColumnClassName(i)));
           }
         }
       } catch (Exception e) {
         if (IS_DEBUG) {
-          LOG.debug("read data " + record.toString()
-              + " occur exception:", e);
+          LOG.debug(
+                  "read data " + record.toString()
+                          + " occur exception:", e);
         }
         //TODO 这里识别为脏数据靠谱吗？
         taskPluginCollector.collectDirtyRecord(record, e);

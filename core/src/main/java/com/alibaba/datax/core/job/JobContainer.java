@@ -44,477 +44,478 @@ import java.util.List;
  * 但它并不做实际的数据同步操作
  */
 public class JobContainer extends AbstractContainer {
-    private static final Logger LOG = LoggerFactory.getLogger(JobContainer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(JobContainer.class);
 
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    private final ErrorRecordChecker errorLimit;
-    private ClassLoaderSwapper classLoaderSwapper = ClassLoaderSwapper.newCurrentThreadClassLoaderSwapper();
-    private long jobId;
-    private String readerPluginName;
-    private String writerPluginName;
-    // reader 和 writer jobContainer 的实例
-    private Reader.Job jobReader;
-    private Writer.Job jobWriter;
-    private Configuration userConf;
-    private long startTimeStamp;
-    private long endTimeStamp;
-    private long startTransferTimeStamp;
-    private long endTransferTimeStamp;
-    private int needChannelNumber;
-    private int totalStage = 1;
+  private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+  private final ErrorRecordChecker errorLimit;
+  private ClassLoaderSwapper classLoaderSwapper = ClassLoaderSwapper.newCurrentThreadClassLoaderSwapper();
+  private long jobId;
+  private String readerPluginName;
+  private String writerPluginName;
+  // reader 和 writer jobContainer 的实例
+  private Reader.Job jobReader;
+  private Writer.Job jobWriter;
+  private Configuration userConf;
+  private long startTimeStamp;
+  private long endTimeStamp;
+  private long startTransferTimeStamp;
+  private long endTransferTimeStamp;
+  private int needChannelNumber;
+  private int totalStage = 1;
 
-    public JobContainer(Configuration configuration) {
-        super(configuration);
+  public JobContainer(Configuration configuration) {
+    super(configuration);
 
-        errorLimit = new ErrorRecordChecker(configuration);
-    }
+    errorLimit = new ErrorRecordChecker(configuration);
+  }
 
-    /**
-     * jobContainer 主要负责的工作全部在 start() 里面，包括 init、prepare、split、scheduler、
-     * post 以及 destroy 和 statistics
-     */
-    @Override
-    public void start() {
-        LOG.info("DataX jobContainer starts job.");
+  /**
+   * jobContainer 主要负责的工作全部在 start() 里面，包括 init、prepare、split、scheduler、
+   * post 以及 destroy 和 statistics
+   */
+  @Override
+  public void start() {
+    LOG.info("DataX jobContainer starts job.");
 
-        boolean hasException = false;
-        boolean isDryRun = false;
-        try {
-            this.startTimeStamp = System.currentTimeMillis();
-            isDryRun = configuration.getBool(CoreConstant.DATAX_JOB_SETTING_DRYRUN, false);
-            if (isDryRun) {
-                LOG.info("jobContainer starts to do preCheck ...");
-                this.preCheck();
-            } else {
-                userConf = configuration.clone();
+    boolean hasException = false;
+    boolean isDryRun = false;
+    try {
+      this.startTimeStamp = System.currentTimeMillis();
+      isDryRun = configuration.getBool(CoreConstant.DATAX_JOB_SETTING_DRYRUN, false);
+      if (isDryRun) {
+        LOG.info("jobContainer starts to do preCheck ...");
+        this.preCheck();
+      } else {
+        userConf = configuration.clone();
 
-                LOG.debug("jobContainer starts to do preHandle ...");
-                this.preHandle();
+        LOG.debug("jobContainer starts to do preHandle ...");
+        this.preHandle();
 
-                LOG.debug("jobContainer starts to do init ...");
-                this.init();
+        LOG.debug("jobContainer starts to do init ...");
+        this.init();
 
-                LOG.info("jobContainer starts to do prepare ...");
-                this.prepare();
+        LOG.info("jobContainer starts to do prepare ...");
+        this.prepare();
 
-                LOG.info("jobContainer starts to do split ...");
-                this.totalStage = this.split();
+        LOG.info("jobContainer starts to do split ...");
+        this.totalStage = this.split();
 
-                LOG.info("jobContainer starts to do schedule ...");
-                this.schedule();
+        LOG.info("jobContainer starts to do schedule ...");
+        this.schedule();
 
-                LOG.debug("jobContainer starts to do post ...");
-                this.post();
+        LOG.debug("jobContainer starts to do post ...");
+        this.post();
 
-                LOG.debug("jobContainer starts to do postHandle ...");
-                this.postHandle();
+        LOG.debug("jobContainer starts to do postHandle ...");
+        this.postHandle();
 
-                LOG.info("DataX jobId [{}] completed successfully.", this.jobId);
+        LOG.info("DataX jobId [{}] completed successfully.", this.jobId);
 
-                this.invokeHooks();
-            }
-        } catch (Throwable e) {
-            LOG.error("Exception when job run", e);
+        this.invokeHooks();
+      }
+    } catch (Throwable e) {
+      LOG.error("Exception when job run", e);
 
-            hasException = true;
+      hasException = true;
 
-            if (e instanceof OutOfMemoryError) {
-                this.destroy();
-                System.gc();
-            }
+      if (e instanceof OutOfMemoryError) {
+        this.destroy();
+        System.gc();
+      }
 
-            if (super.getContainerCommunicator() == null) {
-                // 由于 containerCollector 是在 scheduler() 中初始化的，所以当在 scheduler() 之前出现异常时，需要在此处对 containerCollector 进行初始化
+      if (super.getContainerCommunicator() == null) {
+        // 由于 containerCollector 是在 scheduler() 中初始化的，所以当在 scheduler() 之前出现异常时，需要在此处对 containerCollector 进行初始化
 
-                AbstractContainerCommunicator tempContainerCollector;
-                // standalone
-                tempContainerCollector = new StandAloneJobContainerCommunicator(configuration);
+        AbstractContainerCommunicator tempContainerCollector;
+        // standalone
+        tempContainerCollector = new StandAloneJobContainerCommunicator(configuration);
 
-                super.setContainerCommunicator(tempContainerCollector);
-            }
+        super.setContainerCommunicator(tempContainerCollector);
+      }
 
-            Communication communication = super.getContainerCommunicator().collect();
-            // 汇报前的状态，不需要手动进行设置
-            // communication.setState(State.FAILED);
-            communication.setThrowable(e);
-            communication.setTimestamp(this.endTimeStamp);
+      Communication communication = super.getContainerCommunicator().collect();
+      // 汇报前的状态，不需要手动进行设置
+      // communication.setState(State.FAILED);
+      communication.setThrowable(e);
+      communication.setTimestamp(this.endTimeStamp);
 
-            Communication tempComm = new Communication();
-            tempComm.setTimestamp(this.startTransferTimeStamp);
+      Communication tempComm = new Communication();
+      tempComm.setTimestamp(this.startTransferTimeStamp);
 
-            Communication reportCommunication = CommunicationTool.getReportCommunication(
-                    communication,
-                    tempComm,
-                    this.totalStage);
-            super.getContainerCommunicator().report(reportCommunication);
+      Communication reportCommunication = CommunicationTool.getReportCommunication(
+              communication,
+              tempComm,
+              this.totalStage);
+      super.getContainerCommunicator().report(reportCommunication);
 
-            throw DataXException.asDataXException(FrameworkErrorCode.RUNTIME_ERROR, e);
-        } finally {
-            if (!isDryRun) {
-                this.destroy();
-                this.endTimeStamp = System.currentTimeMillis();
-                if (!hasException) {
-                    // 最后打印 cpu 的平均消耗，GC 的统计
-                    VMInfo vmInfo = VMInfo.getVmInfo();
-                    if (vmInfo != null) {
-                        vmInfo.getDelta(false);
-                        LOG.info(vmInfo.totalString());
-                    }
+      throw DataXException.asDataXException(FrameworkErrorCode.RUNTIME_ERROR, e);
+    } finally {
+      if (!isDryRun) {
+        this.destroy();
+        this.endTimeStamp = System.currentTimeMillis();
+        if (!hasException) {
+          // 最后打印 cpu 的平均消耗，GC 的统计
+          VMInfo vmInfo = VMInfo.getVmInfo();
+          if (vmInfo != null) {
+            vmInfo.getDelta(false);
+            LOG.info(vmInfo.totalString());
+          }
 
-                    LOG.info(PerfTrace.getInstance().summarizeNoException());
-                    this.logStatistics();
-                }
-            }
+          LOG.info(PerfTrace.getInstance().summarizeNoException());
+          this.logStatistics();
         }
+      }
+    }
+  }
+
+  private void preCheck() {
+    this.preCheckInit();
+    this.adjustChannelNumber();
+
+    if (this.needChannelNumber <= 0) {
+      this.needChannelNumber = 1;
+    }
+    this.preCheckReader();
+    this.preCheckWriter();
+    LOG.info("PreCheck通过");
+  }
+
+  private void preCheckInit() {
+    this.jobId = this.configuration.getLong(
+            CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, -1);
+
+    if (this.jobId < 0) {
+      LOG.info("Set jobId = 0");
+      this.jobId = 0;
+      this.configuration.set(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, this.jobId);
     }
 
-    private void preCheck() {
-        this.preCheckInit();
-        this.adjustChannelNumber();
+    Thread.currentThread().setName("job-" + this.jobId);
 
-        if (this.needChannelNumber <= 0) {
-            this.needChannelNumber = 1;
-        }
-        this.preCheckReader();
-        this.preCheckWriter();
-        LOG.info("PreCheck通过");
+    JobPluginCollector jobPluginCollector = new DefaultJobPluginCollector(this.getContainerCommunicator());
+    this.jobReader = this.preCheckReaderInit(jobPluginCollector);
+    this.jobWriter = this.preCheckWriterInit(jobPluginCollector);
+  }
+
+  private Reader.Job preCheckReaderInit(JobPluginCollector jobPluginCollector) {
+    this.readerPluginName = this.configuration.getString(
+            CoreConstant.DATAX_JOB_CONTENT_READER_NAME);
+    classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
+            PluginType.READER, this.readerPluginName));
+
+    Reader.Job jobReader = (Reader.Job) LoadUtil.loadJobPlugin(
+            PluginType.READER, this.readerPluginName);
+
+    this.configuration.set(CoreConstant.DATAX_JOB_CONTENT_READER_PARAMETER + ".dryRun", true);
+
+    // 设置 reader 的 jobConfig
+    jobReader.setPluginJobConf(this.configuration.getConfiguration(
+            CoreConstant.DATAX_JOB_CONTENT_READER_PARAMETER));
+    // 设置 reader 的 readerConfig
+    jobReader.setPeerPluginJobConf(this.configuration.getConfiguration(
+            CoreConstant.DATAX_JOB_CONTENT_READER_PARAMETER));
+
+    jobReader.setJobPluginCollector(jobPluginCollector);
+
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
+    return jobReader;
+  }
+
+  private Writer.Job preCheckWriterInit(JobPluginCollector jobPluginCollector) {
+    this.writerPluginName = this.configuration.getString(CoreConstant.DATAX_JOB_CONTENT_WRITER_NAME);
+    classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
+            PluginType.WRITER, this.writerPluginName));
+
+    Writer.Job jobWriter = (Writer.Job) LoadUtil.loadJobPlugin(
+            PluginType.WRITER, this.writerPluginName);
+
+    this.configuration.set(CoreConstant.DATAX_JOB_CONTENT_WRITER_PARAMETER + ".dryRun", true);
+
+    // 设置 writer 的 jobConfig
+    jobWriter.setPluginJobConf(this.configuration.getConfiguration(
+            CoreConstant.DATAX_JOB_CONTENT_WRITER_PARAMETER));
+    // 设置 reader 的 readerConfig
+    jobWriter.setPeerPluginJobConf(this.configuration.getConfiguration(
+            CoreConstant.DATAX_JOB_CONTENT_READER_PARAMETER));
+
+    jobWriter.setPeerPluginName(this.readerPluginName);
+    jobWriter.setJobPluginCollector(jobPluginCollector);
+
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
+
+    return jobWriter;
+  }
+
+  private void preCheckReader() {
+    classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
+            PluginType.READER, this.readerPluginName));
+    LOG.info(String.format(
+            "DataX Reader.Job [%s] do preCheck work .",
+            this.readerPluginName));
+    this.jobReader.preCheck();
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
+  }
+
+  private void preCheckWriter() {
+    classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
+            PluginType.WRITER, this.writerPluginName));
+    LOG.info(String.format(
+            "DataX Writer.Job [%s] do preCheck work .",
+            this.writerPluginName));
+    this.jobWriter.preCheck();
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
+  }
+
+  /**
+   * reader 和 writer 的初始化
+   */
+  private void init() {
+    this.jobId = this.configuration.getLong(
+            CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, -1);
+
+    if (this.jobId < 0) {
+      LOG.info("Set jobId = 0");
+      this.jobId = 0;
+      this.configuration.set(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, this.jobId);
     }
 
-    private void preCheckInit() {
-        this.jobId = this.configuration.getLong(
-                CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, -1);
+    Thread.currentThread().setName("job-" + this.jobId);
 
-        if (this.jobId < 0) {
-            LOG.info("Set jobId = 0");
-            this.jobId = 0;
-            this.configuration.set(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, this.jobId);
-        }
+    JobPluginCollector jobPluginCollector = new DefaultJobPluginCollector(this.getContainerCommunicator());
+    // 必须先 Reader ，后 Writer
+    this.jobReader = this.initJobReader(jobPluginCollector);
+    this.jobWriter = this.initJobWriter(jobPluginCollector);
+  }
 
-        Thread.currentThread().setName("job-" + this.jobId);
+  private void prepare() {
+    this.prepareJobReader();
+    this.prepareJobWriter();
+  }
 
-        JobPluginCollector jobPluginCollector = new DefaultJobPluginCollector(this.getContainerCommunicator());
-        this.jobReader = this.preCheckReaderInit(jobPluginCollector);
-        this.jobWriter = this.preCheckWriterInit(jobPluginCollector);
+  private void preHandle() {
+    String handlerPluginTypeStr = this.configuration.getString(
+            CoreConstant.DATAX_JOB_PREHANDLER_PLUGINTYPE);
+    if (!StringUtils.isNotEmpty(handlerPluginTypeStr)) {
+      return;
+    }
+    PluginType handlerPluginType;
+    try {
+      handlerPluginType = PluginType.valueOf(handlerPluginTypeStr.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw DataXException.asDataXException(
+              FrameworkErrorCode.CONFIG_ERROR,
+              String.format(
+                      "Job preHandler's pluginType(%s) set error, reason(%s)",
+                      handlerPluginTypeStr.toUpperCase(),
+                      e.getMessage()));
     }
 
-    private Reader.Job preCheckReaderInit(JobPluginCollector jobPluginCollector) {
-        this.readerPluginName = this.configuration.getString(
-                CoreConstant.DATAX_JOB_CONTENT_READER_NAME);
-        classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
-                PluginType.READER, this.readerPluginName));
+    String handlerPluginName = this.configuration.getString(CoreConstant.DATAX_JOB_PREHANDLER_PLUGINNAME);
 
-        Reader.Job jobReader = (Reader.Job) LoadUtil.loadJobPlugin(
-                PluginType.READER, this.readerPluginName);
+    classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
+            handlerPluginType, handlerPluginName));
 
-        this.configuration.set(CoreConstant.DATAX_JOB_CONTENT_READER_PARAMETER + ".dryRun", true);
+    AbstractJobPlugin handler = LoadUtil.loadJobPlugin(handlerPluginType, handlerPluginName);
 
-        // 设置 reader 的 jobConfig
-        jobReader.setPluginJobConf(this.configuration.getConfiguration(
-                CoreConstant.DATAX_JOB_CONTENT_READER_PARAMETER));
-        // 设置 reader 的 readerConfig
-        jobReader.setPeerPluginJobConf(this.configuration.getConfiguration(
-                CoreConstant.DATAX_JOB_CONTENT_READER_PARAMETER));
+    JobPluginCollector jobPluginCollector = new DefaultJobPluginCollector(
+            this.getContainerCommunicator());
+    handler.setJobPluginCollector(jobPluginCollector);
 
-        jobReader.setJobPluginCollector(jobPluginCollector);
+    // todo configuration 的安全性，将来必须保证
+    handler.preHandler(configuration);
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
 
-        classLoaderSwapper.restoreCurrentThreadClassLoader();
-        return jobReader;
+    LOG.info("After PreHandler: \n{}\n", Engine.filterJobConfiguration(configuration));
+  }
+
+  private void postHandle() {
+    String handlerPluginTypeStr = this.configuration.getString(CoreConstant.DATAX_JOB_POSTHANDLER_PLUGINTYPE);
+
+    if (!StringUtils.isNotEmpty(handlerPluginTypeStr)) {
+      return;
+    }
+    PluginType handlerPluginType;
+    try {
+      handlerPluginType = PluginType.valueOf(handlerPluginTypeStr.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw DataXException.asDataXException(
+              FrameworkErrorCode.CONFIG_ERROR,
+              String.format(
+                      "Job postHandler's pluginType(%s) set error, reason(%s)",
+                      handlerPluginTypeStr.toUpperCase(),
+                      e.getMessage()));
     }
 
-    private Writer.Job preCheckWriterInit(JobPluginCollector jobPluginCollector) {
-        this.writerPluginName = this.configuration.getString(CoreConstant.DATAX_JOB_CONTENT_WRITER_NAME);
-        classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
-                PluginType.WRITER, this.writerPluginName));
+    String handlerPluginName = this.configuration.getString(CoreConstant.DATAX_JOB_POSTHANDLER_PLUGINNAME);
 
-        Writer.Job jobWriter = (Writer.Job) LoadUtil.loadJobPlugin(
-                PluginType.WRITER, this.writerPluginName);
+    classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
+            handlerPluginType, handlerPluginName));
 
-        this.configuration.set(CoreConstant.DATAX_JOB_CONTENT_WRITER_PARAMETER + ".dryRun", true);
+    AbstractJobPlugin handler = LoadUtil.loadJobPlugin(handlerPluginType, handlerPluginName);
 
-        // 设置 writer 的 jobConfig
-        jobWriter.setPluginJobConf(this.configuration.getConfiguration(
-                CoreConstant.DATAX_JOB_CONTENT_WRITER_PARAMETER));
-        // 设置 reader 的 readerConfig
-        jobWriter.setPeerPluginJobConf(this.configuration.getConfiguration(
-                CoreConstant.DATAX_JOB_CONTENT_READER_PARAMETER));
+    JobPluginCollector jobPluginCollector = new DefaultJobPluginCollector(this.getContainerCommunicator());
+    handler.setJobPluginCollector(jobPluginCollector);
 
-        jobWriter.setPeerPluginName(this.readerPluginName);
-        jobWriter.setJobPluginCollector(jobPluginCollector);
+    handler.postHandler(configuration);
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
+  }
 
-        classLoaderSwapper.restoreCurrentThreadClassLoader();
+  /**
+   * 执行 reader 和 writer 最细粒度的切分，需要注意的是，writer 的切分结果要参照 reader 的切分结果，
+   * 达到切分后数目相等，才能满足 1 : 1 的通道模型，所以这里可以将 reader 和 writer 的配置整合到一起，
+   * 然后，为避免顺序给读写端带来长尾影响，将整合的结果 shuffle 掉
+   */
+  private int split() {
+    // 调整 needChannelNumber 的值（needChannelNumber），有两种结果
+    //    1. 根据限速计算，总限速 / 每个 channel 的限速
+    //    2. 配置中 channel 的设置
+    this.adjustChannelNumber();
 
-        return jobWriter;
+    if (this.needChannelNumber <= 0) {
+      // 最小 1 个 channel
+      this.needChannelNumber = 1;
     }
 
-    private void preCheckReader() {
-        classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
-                PluginType.READER, this.readerPluginName));
-        LOG.info(String.format(
-                "DataX Reader.Job [%s] do preCheck work .",
-                this.readerPluginName));
-        this.jobReader.preCheck();
-        classLoaderSwapper.restoreCurrentThreadClassLoader();
-    }
+    // 这里的 split 的最终结果就是在 job.content 数组中为每一个切分后的作业增加一个配置
 
-    private void preCheckWriter() {
-        classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
-                PluginType.WRITER, this.writerPluginName));
-        LOG.info(String.format(
-                "DataX Writer.Job [%s] do preCheck work .",
-                this.writerPluginName));
-        this.jobWriter.preCheck();
-        classLoaderSwapper.restoreCurrentThreadClassLoader();
-    }
+    // 先切分 reader
+    List<Configuration> readerTaskConfigs = this.doReaderSplit(this.needChannelNumber);
+    int taskNumber = readerTaskConfigs.size();
+    // 再切分 writer
+    List<Configuration> writerTaskConfigs = this.doWriterSplit(taskNumber);
 
-    /**
-     * reader 和 writer 的初始化
-     */
-    private void init() {
-        this.jobId = this.configuration.getLong(
-                CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, -1);
+    List<Configuration> transformerList = this.configuration.getListConfiguration(
+            CoreConstant.DATAX_JOB_CONTENT_TRANSFORMER);
 
-        if (this.jobId < 0) {
-            LOG.info("Set jobId = 0");
-            this.jobId = 0;
-            this.configuration.set(CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, this.jobId);
-        }
+    LOG.debug("transformer configuration: {}", JSON.toJSONString(transformerList));
+    // 输入是 reader 和 writer 的 parameter list，输出是 content 下面元素的 list
+    List<Configuration> contentConfig = mergeReaderAndWriterTaskConfigs(
+            readerTaskConfigs, writerTaskConfigs, transformerList);
 
-        Thread.currentThread().setName("job-" + this.jobId);
+    LOG.debug("contentConfig configuration: {}", JSON.toJSONString(contentConfig));
 
-        JobPluginCollector jobPluginCollector = new DefaultJobPluginCollector(this.getContainerCommunicator());
-        // 必须先 Reader ，后 Writer
-        this.jobReader = this.initJobReader(jobPluginCollector);
-        this.jobWriter = this.initJobWriter(jobPluginCollector);
-    }
+    this.configuration.set(CoreConstant.DATAX_JOB_CONTENT, contentConfig);
 
-    private void prepare() {
-        this.prepareJobReader();
-        this.prepareJobWriter();
-    }
+    return contentConfig.size();
+  }
 
-    private void preHandle() {
-        String handlerPluginTypeStr = this.configuration.getString(
-                CoreConstant.DATAX_JOB_PREHANDLER_PLUGINTYPE);
-        if (!StringUtils.isNotEmpty(handlerPluginTypeStr)) {
-            return;
-        }
-        PluginType handlerPluginType;
-        try {
-            handlerPluginType = PluginType.valueOf(handlerPluginTypeStr.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw DataXException.asDataXException(
-                    FrameworkErrorCode.CONFIG_ERROR,
-                    String.format(
-                            "Job preHandler's pluginType(%s) set error, reason(%s)",
-                            handlerPluginTypeStr.toUpperCase(),
-                            e.getMessage()));
-        }
+  /**
+   * 调整 channel 数量
+   * 1. 根据限速计算 channel 数量，直接返回
+   * 2. 如果有直接指定 channel 数量，则直接返回
+   */
+  private void adjustChannelNumber() {
+    int needChannelNumberByByte = Integer.MAX_VALUE;
+    int needChannelNumberByRecord = Integer.MAX_VALUE;
 
-        String handlerPluginName = this.configuration.getString(CoreConstant.DATAX_JOB_PREHANDLER_PLUGINNAME);
+    // 是否有字节流限速
+    boolean isByteLimit = (this.configuration.getInt(
+            CoreConstant.DATAX_JOB_SETTING_SPEED_BYTE, 0) > 0);
+    if (isByteLimit) {
+      long globalLimitedByteSpeed = this.configuration.getInt(
+              CoreConstant.DATAX_JOB_SETTING_SPEED_BYTE, 10 * 1024 * 1024);
 
-        classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
-                handlerPluginType, handlerPluginName));
-
-        AbstractJobPlugin handler = LoadUtil.loadJobPlugin(handlerPluginType, handlerPluginName);
-
-        JobPluginCollector jobPluginCollector = new DefaultJobPluginCollector(
-                this.getContainerCommunicator());
-        handler.setJobPluginCollector(jobPluginCollector);
-
-        // todo configuration 的安全性，将来必须保证
-        handler.preHandler(configuration);
-        classLoaderSwapper.restoreCurrentThreadClassLoader();
-
-        LOG.info("After PreHandler: \n{}\n", Engine.filterJobConfiguration(configuration));
-    }
-
-    private void postHandle() {
-        String handlerPluginTypeStr = this.configuration.getString(CoreConstant.DATAX_JOB_POSTHANDLER_PLUGINTYPE);
-
-        if (!StringUtils.isNotEmpty(handlerPluginTypeStr)) {
-            return;
-        }
-        PluginType handlerPluginType;
-        try {
-            handlerPluginType = PluginType.valueOf(handlerPluginTypeStr.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw DataXException.asDataXException(
-                    FrameworkErrorCode.CONFIG_ERROR,
-                    String.format(
-                            "Job postHandler's pluginType(%s) set error, reason(%s)",
-                            handlerPluginTypeStr.toUpperCase(),
-                            e.getMessage()));
-        }
-
-        String handlerPluginName = this.configuration.getString(CoreConstant.DATAX_JOB_POSTHANDLER_PLUGINNAME);
-
-        classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
-                handlerPluginType, handlerPluginName));
-
-        AbstractJobPlugin handler = LoadUtil.loadJobPlugin(handlerPluginType, handlerPluginName);
-
-        JobPluginCollector jobPluginCollector = new DefaultJobPluginCollector(this.getContainerCommunicator());
-        handler.setJobPluginCollector(jobPluginCollector);
-
-        handler.postHandler(configuration);
-        classLoaderSwapper.restoreCurrentThreadClassLoader();
-    }
-
-    /**
-     * 执行 reader 和 writer 最细粒度的切分，需要注意的是，writer 的切分结果要参照 reader 的切分结果，
-     * 达到切分后数目相等，才能满足 1 : 1 的通道模型，所以这里可以将 reader 和 writer 的配置整合到一起，
-     * 然后，为避免顺序给读写端带来长尾影响，将整合的结果 shuffle 掉
-     */
-    private int split() {
-        // 调整 needChannelNumber 的值（needChannelNumber），有两种结果
-        //    1. 根据限速计算，总限速 / 每个 channel 的限速
-        //    2. 配置中 channel 的设置
-        this.adjustChannelNumber();
-
-        if (this.needChannelNumber <= 0) {
-            // 最小 1 个 channel
-            this.needChannelNumber = 1;
-        }
-
-        // 这里的 split 的最终结果就是在 job.content 数组中为每一个切分后的作业增加一个配置
-
-        // 先切分 reader
-        List<Configuration> readerTaskConfigs = this.doReaderSplit(this.needChannelNumber);
-        int taskNumber = readerTaskConfigs.size();
-        // 再切分 writer
-        List<Configuration> writerTaskConfigs = this.doWriterSplit(taskNumber);
-
-        List<Configuration> transformerList = this.configuration.getListConfiguration(
-                CoreConstant.DATAX_JOB_CONTENT_TRANSFORMER);
-
-        LOG.debug("transformer configuration: {}", JSON.toJSONString(transformerList));
-        // 输入是 reader 和 writer 的 parameter list，输出是 content 下面元素的 list
-        List<Configuration> contentConfig = mergeReaderAndWriterTaskConfigs(
-                readerTaskConfigs, writerTaskConfigs, transformerList);
-
-        LOG.debug("contentConfig configuration: {}", JSON.toJSONString(contentConfig));
-
-        this.configuration.set(CoreConstant.DATAX_JOB_CONTENT, contentConfig);
-
-        return contentConfig.size();
-    }
-
-    /**
-     * 调整 channel 数量
-     * 1. 根据限速计算 channel 数量，直接返回
-     * 2. 如果有直接指定 channel 数量，则直接返回
-     */
-    private void adjustChannelNumber() {
-        int needChannelNumberByByte = Integer.MAX_VALUE;
-        int needChannelNumberByRecord = Integer.MAX_VALUE;
-
-        // 是否有字节流限速
-        boolean isByteLimit = (this.configuration.getInt(
-                CoreConstant.DATAX_JOB_SETTING_SPEED_BYTE, 0) > 0);
-        if (isByteLimit) {
-            long globalLimitedByteSpeed = this.configuration.getInt(
-                    CoreConstant.DATAX_JOB_SETTING_SPEED_BYTE, 10 * 1024 * 1024);
-
-            // 在 byte 流控情况下，单个 Channel 流量最大值必须设置，否则报错！
-            Long channelLimitedByteSpeed = this.configuration
-                    .getLong(CoreConstant.DATAX_CORE_TRANSPORT_CHANNEL_SPEED_BYTE);
-            if (channelLimitedByteSpeed == null || channelLimitedByteSpeed <= 0) {
-                throw DataXException.asDataXException(
-                        FrameworkErrorCode.CONFIG_ERROR,
-                        "在有总 bps 限速条件下，单个 channel 的 bps 值不能为空，也不能为非正数");
-            }
-
-            // 计算需要的 channel，总的阈值 / 单个 channel 阈值
-            // job.setting.speed.byte/core.transport.channel.speed.byte
-            needChannelNumberByByte = (int) (globalLimitedByteSpeed / channelLimitedByteSpeed);
-            needChannelNumberByByte = needChannelNumberByByte > 0 ? needChannelNumberByByte : 1;
-            LOG.info("Job set Max-Byte-Speed to {} bytes.", globalLimitedByteSpeed);
-        }
-
-        // 是否有记录流限速
-        boolean isRecordLimit =
-                (this.configuration.getInt(CoreConstant.DATAX_JOB_SETTING_SPEED_RECORD, 0)) > 0;
-        if (isRecordLimit) {
-            long globalLimitedRecordSpeed = this.configuration.getInt(
-                    CoreConstant.DATAX_JOB_SETTING_SPEED_RECORD, 100000);
-
-            Long channelLimitedRecordSpeed = this.configuration.getLong(
-                    CoreConstant.DATAX_CORE_TRANSPORT_CHANNEL_SPEED_RECORD);
-            if (channelLimitedRecordSpeed == null || channelLimitedRecordSpeed <= 0) {
-                throw DataXException.asDataXException(
-                        FrameworkErrorCode.CONFIG_ERROR,
-                        "在有总 tps 限速条件下，单个 channel 的 tps 值不能为空，也不能为非正数");
-            }
-
-            needChannelNumberByRecord = (int) (globalLimitedRecordSpeed
-                    / channelLimitedRecordSpeed);
-            needChannelNumberByRecord =
-                    needChannelNumberByRecord > 0 ? needChannelNumberByRecord : 1;
-            LOG.info("Job set Max-Record-Speed to {} records.", globalLimitedRecordSpeed);
-        }
-
-        // 取较小值，如果没有设置限速，则二者都是最大值
-        this.needChannelNumber = Math.min(needChannelNumberByByte, needChannelNumberByRecord);
-
-        // 如果有限速，则返回根据限速计算的结果
-        if (this.needChannelNumber < Integer.MAX_VALUE) return;
-
-        // 是否有单独设置 channel 数量
-        boolean isChannelLimit = (this.configuration.getInt(
-                CoreConstant.DATAX_JOB_SETTING_SPEED_CHANNEL, 0) > 0);
-        if (isChannelLimit) {
-            this.needChannelNumber = this.configuration.getInt(CoreConstant.DATAX_JOB_SETTING_SPEED_CHANNEL);
-
-            LOG.info("Job set Channel-Number to {} channels.", this.needChannelNumber);
-
-            return;
-        }
-
+      // 在 byte 流控情况下，单个 Channel 流量最大值必须设置，否则报错！
+      Long channelLimitedByteSpeed = this.configuration
+              .getLong(CoreConstant.DATAX_CORE_TRANSPORT_CHANNEL_SPEED_BYTE);
+      if (channelLimitedByteSpeed == null || channelLimitedByteSpeed <= 0) {
         throw DataXException.asDataXException(
                 FrameworkErrorCode.CONFIG_ERROR,
-                "Job 运行速度必须设置");
+                "在有总 bps 限速条件下，单个 channel 的 bps 值不能为空，也不能为非正数");
+      }
+
+      // 计算需要的 channel，总的阈值 / 单个 channel 阈值
+      // job.setting.speed.byte/core.transport.channel.speed.byte
+      needChannelNumberByByte = (int) (globalLimitedByteSpeed / channelLimitedByteSpeed);
+      needChannelNumberByByte = needChannelNumberByByte > 0 ? needChannelNumberByByte : 1;
+      LOG.info("Job set Max-Byte-Speed to {} bytes.", globalLimitedByteSpeed);
     }
 
-    /**
-     * task 是最小执行单元，scheduler 会将上一步 reader 和 writer 拆分出的 task 根据并发配置重新组合，
-     * 组装成 taskGroup，每个 taskGroup 负责以一定的并发度运行所有分配好的 task，默认单个 taskGroup 并行度是 5
-     */
-    private void schedule() {
-        // 这里的全局 speed 和每个 channel 的速度设置为 B/s
+    // 是否有记录流限速
+    boolean isRecordLimit =
+            (this.configuration.getInt(CoreConstant.DATAX_JOB_SETTING_SPEED_RECORD, 0)) > 0;
+    if (isRecordLimit) {
+      long globalLimitedRecordSpeed = this.configuration.getInt(
+              CoreConstant.DATAX_JOB_SETTING_SPEED_RECORD, 100000);
 
-        // 每个 taskGroup 的 channel 数量，配置文件中默认是 1，如果没有配置则是 5
-        int channelsPerTaskGroup = this.configuration.getInt(
-                CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL, 5);
-        // task 即 job.content 数组，包括：reader writer taskId（没有配置即为 0）
-        // 与 channel 数量相同，在 split 阶段完成
-        int taskNumber = this.configuration.getList(CoreConstant.DATAX_JOB_CONTENT).size();
+      Long channelLimitedRecordSpeed = this.configuration.getLong(
+              CoreConstant.DATAX_CORE_TRANSPORT_CHANNEL_SPEED_RECORD);
+      if (channelLimitedRecordSpeed == null || channelLimitedRecordSpeed <= 0) {
+        throw DataXException.asDataXException(
+                FrameworkErrorCode.CONFIG_ERROR,
+                "在有总 tps 限速条件下，单个 channel 的 tps 值不能为空，也不能为非正数");
+      }
 
-        // 取最小值是因为 channel 的取值有两种方式，一是配置 channel 数量，而是根据限速计算
-        this.needChannelNumber = Math.min(this.needChannelNumber, taskNumber); // 最小为 1
+      needChannelNumberByRecord = (int) (globalLimitedRecordSpeed
+              / channelLimitedRecordSpeed);
+      needChannelNumberByRecord =
+              needChannelNumberByRecord > 0 ? needChannelNumberByRecord : 1;
+      LOG.info("Job set Max-Record-Speed to {} records.", globalLimitedRecordSpeed);
+    }
 
-        PerfTrace.getInstance().setChannelNumber(needChannelNumber);
+    // 取较小值，如果没有设置限速，则二者都是最大值
+    this.needChannelNumber = Math.min(needChannelNumberByByte, needChannelNumberByRecord);
 
-        // 通过获取配置信息得到每个 taskGroup 需要运行哪些 tasks 任务
+    // 如果有限速，则返回根据限速计算的结果
+    if (this.needChannelNumber < Integer.MAX_VALUE) return;
 
-        // taskGroup 数量 = channel 数量 / 每个 taskGroup 的 channel 数量
-        // TaskGroup: 描述的是一组 Task 集合。在同一个 TaskGroupContainer 执行下的 Task 集合称之为 TaskGroup
-        List<Configuration> taskGroupConfigs = JobAssignUtil.assignFairly(this.configuration,
-                this.needChannelNumber, channelsPerTaskGroup);
+    // 是否有单独设置 channel 数量
+    boolean isChannelLimit = (this.configuration.getInt(
+            CoreConstant.DATAX_JOB_SETTING_SPEED_CHANNEL, 0) > 0);
+    if (isChannelLimit) {
+      this.needChannelNumber = this.configuration.getInt(CoreConstant.DATAX_JOB_SETTING_SPEED_CHANNEL);
 
-        LOG.info("Scheduler starts [{}] taskGroups.", taskGroupConfigs.size());
+      LOG.info("Job set Channel-Number to {} channels.", this.needChannelNumber);
 
-        ExecuteMode executeMode = null;
-        AbstractScheduler scheduler;
-        try {
-            executeMode = ExecuteMode.STANDALONE;
-            scheduler = initStandaloneScheduler(this.configuration);
+      return;
+    }
 
-            // 设置 executeMode
-            for (Configuration taskGroupConfig : taskGroupConfigs) {
-                taskGroupConfig.set(
-                        CoreConstant.DATAX_CORE_CONTAINER_JOB_MODE,
-                        executeMode.getValue());
-            }
+    throw DataXException.asDataXException(
+            FrameworkErrorCode.CONFIG_ERROR,
+            "Job 运行速度必须设置");
+  }
+
+  /**
+   * task 是最小执行单元，scheduler 会将上一步 reader 和 writer 拆分出的 task 根据并发配置重新组合，
+   * 组装成 taskGroup，每个 taskGroup 负责以一定的并发度运行所有分配好的 task，默认单个 taskGroup 并行度是 5
+   */
+  private void schedule() {
+    // 这里的全局 speed 和每个 channel 的速度设置为 B/s
+
+    // 每个 taskGroup 的 channel 数量，配置文件中默认是 1，如果没有配置则是 5
+    int channelsPerTaskGroup = this.configuration.getInt(
+            CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL, 5);
+    // task 即 job.content 数组，包括：reader writer taskId（没有配置即为 0）
+    // 与 channel 数量相同，在 split 阶段完成
+    int taskNumber = this.configuration.getList(CoreConstant.DATAX_JOB_CONTENT).size();
+
+    // 取最小值是因为 channel 的取值有两种方式，一是配置 channel 数量，而是根据限速计算
+    this.needChannelNumber = Math.min(this.needChannelNumber, taskNumber); // 最小为 1
+
+    PerfTrace.getInstance().setChannelNumber(needChannelNumber);
+
+    // 通过获取配置信息得到每个 taskGroup 需要运行哪些 tasks 任务
+
+    // taskGroup 数量 = channel 数量 / 每个 taskGroup 的 channel 数量
+    // TaskGroup: 描述的是一组 Task 集合。在同一个 TaskGroupContainer 执行下的 Task 集合称之为 TaskGroup
+    List<Configuration> taskGroupConfigs = JobAssignUtil.assignFairly(
+            this.configuration,
+            this.needChannelNumber, channelsPerTaskGroup);
+
+    LOG.info("Scheduler starts [{}] taskGroups.", taskGroupConfigs.size());
+
+    ExecuteMode executeMode = null;
+    AbstractScheduler scheduler;
+    try {
+      executeMode = ExecuteMode.STANDALONE;
+      scheduler = initStandaloneScheduler(this.configuration);
+
+      // 设置 executeMode
+      for (Configuration taskGroupConfig : taskGroupConfigs) {
+        taskGroupConfig.set(
+                CoreConstant.DATAX_CORE_CONTAINER_JOB_MODE,
+                executeMode.getValue());
+      }
 
 //            if (executeMode == ExecuteMode.LOCAL || executeMode == ExecuteMode.DISTRIBUTE) {
 //                if (this.jobId <= 0) {
@@ -523,424 +524,427 @@ public class JobContainer extends AbstractContainer {
 //                }
 //            }
 
-            LOG.info("Running by {} Mode.", executeMode);
+      LOG.info("Running by {} Mode.", executeMode);
 
-            this.startTransferTimeStamp = System.currentTimeMillis();
+      this.startTransferTimeStamp = System.currentTimeMillis();
 
-            // 开启调度作业
-            scheduler.schedule(taskGroupConfigs);
+      // 开启调度作业
+      scheduler.schedule(taskGroupConfigs);
 
-            this.endTransferTimeStamp = System.currentTimeMillis();
-        } catch (Exception e) {
-            LOG.error("运行scheduler 模式[{}]出错.", executeMode);
+      this.endTransferTimeStamp = System.currentTimeMillis();
+    } catch (Exception e) {
+      LOG.error("运行scheduler 模式[{}]出错.", executeMode);
 
-            this.endTransferTimeStamp = System.currentTimeMillis();
+      this.endTransferTimeStamp = System.currentTimeMillis();
 
-            throw DataXException.asDataXException(FrameworkErrorCode.RUNTIME_ERROR, e);
+      throw DataXException.asDataXException(FrameworkErrorCode.RUNTIME_ERROR, e);
+    }
+
+    // 检查任务执行情况
+    this.checkLimit();
+  }
+
+  private AbstractScheduler initStandaloneScheduler(Configuration configuration) {
+    AbstractContainerCommunicator containerCommunicator = new StandAloneJobContainerCommunicator(
+            configuration);
+    super.setContainerCommunicator(containerCommunicator);
+
+    return new StandAloneScheduler(containerCommunicator);
+  }
+
+  private void post() {
+    this.postJobWriter();
+    this.postJobReader();
+  }
+
+  private void destroy() {
+    if (this.jobWriter != null) {
+      this.jobWriter.destroy();
+      this.jobWriter = null;
+    }
+    if (this.jobReader != null) {
+      this.jobReader.destroy();
+      this.jobReader = null;
+    }
+  }
+
+  private void logStatistics() {
+    long totalCosts = (this.endTimeStamp - this.startTimeStamp) / 1000;
+    long transferCosts = (this.endTransferTimeStamp - this.startTransferTimeStamp) / 1000;
+
+    if (0L == transferCosts) transferCosts = 1L;
+
+    if (super.getContainerCommunicator() == null) return;
+
+    Communication communication = super.getContainerCommunicator().collect();
+    communication.setTimestamp(this.endTimeStamp);
+
+    Communication tempComm = new Communication();
+    tempComm.setTimestamp(this.startTransferTimeStamp);
+
+    Communication reportCommunication = CommunicationTool.getReportCommunication(
+            communication,
+            tempComm,
+            this.totalStage);
+
+    // 字节速率
+    long byteSpeedPerSecond = communication.getLongCounter(CommunicationTool.READ_SUCCEED_BYTES)
+            / transferCosts;
+
+    long recordSpeedPerSecond =
+            communication.getLongCounter(CommunicationTool.READ_SUCCEED_RECORDS)
+                    / transferCosts;
+
+    reportCommunication.setLongCounter(CommunicationTool.BYTE_SPEED, byteSpeedPerSecond);
+    reportCommunication.setLongCounter(CommunicationTool.RECORD_SPEED, recordSpeedPerSecond);
+
+    super.getContainerCommunicator().report(reportCommunication);
+
+    LOG.info(String.format(
+            "\n" + "%-26s: %-18s\n" + "%-26s: %-18s\n" + "%-26s: %19s\n"
+                    + "%-26s: %19s\n" + "%-26s: %19s\n" + "%-26s: %19s\n"
+                    + "%-26s: %19s\n",
+            "任务启动时刻",
+            dateFormat.format(startTimeStamp),
+
+            "任务结束时刻",
+            dateFormat.format(endTimeStamp),
+
+            "任务总计耗时",
+            String.valueOf(totalCosts) + "s",
+            "任务平均流量",
+            StrUtil.stringify(byteSpeedPerSecond)
+                    + "/s",
+            "记录写入速度",
+            String.valueOf(recordSpeedPerSecond)
+                    + "rec/s", "读出记录总数",
+            String.valueOf(CommunicationTool.getTotalReadRecords(communication)),
+            "读写失败总数",
+            String.valueOf(CommunicationTool.getTotalErrorRecords(communication))
+    ));
+
+    if (communication.getLongCounter(CommunicationTool.TRANSFORMER_SUCCEED_RECORDS) > 0
+            || communication.getLongCounter(CommunicationTool.TRANSFORMER_FAILED_RECORDS) > 0
+            || communication.getLongCounter(CommunicationTool.TRANSFORMER_FILTER_RECORDS) > 0) {
+      LOG.info(String.format(
+              "\n" + "%-26s: %19s\n" + "%-26s: %19s\n" + "%-26s: %19s\n",
+              "Transformer成功记录总数",
+              communication.getLongCounter(CommunicationTool.TRANSFORMER_SUCCEED_RECORDS),
+
+              "Transformer失败记录总数",
+              communication.getLongCounter(CommunicationTool.TRANSFORMER_FAILED_RECORDS),
+
+              "Transformer过滤记录总数",
+              communication.getLongCounter(CommunicationTool.TRANSFORMER_FILTER_RECORDS)
+      ));
+    }
+  }
+
+  /**
+   * reader job 的初始化，返回 Reader.Job
+   */
+  private Reader.Job initJobReader(JobPluginCollector jobPluginCollector) {
+    this.readerPluginName = this.configuration.getString(CoreConstant.DATAX_JOB_CONTENT_READER_NAME);
+    classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
+            PluginType.READER,
+            this.readerPluginName));
+
+    Reader.Job jobReader = (Reader.Job) LoadUtil.loadJobPlugin(
+            PluginType.READER,
+            this.readerPluginName);
+
+    // 设置 reader 的 jobConfig
+    jobReader.setPluginJobConf(this.configuration.getConfiguration(
+            CoreConstant.DATAX_JOB_CONTENT_READER_PARAMETER));
+
+    // 设置 reader 的 readerConfig
+    jobReader.setPeerPluginJobConf(this.configuration.getConfiguration(
+            CoreConstant.DATAX_JOB_CONTENT_WRITER_PARAMETER));
+
+    jobReader.setJobPluginCollector(jobPluginCollector);
+    jobReader.init();
+
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
+    return jobReader;
+  }
+
+  /**
+   * writer job 的初始化，返回 Writer.Job
+   */
+  private Writer.Job initJobWriter(JobPluginCollector jobPluginCollector) {
+    this.writerPluginName = this.configuration.getString(CoreConstant.DATAX_JOB_CONTENT_WRITER_NAME);
+    classLoaderSwapper.setCurrentThreadClassLoader(
+            LoadUtil.getJarLoader(PluginType.WRITER, this.writerPluginName));
+
+    Writer.Job jobWriter = (Writer.Job) LoadUtil.loadJobPlugin(
+            PluginType.WRITER, this.writerPluginName);
+
+    // 设置 writer 的 jobConfig
+    jobWriter.setPluginJobConf(this.configuration.getConfiguration(
+            CoreConstant.DATAX_JOB_CONTENT_WRITER_PARAMETER));
+
+    // 设置 reader 的 readerConfig
+    jobWriter.setPeerPluginJobConf(this.configuration.getConfiguration(
+            CoreConstant.DATAX_JOB_CONTENT_READER_PARAMETER));
+
+    jobWriter.setPeerPluginName(this.readerPluginName);
+    jobWriter.setJobPluginCollector(jobPluginCollector);
+    jobWriter.init();
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
+
+    return jobWriter;
+  }
+
+  private void prepareJobReader() {
+    classLoaderSwapper.setCurrentThreadClassLoader(
+            LoadUtil.getJarLoader(PluginType.READER, this.readerPluginName));
+    LOG.info("DataX Reader.Job [{}] do prepare work .", this.readerPluginName);
+    this.jobReader.prepare();
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
+  }
+
+  private void prepareJobWriter() {
+    classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
+            PluginType.WRITER, this.writerPluginName));
+    LOG.info("DataX Writer.Job [{}] do prepare work .", this.writerPluginName);
+    this.jobWriter.prepare();
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
+  }
+
+  // TODO: 如果源头就是空数据
+  private List<Configuration> doReaderSplit(int adviceNumber) {
+    classLoaderSwapper.setCurrentThreadClassLoader(
+            LoadUtil.getJarLoader(PluginType.READER, this.readerPluginName));
+    List<Configuration> readerSlicesConfigs = this.jobReader.split(adviceNumber);
+    if (readerSlicesConfigs == null || readerSlicesConfigs.size() <= 0) {
+      throw DataXException.asDataXException(
+              FrameworkErrorCode.PLUGIN_SPLIT_ERROR,
+              "reader切分的task数目不能小于等于0");
+    }
+
+    LOG.info(
+            "DataX Reader.Job [{}] splits to [{}] tasks.",
+            this.readerPluginName,
+            readerSlicesConfigs.size());
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
+
+    return readerSlicesConfigs;
+  }
+
+  private List<Configuration> doWriterSplit(int readerTaskNumber) {
+    classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
+            PluginType.WRITER, this.writerPluginName));
+
+    List<Configuration> writerSlicesConfigs = this.jobWriter
+            .split(readerTaskNumber);
+    if (writerSlicesConfigs == null || writerSlicesConfigs.size() <= 0) {
+      throw DataXException.asDataXException(
+              FrameworkErrorCode.PLUGIN_SPLIT_ERROR,
+              "writer切分的task不能小于等于0");
+    }
+    LOG.info(
+            "DataX Writer.Job [{}] splits to [{}] tasks.",
+            this.writerPluginName, writerSlicesConfigs.size());
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
+
+    return writerSlicesConfigs;
+  }
+
+  /**
+   * 按顺序整合 reader 和 writer 的配置，这里的顺序不能乱！ 输入是 reader、writer 级别的配置，输出是一个完整 task 的配置
+   */
+  private List<Configuration> mergeReaderAndWriterTaskConfigs(
+          List<Configuration> readerTasksConfigs,
+          List<Configuration> writerTasksConfigs) {
+    return mergeReaderAndWriterTaskConfigs(readerTasksConfigs, writerTasksConfigs, null);
+  }
+
+  private List<Configuration> mergeReaderAndWriterTaskConfigs(
+          List<Configuration> readerTasksConfigs,
+          List<Configuration> writerTasksConfigs,
+          List<Configuration> transformerConfigs) {
+    if (readerTasksConfigs.size() != writerTasksConfigs.size()) {
+      throw DataXException.asDataXException(
+              FrameworkErrorCode.PLUGIN_SPLIT_ERROR,
+              String.format(
+                      "reader 切分的 task 数目 [%d] 不等于 writer 切分的 task 数目 [%d].",
+                      readerTasksConfigs.size(), writerTasksConfigs.size())
+      );
+    }
+
+    List<Configuration> contentConfigs = new ArrayList<>();
+    for (int i = 0; i < readerTasksConfigs.size(); i++) {
+      Configuration taskConfig = Configuration.newDefault();
+      taskConfig.set(CoreConstant.JOB_READER_NAME, this.readerPluginName);
+      taskConfig.set(CoreConstant.JOB_READER_PARAMETER, readerTasksConfigs.get(i));
+      taskConfig.set(CoreConstant.JOB_WRITER_NAME, this.writerPluginName);
+      taskConfig.set(CoreConstant.JOB_WRITER_PARAMETER, writerTasksConfigs.get(i));
+
+      if (transformerConfigs != null && !transformerConfigs.isEmpty()) {
+        taskConfig.set(CoreConstant.JOB_TRANSFORMER, transformerConfigs);
+      }
+
+      // 设置 taskId
+      taskConfig.set(CoreConstant.TASK_ID, i);
+      contentConfigs.add(taskConfig);
+    }
+
+    return contentConfigs;
+  }
+
+  /**
+   * 这里比较复杂，分两步整合 1. tasks到channel 2. channel到taskGroup
+   * 合起来考虑，其实就是把tasks整合到taskGroup中，需要满足计算出的channel数，同时不能多起channel
+   * <p/>
+   * example:
+   * <p/>
+   * 前提条件： 切分后是1024个分表，假设用户要求总速率是1000M/s，每个channel的速率的3M/s，
+   * 每个taskGroup负责运行7个channel
+   * <p/>
+   * 计算： 总channel数为：1000M/s / 3M/s =
+   * 333个，为平均分配，计算可知有308个每个channel有3个tasks，而有25个每个channel有4个tasks，
+   * 需要的taskGroup数为：333 / 7 =
+   * 47...4，也就是需要48个taskGroup，47个是每个负责7个channel，有4个负责1个channel
+   * <p/>
+   * 处理：我们先将这负责4个channel的taskGroup处理掉，逻辑是：
+   * 先按平均为3个tasks找4个channel，设置taskGroupId为0，
+   * 接下来就像发牌一样轮询分配task到剩下的包含平均channel数的taskGroup中
+   * <p/>
+   * <p>
+   * TODO delete it
+   *
+   * @return 每个 taskGroup 独立的全部配置
+   */
+  @SuppressWarnings("serial")
+  private List<Configuration> distributeTasksToTaskGroup(
+          int averTaskPerChannel,
+          int channelNumber, int channelsPerTaskGroup) {
+    Validate.isTrue(
+            averTaskPerChannel > 0 && channelNumber > 0
+                    && channelsPerTaskGroup > 0,
+            "每个channel的平均task数[averTaskPerChannel]，channel数目[channelNumber]，每个taskGroup的平均channel数[channelsPerTaskGroup]都应该为正数");
+    List<Configuration> taskConfigs = this.configuration.getListConfiguration(CoreConstant.DATAX_JOB_CONTENT);
+    int taskGroupNumber = channelNumber / channelsPerTaskGroup;
+    int leftChannelNumber = channelNumber % channelsPerTaskGroup;
+    if (leftChannelNumber > 0) taskGroupNumber += 1;
+
+    // 如果只有一个 taskGroup，直接打标返回
+    if (taskGroupNumber == 1) {
+      final Configuration taskGroupConfig = this.configuration.clone();
+      // configure 的 clone 不能 clone 出
+      taskGroupConfig.set(
+              CoreConstant.DATAX_JOB_CONTENT, this.configuration
+                      .getListConfiguration(CoreConstant.DATAX_JOB_CONTENT));
+      taskGroupConfig.set(
+              CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL,
+              channelNumber);
+      taskGroupConfig.set(CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID, 0);
+      return new ArrayList<Configuration>() {
+        {
+          add(taskGroupConfig);
         }
-
-        // 检查任务执行情况
-        this.checkLimit();
+      };
     }
 
-    private AbstractScheduler initStandaloneScheduler(Configuration configuration) {
-        AbstractContainerCommunicator containerCommunicator = new StandAloneJobContainerCommunicator(
-                configuration);
-        super.setContainerCommunicator(containerCommunicator);
+    List<Configuration> taskGroupConfigs = new ArrayList<>();
+    // 将每个 taskGroup 中 content 的配置清空
+    for (int i = 0; i < taskGroupNumber; i++) {
+      Configuration taskGroupConfig = this.configuration.clone();
+      List<Configuration> taskGroupJobContent = taskGroupConfig
+              .getListConfiguration(CoreConstant.DATAX_JOB_CONTENT);
+      taskGroupJobContent.clear();
+      taskGroupConfig.set(CoreConstant.DATAX_JOB_CONTENT, taskGroupJobContent);
 
-        return new StandAloneScheduler(containerCommunicator);
+      taskGroupConfigs.add(taskGroupConfig);
     }
 
-    private void post() {
-        this.postJobWriter();
-        this.postJobReader();
-    }
+    int taskConfigIndex = 0;
+    int channelIndex = 0;
+    int taskGroupConfigIndex = 0;
 
-    private void destroy() {
-        if (this.jobWriter != null) {
-            this.jobWriter.destroy();
-            this.jobWriter = null;
+    // 先处理掉 taskGroup 包含 channel 数不是平均值的 taskGroup
+    if (leftChannelNumber > 0) {
+      Configuration taskGroupConfig = taskGroupConfigs.get(taskGroupConfigIndex);
+      for (; channelIndex < leftChannelNumber; channelIndex++) {
+        for (int i = 0; i < averTaskPerChannel; i++) {
+          List<Configuration> taskGroupJobContent = taskGroupConfig
+                  .getListConfiguration(CoreConstant.DATAX_JOB_CONTENT);
+          taskGroupJobContent.add(taskConfigs.get(taskConfigIndex++));
+          taskGroupConfig.set(CoreConstant.DATAX_JOB_CONTENT, taskGroupJobContent);
         }
-        if (this.jobReader != null) {
-            this.jobReader.destroy();
-            this.jobReader = null;
-        }
+      }
+
+      taskGroupConfig.set(
+              CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL,
+              leftChannelNumber);
+      taskGroupConfig.set(
+              CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID,
+              taskGroupConfigIndex++);
     }
 
-    private void logStatistics() {
-        long totalCosts = (this.endTimeStamp - this.startTimeStamp) / 1000;
-        long transferCosts = (this.endTransferTimeStamp - this.startTransferTimeStamp) / 1000;
-
-        if (0L == transferCosts) transferCosts = 1L;
-
-        if (super.getContainerCommunicator() == null) return;
-
-        Communication communication = super.getContainerCommunicator().collect();
-        communication.setTimestamp(this.endTimeStamp);
-
-        Communication tempComm = new Communication();
-        tempComm.setTimestamp(this.startTransferTimeStamp);
-
-        Communication reportCommunication = CommunicationTool.getReportCommunication(
-                communication,
-                tempComm,
-                this.totalStage);
-
-        // 字节速率
-        long byteSpeedPerSecond = communication.getLongCounter(CommunicationTool.READ_SUCCEED_BYTES)
-                / transferCosts;
-
-        long recordSpeedPerSecond =
-                communication.getLongCounter(CommunicationTool.READ_SUCCEED_RECORDS)
-                        / transferCosts;
-
-        reportCommunication.setLongCounter(CommunicationTool.BYTE_SPEED, byteSpeedPerSecond);
-        reportCommunication.setLongCounter(CommunicationTool.RECORD_SPEED, recordSpeedPerSecond);
-
-        super.getContainerCommunicator().report(reportCommunication);
-
-        LOG.info(String.format(
-                "\n" + "%-26s: %-18s\n" + "%-26s: %-18s\n" + "%-26s: %19s\n"
-                        + "%-26s: %19s\n" + "%-26s: %19s\n" + "%-26s: %19s\n"
-                        + "%-26s: %19s\n",
-                "任务启动时刻",
-                dateFormat.format(startTimeStamp),
-
-                "任务结束时刻",
-                dateFormat.format(endTimeStamp),
-
-                "任务总计耗时",
-                String.valueOf(totalCosts) + "s",
-                "任务平均流量",
-                StrUtil.stringify(byteSpeedPerSecond)
-                        + "/s",
-                "记录写入速度",
-                String.valueOf(recordSpeedPerSecond)
-                        + "rec/s", "读出记录总数",
-                String.valueOf(CommunicationTool.getTotalReadRecords(communication)),
-                "读写失败总数",
-                String.valueOf(CommunicationTool.getTotalErrorRecords(communication))
-        ));
-
-        if (communication.getLongCounter(CommunicationTool.TRANSFORMER_SUCCEED_RECORDS) > 0
-                || communication.getLongCounter(CommunicationTool.TRANSFORMER_FAILED_RECORDS) > 0
-                || communication.getLongCounter(CommunicationTool.TRANSFORMER_FILTER_RECORDS) > 0) {
-            LOG.info(String.format(
-                    "\n" + "%-26s: %19s\n" + "%-26s: %19s\n" + "%-26s: %19s\n",
-                    "Transformer成功记录总数",
-                    communication.getLongCounter(CommunicationTool.TRANSFORMER_SUCCEED_RECORDS),
-
-                    "Transformer失败记录总数",
-                    communication.getLongCounter(CommunicationTool.TRANSFORMER_FAILED_RECORDS),
-
-                    "Transformer过滤记录总数",
-                    communication.getLongCounter(CommunicationTool.TRANSFORMER_FILTER_RECORDS)
-            ));
-        }
+    // 下面需要轮询分配，并打上 channel 数和 taskGroupId 标记
+    int equalDivisionStartIndex = taskGroupConfigIndex;
+    while (taskConfigIndex < taskConfigs.size()
+            && equalDivisionStartIndex < taskGroupConfigs.size()) {
+      for (taskGroupConfigIndex = equalDivisionStartIndex;
+           taskGroupConfigIndex < taskGroupConfigs
+                   .size() && taskConfigIndex < taskConfigs.size(); taskGroupConfigIndex++) {
+        Configuration taskGroupConfig = taskGroupConfigs.get(taskGroupConfigIndex);
+        List<Configuration> taskGroupJobContent = taskGroupConfig
+                .getListConfiguration(CoreConstant.DATAX_JOB_CONTENT);
+        taskGroupJobContent.add(taskConfigs.get(taskConfigIndex++));
+        taskGroupConfig.set(CoreConstant.DATAX_JOB_CONTENT, taskGroupJobContent);
+      }
     }
 
-    /**
-     * reader job 的初始化，返回 Reader.Job
-     */
-    private Reader.Job initJobReader(JobPluginCollector jobPluginCollector) {
-        this.readerPluginName = this.configuration.getString(CoreConstant.DATAX_JOB_CONTENT_READER_NAME);
-        classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
-                PluginType.READER,
-                this.readerPluginName));
-
-        Reader.Job jobReader = (Reader.Job) LoadUtil.loadJobPlugin(
-                PluginType.READER,
-                this.readerPluginName);
-
-        // 设置 reader 的 jobConfig
-        jobReader.setPluginJobConf(this.configuration.getConfiguration(
-                CoreConstant.DATAX_JOB_CONTENT_READER_PARAMETER));
-
-        // 设置 reader 的 readerConfig
-        jobReader.setPeerPluginJobConf(this.configuration.getConfiguration(
-                CoreConstant.DATAX_JOB_CONTENT_WRITER_PARAMETER));
-
-        jobReader.setJobPluginCollector(jobPluginCollector);
-        jobReader.init();
-
-        classLoaderSwapper.restoreCurrentThreadClassLoader();
-        return jobReader;
+    for (taskGroupConfigIndex = equalDivisionStartIndex;
+         taskGroupConfigIndex < taskGroupConfigs.size(); ) {
+      Configuration taskGroupConfig = taskGroupConfigs.get(taskGroupConfigIndex);
+      taskGroupConfig.set(
+              CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL,
+              channelsPerTaskGroup);
+      taskGroupConfig.set(
+              CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID,
+              taskGroupConfigIndex++);
     }
 
-    /**
-     * writer job 的初始化，返回 Writer.Job
-     */
-    private Writer.Job initJobWriter(JobPluginCollector jobPluginCollector) {
-        this.writerPluginName = this.configuration.getString(CoreConstant.DATAX_JOB_CONTENT_WRITER_NAME);
-        classLoaderSwapper.setCurrentThreadClassLoader(
-                LoadUtil.getJarLoader(PluginType.WRITER, this.writerPluginName));
+    return taskGroupConfigs;
+  }
 
-        Writer.Job jobWriter = (Writer.Job) LoadUtil.loadJobPlugin(
-                PluginType.WRITER, this.writerPluginName);
+  private void postJobReader() {
+    classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
+            PluginType.READER,
+            this.readerPluginName));
+    LOG.info("DataX Reader.Job [{}] do post work.", this.readerPluginName);
+    this.jobReader.post();
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
+  }
 
-        // 设置 writer 的 jobConfig
-        jobWriter.setPluginJobConf(this.configuration.getConfiguration(
-                CoreConstant.DATAX_JOB_CONTENT_WRITER_PARAMETER));
+  private void postJobWriter() {
+    classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
+            PluginType.WRITER,
+            this.writerPluginName));
+    LOG.info("DataX Writer.Job [{}] do post work.", this.writerPluginName);
+    this.jobWriter.post();
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
+  }
 
-        // 设置 reader 的 readerConfig
-        jobWriter.setPeerPluginJobConf(this.configuration.getConfiguration(
-                CoreConstant.DATAX_JOB_CONTENT_READER_PARAMETER));
+  /**
+   * 检查最终结果是否超出阈值，如果阈值设定小于 1，则表示百分数阈值，大于 1 表示条数阈值
+   */
+  private void checkLimit() {
+    Communication communication = super.getContainerCommunicator().collect();
+    errorLimit.checkRecordLimit(communication);
+    errorLimit.checkPercentageLimit(communication);
+  }
 
-        jobWriter.setPeerPluginName(this.readerPluginName);
-        jobWriter.setJobPluginCollector(jobPluginCollector);
-        jobWriter.init();
-        classLoaderSwapper.restoreCurrentThreadClassLoader();
-
-        return jobWriter;
-    }
-
-    private void prepareJobReader() {
-        classLoaderSwapper.setCurrentThreadClassLoader(
-                LoadUtil.getJarLoader(PluginType.READER, this.readerPluginName));
-        LOG.info("DataX Reader.Job [{}] do prepare work .", this.readerPluginName);
-        this.jobReader.prepare();
-        classLoaderSwapper.restoreCurrentThreadClassLoader();
-    }
-
-    private void prepareJobWriter() {
-        classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
-                PluginType.WRITER, this.writerPluginName));
-        LOG.info("DataX Writer.Job [{}] do prepare work .", this.writerPluginName);
-        this.jobWriter.prepare();
-        classLoaderSwapper.restoreCurrentThreadClassLoader();
-    }
-
-    // TODO: 如果源头就是空数据
-    private List<Configuration> doReaderSplit(int adviceNumber) {
-        classLoaderSwapper.setCurrentThreadClassLoader(
-                LoadUtil.getJarLoader(PluginType.READER, this.readerPluginName));
-        List<Configuration> readerSlicesConfigs = this.jobReader.split(adviceNumber);
-        if (readerSlicesConfigs == null || readerSlicesConfigs.size() <= 0) {
-            throw DataXException.asDataXException(
-                    FrameworkErrorCode.PLUGIN_SPLIT_ERROR,
-                    "reader切分的task数目不能小于等于0");
-        }
-
-        LOG.info(
-                "DataX Reader.Job [{}] splits to [{}] tasks.",
-                this.readerPluginName,
-                readerSlicesConfigs.size());
-        classLoaderSwapper.restoreCurrentThreadClassLoader();
-
-        return readerSlicesConfigs;
-    }
-
-    private List<Configuration> doWriterSplit(int readerTaskNumber) {
-        classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
-                PluginType.WRITER, this.writerPluginName));
-
-        List<Configuration> writerSlicesConfigs = this.jobWriter
-                .split(readerTaskNumber);
-        if (writerSlicesConfigs == null || writerSlicesConfigs.size() <= 0) {
-            throw DataXException.asDataXException(
-                    FrameworkErrorCode.PLUGIN_SPLIT_ERROR,
-                    "writer切分的task不能小于等于0");
-        }
-        LOG.info("DataX Writer.Job [{}] splits to [{}] tasks.",
-                this.writerPluginName, writerSlicesConfigs.size());
-        classLoaderSwapper.restoreCurrentThreadClassLoader();
-
-        return writerSlicesConfigs;
-    }
-
-    /**
-     * 按顺序整合 reader 和 writer 的配置，这里的顺序不能乱！ 输入是 reader、writer 级别的配置，输出是一个完整 task 的配置
-     */
-    private List<Configuration> mergeReaderAndWriterTaskConfigs(
-            List<Configuration> readerTasksConfigs,
-            List<Configuration> writerTasksConfigs) {
-        return mergeReaderAndWriterTaskConfigs(readerTasksConfigs, writerTasksConfigs, null);
-    }
-
-    private List<Configuration> mergeReaderAndWriterTaskConfigs(
-            List<Configuration> readerTasksConfigs,
-            List<Configuration> writerTasksConfigs,
-            List<Configuration> transformerConfigs) {
-        if (readerTasksConfigs.size() != writerTasksConfigs.size()) {
-            throw DataXException.asDataXException(
-                    FrameworkErrorCode.PLUGIN_SPLIT_ERROR,
-                    String.format("reader 切分的 task 数目 [%d] 不等于 writer 切分的 task 数目 [%d].",
-                            readerTasksConfigs.size(), writerTasksConfigs.size())
-            );
-        }
-
-        List<Configuration> contentConfigs = new ArrayList<>();
-        for (int i = 0; i < readerTasksConfigs.size(); i++) {
-            Configuration taskConfig = Configuration.newDefault();
-            taskConfig.set(CoreConstant.JOB_READER_NAME, this.readerPluginName);
-            taskConfig.set(CoreConstant.JOB_READER_PARAMETER, readerTasksConfigs.get(i));
-            taskConfig.set(CoreConstant.JOB_WRITER_NAME, this.writerPluginName);
-            taskConfig.set(CoreConstant.JOB_WRITER_PARAMETER, writerTasksConfigs.get(i));
-
-            if (transformerConfigs != null && !transformerConfigs.isEmpty()) {
-                taskConfig.set(CoreConstant.JOB_TRANSFORMER, transformerConfigs);
-            }
-
-            // 设置 taskId
-            taskConfig.set(CoreConstant.TASK_ID, i);
-            contentConfigs.add(taskConfig);
-        }
-
-        return contentConfigs;
-    }
-
-    /**
-     * 这里比较复杂，分两步整合 1. tasks到channel 2. channel到taskGroup
-     * 合起来考虑，其实就是把tasks整合到taskGroup中，需要满足计算出的channel数，同时不能多起channel
-     * <p/>
-     * example:
-     * <p/>
-     * 前提条件： 切分后是1024个分表，假设用户要求总速率是1000M/s，每个channel的速率的3M/s，
-     * 每个taskGroup负责运行7个channel
-     * <p/>
-     * 计算： 总channel数为：1000M/s / 3M/s =
-     * 333个，为平均分配，计算可知有308个每个channel有3个tasks，而有25个每个channel有4个tasks，
-     * 需要的taskGroup数为：333 / 7 =
-     * 47...4，也就是需要48个taskGroup，47个是每个负责7个channel，有4个负责1个channel
-     * <p/>
-     * 处理：我们先将这负责4个channel的taskGroup处理掉，逻辑是：
-     * 先按平均为3个tasks找4个channel，设置taskGroupId为0，
-     * 接下来就像发牌一样轮询分配task到剩下的包含平均channel数的taskGroup中
-     * <p/>
-     * <p>
-     * TODO delete it
-     *
-     * @return 每个 taskGroup 独立的全部配置
-     */
-    @SuppressWarnings("serial")
-    private List<Configuration> distributeTasksToTaskGroup(
-            int averTaskPerChannel,
-            int channelNumber, int channelsPerTaskGroup) {
-        Validate.isTrue(
-                averTaskPerChannel > 0 && channelNumber > 0
-                        && channelsPerTaskGroup > 0,
-                "每个channel的平均task数[averTaskPerChannel]，channel数目[channelNumber]，每个taskGroup的平均channel数[channelsPerTaskGroup]都应该为正数");
-        List<Configuration> taskConfigs = this.configuration.getListConfiguration(CoreConstant.DATAX_JOB_CONTENT);
-        int taskGroupNumber = channelNumber / channelsPerTaskGroup;
-        int leftChannelNumber = channelNumber % channelsPerTaskGroup;
-        if (leftChannelNumber > 0) taskGroupNumber += 1;
-
-        // 如果只有一个 taskGroup，直接打标返回
-        if (taskGroupNumber == 1) {
-            final Configuration taskGroupConfig = this.configuration.clone();
-            // configure 的 clone 不能 clone 出
-            taskGroupConfig.set(CoreConstant.DATAX_JOB_CONTENT, this.configuration
-                    .getListConfiguration(CoreConstant.DATAX_JOB_CONTENT));
-            taskGroupConfig.set(
-                    CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL,
-                    channelNumber);
-            taskGroupConfig.set(CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID, 0);
-            return new ArrayList<Configuration>() {
-                {
-                    add(taskGroupConfig);
-                }
-            };
-        }
-
-        List<Configuration> taskGroupConfigs = new ArrayList<>();
-        // 将每个 taskGroup 中 content 的配置清空
-        for (int i = 0; i < taskGroupNumber; i++) {
-            Configuration taskGroupConfig = this.configuration.clone();
-            List<Configuration> taskGroupJobContent = taskGroupConfig
-                    .getListConfiguration(CoreConstant.DATAX_JOB_CONTENT);
-            taskGroupJobContent.clear();
-            taskGroupConfig.set(CoreConstant.DATAX_JOB_CONTENT, taskGroupJobContent);
-
-            taskGroupConfigs.add(taskGroupConfig);
-        }
-
-        int taskConfigIndex = 0;
-        int channelIndex = 0;
-        int taskGroupConfigIndex = 0;
-
-        // 先处理掉 taskGroup 包含 channel 数不是平均值的 taskGroup
-        if (leftChannelNumber > 0) {
-            Configuration taskGroupConfig = taskGroupConfigs.get(taskGroupConfigIndex);
-            for (; channelIndex < leftChannelNumber; channelIndex++) {
-                for (int i = 0; i < averTaskPerChannel; i++) {
-                    List<Configuration> taskGroupJobContent = taskGroupConfig
-                            .getListConfiguration(CoreConstant.DATAX_JOB_CONTENT);
-                    taskGroupJobContent.add(taskConfigs.get(taskConfigIndex++));
-                    taskGroupConfig.set(CoreConstant.DATAX_JOB_CONTENT, taskGroupJobContent);
-                }
-            }
-
-            taskGroupConfig.set(
-                    CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL,
-                    leftChannelNumber);
-            taskGroupConfig.set(
-                    CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID,
-                    taskGroupConfigIndex++);
-        }
-
-        // 下面需要轮询分配，并打上 channel 数和 taskGroupId 标记
-        int equalDivisionStartIndex = taskGroupConfigIndex;
-        while (taskConfigIndex < taskConfigs.size()
-                && equalDivisionStartIndex < taskGroupConfigs.size()) {
-            for (taskGroupConfigIndex = equalDivisionStartIndex;
-                 taskGroupConfigIndex < taskGroupConfigs
-                         .size() && taskConfigIndex < taskConfigs.size(); taskGroupConfigIndex++) {
-                Configuration taskGroupConfig = taskGroupConfigs.get(taskGroupConfigIndex);
-                List<Configuration> taskGroupJobContent = taskGroupConfig
-                        .getListConfiguration(CoreConstant.DATAX_JOB_CONTENT);
-                taskGroupJobContent.add(taskConfigs.get(taskConfigIndex++));
-                taskGroupConfig.set(CoreConstant.DATAX_JOB_CONTENT, taskGroupJobContent);
-            }
-        }
-
-        for (taskGroupConfigIndex = equalDivisionStartIndex;
-             taskGroupConfigIndex < taskGroupConfigs.size(); ) {
-            Configuration taskGroupConfig = taskGroupConfigs.get(taskGroupConfigIndex);
-            taskGroupConfig.set(
-                    CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_CHANNEL,
-                    channelsPerTaskGroup);
-            taskGroupConfig.set(
-                    CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID,
-                    taskGroupConfigIndex++);
-        }
-
-        return taskGroupConfigs;
-    }
-
-    private void postJobReader() {
-        classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
-                PluginType.READER,
-                this.readerPluginName));
-        LOG.info("DataX Reader.Job [{}] do post work.", this.readerPluginName);
-        this.jobReader.post();
-        classLoaderSwapper.restoreCurrentThreadClassLoader();
-    }
-
-    private void postJobWriter() {
-        classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
-                PluginType.WRITER,
-                this.writerPluginName));
-        LOG.info("DataX Writer.Job [{}] do post work.", this.writerPluginName);
-        this.jobWriter.post();
-        classLoaderSwapper.restoreCurrentThreadClassLoader();
-    }
-
-    /**
-     * 检查最终结果是否超出阈值，如果阈值设定小于 1，则表示百分数阈值，大于 1 表示条数阈值
-     */
-    private void checkLimit() {
-        Communication communication = super.getContainerCommunicator().collect();
-        errorLimit.checkRecordLimit(communication);
-        errorLimit.checkPercentageLimit(communication);
-    }
-
-    /**
-     * 调用外部 hook
-     */
-    private void invokeHooks() {
-        Communication comm = super.getContainerCommunicator().collect();
-        HookInvoker invoker = new HookInvoker(
-                CoreConstant.DATAX_HOME + "/hook", configuration, comm.getCounter());
-        invoker.invokeAll();
-    }
+  /**
+   * 调用外部 hook
+   */
+  private void invokeHooks() {
+    Communication comm = super.getContainerCommunicator().collect();
+    HookInvoker invoker = new HookInvoker(
+            CoreConstant.DATAX_HOME + "/hook", configuration, comm.getCounter());
+    invoker.invokeAll();
+  }
 }

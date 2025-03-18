@@ -9,7 +9,14 @@ import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +61,8 @@ public class PerfTrace {
 
   private PerfTrace(boolean isJob, long jobId, int taskGroupId, boolean enable) {
     try {
-      this.perfTraceId = isJob ? "job_" + jobId : String.format("taskGroup_%s_%s", jobId, taskGroupId);
+      this.perfTraceId = isJob ?
+              "job_" + jobId : String.format("taskGroup_%s_%s", jobId, taskGroupId);
       this.enable = enable;
       this.isJob = isJob;
       this.taskGroupId = taskGroupId;
@@ -73,6 +81,7 @@ public class PerfTrace {
    * @param isJob
    * @param jobId
    * @param taskGroupId
+   *
    * @return
    */
   public static PerfTrace getInstance(boolean isJob, long jobId, int taskGroupId, boolean enable) {
@@ -216,15 +225,23 @@ public class PerfTrace {
     StringBuilder info = new StringBuilder();
     info.append("\n === total summarize info === \n");
     info.append("\n   1. all phase average time info and max time task info: \n\n");
-    info.append(String.format("%-20s | %18s | %18s | %18s | %18s | %-100s\n", "PHASE", "AVERAGE USED TIME", "ALL TASK NUM", "MAX USED TIME", "MAX TASK ID", "MAX TASK INFO"));
+    info.append(String.format(
+            "%-20s | %18s | %18s | %18s | %18s | %-100s\n",
+            "PHASE",
+            "AVERAGE USED TIME",
+            "ALL TASK NUM",
+            "MAX USED TIME",
+            "MAX TASK ID",
+            "MAX TASK INFO"));
 
     List<PHASE> keys = new ArrayList<PHASE>(perfRecordMaps4print.keySet());
-    Collections.sort(keys, new Comparator<PHASE>() {
-      @Override
-      public int compare(PHASE o1, PHASE o2) {
-        return o1.toInt() - o2.toInt();
-      }
-    });
+    Collections.sort(
+            keys, new Comparator<PHASE>() {
+              @Override
+              public int compare(PHASE o1, PHASE o2) {
+                return o1.toInt() - o2.toInt();
+              }
+            });
     for (PHASE phase : keys) {
       SumPerfRecord4Print sumPerfRecord = perfRecordMaps4print.get(phase);
       if (sumPerfRecord == null) {
@@ -234,8 +251,14 @@ public class PerfTrace {
       long maxTime = sumPerfRecord.getMaxTime();
       int maxTaskId = sumPerfRecord.maxTaskId;
       int maxTaskGroupId = sumPerfRecord.getMaxTaskGroupId();
-      info.append(String.format("%-20s | %18s | %18s | %18s | %18s | %-100s\n",
-          phase, unitTime(averageTime), sumPerfRecord.totalCount, unitTime(maxTime), jobId + "-" + maxTaskGroupId + "-" + maxTaskId, taskDetails.get(maxTaskId)));
+      info.append(String.format(
+              "%-20s | %18s | %18s | %18s | %18s | %-100s\n",
+              phase,
+              unitTime(averageTime),
+              sumPerfRecord.totalCount,
+              unitTime(maxTime),
+              jobId + "-" + maxTaskGroupId + "-" + maxTaskId,
+              taskDetails.get(maxTaskId)));
     }
 
     //SumPerfRecord4Print countSumPerf = Optional.fromNullable(perfRecordMaps4print.get(PHASE.READ_TASK_DATA)).or(new SumPerfRecord4Print());
@@ -253,10 +276,26 @@ public class PerfTrace {
     int maxTGID4Records = countSumPerf.getMaxTGID4Records();
 
     info.append("\n\n 2. record average count and max count task info :\n\n");
-    info.append(String.format("%-20s | %18s | %18s | %18s | %18s | %18s | %-100s\n", "PHASE", "AVERAGE RECORDS", "AVERAGE BYTES", "MAX RECORDS", "MAX RECORD`S BYTES", "MAX TASK ID", "MAX TASK INFO"));
+    info.append(String.format(
+            "%-20s | %18s | %18s | %18s | %18s | %18s | %-100s\n",
+            "PHASE",
+            "AVERAGE RECORDS",
+            "AVERAGE BYTES",
+            "MAX RECORDS",
+            "MAX RECORD`S BYTES",
+            "MAX TASK ID",
+            "MAX TASK INFO"));
     if (maxTaskId4Records > -1) {
-      info.append(String.format("%-20s | %18s | %18s | %18s | %18s | %18s | %-100s\n"
-          , PHASE.READ_TASK_DATA, averageRecords, unitSize(averageBytes), maxRecord, unitSize(maxByte), jobId + "-" + maxTGID4Records + "-" + maxTaskId4Records, taskDetails.get(maxTaskId4Records)));
+      info.append(String.format(
+              "%-20s | %18s | %18s | %18s | %18s | %18s | %-100s\n"
+              ,
+              PHASE.READ_TASK_DATA,
+              averageRecords,
+              unitSize(averageBytes),
+              maxRecord,
+              unitSize(maxByte),
+              jobId + "-" + maxTGID4Records + "-" + maxTaskId4Records,
+              taskDetails.get(maxTaskId4Records)));
 
     }
     return info.toString();
@@ -402,10 +441,14 @@ public class PerfTrace {
       jdo.setHostAddress(HostUtils.IP);
 
       //sum
-      jdo.setTaskTotalTimeMs(sumPerf4Report4NotEnd.totalTaskRunTimeInMs + sumPerf4Report.totalTaskRunTimeInMs);
-      jdo.setOdpsBlockCloseTimeMs(sumPerf4Report4NotEnd.odpsCloseTimeInMs + sumPerf4Report.odpsCloseTimeInMs);
-      jdo.setSqlQueryTimeMs(sumPerf4Report4NotEnd.sqlQueryTimeInMs + sumPerf4Report.sqlQueryTimeInMs);
-      jdo.setResultNextTimeMs(sumPerf4Report4NotEnd.resultNextTimeInMs + sumPerf4Report.resultNextTimeInMs);
+      jdo.setTaskTotalTimeMs(
+              sumPerf4Report4NotEnd.totalTaskRunTimeInMs + sumPerf4Report.totalTaskRunTimeInMs);
+      jdo.setOdpsBlockCloseTimeMs(
+              sumPerf4Report4NotEnd.odpsCloseTimeInMs + sumPerf4Report.odpsCloseTimeInMs);
+      jdo.setSqlQueryTimeMs(
+              sumPerf4Report4NotEnd.sqlQueryTimeInMs + sumPerf4Report.sqlQueryTimeInMs);
+      jdo.setResultNextTimeMs(
+              sumPerf4Report4NotEnd.resultNextTimeInMs + sumPerf4Report.resultNextTimeInMs);
 
       return jdo;
     } catch (Exception e) {

@@ -48,9 +48,14 @@ public class HintUtil {
         if (m.find()) {
           String[] tableStr = table.split("\\.");
           String tableWithoutSchema = tableStr[tableStr.length - 1];
-          String finalHint = hintExpression.replaceAll(Constant.TABLE_NAME_PLACEHOLDER, tableWithoutSchema);
+          String finalHint = hintExpression.replaceAll(
+                  Constant.TABLE_NAME_PLACEHOLDER,
+                  tableWithoutSchema);
           //主库不并发读取
-          if (finalHint.indexOf("parallel") > 0 && DBUtil.isOracleMaster(jdbcUrl, username, password)) {
+          if (finalHint.indexOf("parallel") > 0 && DBUtil.isOracleMaster(
+                  jdbcUrl,
+                  username,
+                  password)) {
             LOG.info("master:{} will not use hint:{}", jdbcUrl, finalHint);
           } else {
             LOG.info("table:{} use hint:{}.", table, finalHint);

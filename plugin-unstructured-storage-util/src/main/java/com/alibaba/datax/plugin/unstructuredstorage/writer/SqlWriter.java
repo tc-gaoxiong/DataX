@@ -17,7 +17,12 @@ public class SqlWriter implements UnstructuredWriter {
   private String tableName;
   private StringBuilder insertPrefix;
 
-  public SqlWriter(Writer writer, String quoteChar, String tableName, String lineSeparator, List<String> columnNames) {
+  public SqlWriter(
+          Writer writer,
+          String quoteChar,
+          String tableName,
+          String lineSeparator,
+          List<String> columnNames) {
     this.sqlWriter = writer;
     this.quoteChar = quoteChar;
     this.lineSeparator = lineSeparator;
@@ -33,7 +38,10 @@ public class SqlWriter implements UnstructuredWriter {
     }
 
     StringBuilder sqlPatten = new StringBuilder(4096).append(insertPrefix);
-    sqlPatten.append(splitedRows.stream().map(e -> "'" + DataXCsvWriter.replace(e, "'", "''") + "'").collect(Collectors.joining(",")));
+    sqlPatten.append(splitedRows
+            .stream()
+            .map(e -> "'" + DataXCsvWriter.replace(e, "'", "''") + "'")
+            .collect(Collectors.joining(",")));
     sqlPatten.append(");").append(lineSeparator);
     this.sqlWriter.write(sqlPatten.toString());
   }
@@ -50,7 +58,13 @@ public class SqlWriter implements UnstructuredWriter {
 
     int capacity = 16 + tableName.length() + sb.length();
     this.insertPrefix = new StringBuilder(capacity);
-    this.insertPrefix.append("INSERT INTO ").append(tableName).append(" (").append(sb).append(")").append(" VALUES(");
+    this.insertPrefix
+            .append("INSERT INTO ")
+            .append(tableName)
+            .append(" (")
+            .append(sb)
+            .append(")")
+            .append(" VALUES(");
   }
 
   public void appendCommit() throws IOException {

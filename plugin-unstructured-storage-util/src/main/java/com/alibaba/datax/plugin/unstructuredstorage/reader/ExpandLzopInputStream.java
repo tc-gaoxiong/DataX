@@ -20,6 +20,7 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -45,7 +46,7 @@ public class ExpandLzopInputStream extends LzopInputStream {
     short LZO_LIBRARY_VERSION = 0x2060;
     Log LOG = LogFactory.getLog(LzopInputStream.class);
     byte[] LZOP_MAGIC = new byte[]{
-        -119, 'L', 'Z', 'O', 0, '\r', '\n', '\032', '\n'};
+            -119, 'L', 'Z', 'O', 0, '\r', '\n', '\032', '\n'};
     byte[] buf = new byte[9];
     readBytes(buf, 0, 9);
     if (!Arrays.equals(buf, LZOP_MAGIC))
@@ -56,20 +57,20 @@ public class ExpandLzopInputStream extends LzopInputStream {
     int hitem = readHeaderItem(buf, 2, adler, crc32); // lzop version
     if (hitem > LzopConstants.LZOP_VERSION) {
       LOG.debug("Compressed with later version of lzop: "
-          + Integer.toHexString(hitem) + " (expected 0x"
-          + Integer.toHexString(LzopConstants.LZOP_VERSION) + ")");
+              + Integer.toHexString(hitem) + " (expected 0x"
+              + Integer.toHexString(LzopConstants.LZOP_VERSION) + ")");
     }
     hitem = readHeaderItem(buf, 2, adler, crc32); // lzo library version
     if (hitem > LZO_LIBRARY_VERSION) {
       throw new IOException("Compressed with incompatible lzo version: 0x"
-          + Integer.toHexString(hitem) + " (expected 0x"
-          + Integer.toHexString(LzoVersion.LZO_LIBRARY_VERSION) + ")");
+              + Integer.toHexString(hitem) + " (expected 0x"
+              + Integer.toHexString(LzoVersion.LZO_LIBRARY_VERSION) + ")");
     }
     hitem = readHeaderItem(buf, 2, adler, crc32); // lzop extract version
     if (hitem > LzopConstants.LZOP_VERSION) {
       throw new IOException("Compressed with incompatible lzop version: 0x"
-          + Integer.toHexString(hitem) + " (expected 0x"
-          + Integer.toHexString(LzopConstants.LZOP_VERSION) + ")");
+              + Integer.toHexString(hitem) + " (expected 0x"
+              + Integer.toHexString(LzopConstants.LZOP_VERSION) + ")");
     }
     hitem = readHeaderItem(buf, 1, adler, crc32); // method
     switch (hitem) {
@@ -106,8 +107,8 @@ public class ExpandLzopInputStream extends LzopInputStream {
     hitem = readHeaderItem(buf, 4, adler, crc32); // read checksum
     if (hitem != checksum) {
       throw new IOException("Invalid header checksum: "
-          + Long.toHexString(checksum) + " (expected 0x"
-          + Integer.toHexString(hitem) + ")");
+              + Long.toHexString(checksum) + " (expected 0x"
+              + Integer.toHexString(hitem) + ")");
     }
     if (extraField) { // lzop 1.08 ultimately ignores this
       LOG.debug("Extra header field not processed");
@@ -124,7 +125,11 @@ public class ExpandLzopInputStream extends LzopInputStream {
     return flags;
   }
 
-  private int readHeaderItem(@Nonnull byte[] buf, @Nonnegative int len, @Nonnull Adler32 adler, @Nonnull CRC32 crc32) throws IOException {
+  private int readHeaderItem(
+          @Nonnull byte[] buf,
+          @Nonnegative int len,
+          @Nonnull Adler32 adler,
+          @Nonnull CRC32 crc32) throws IOException {
     int ret = readInt(buf, len);
     adler.update(buf, 0, len);
     crc32.update(buf, 0, len);
@@ -138,7 +143,7 @@ public class ExpandLzopInputStream extends LzopInputStream {
    */
   // @Nonnegative ?
   private int readInt(@Nonnull byte[] buf, @Nonnegative int len)
-      throws IOException {
+          throws IOException {
     readBytes(buf, 0, len);
     int ret = (0xFF & buf[0]) << 24;
     ret |= (0xFF & buf[1]) << 16;

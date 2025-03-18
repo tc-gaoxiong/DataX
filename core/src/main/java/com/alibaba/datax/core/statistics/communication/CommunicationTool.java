@@ -44,9 +44,13 @@ public final class CommunicationTool {
   private static final String WRITE_SUCCEED_RECORDS = "writeSucceedRecords";
   private static final String WRITE_SUCCEED_BYTES = "writeSucceedBytes";
 
-  public static Communication getReportCommunication(Communication now, Communication old, int totalStage) {
-    Validate.isTrue(now != null && old != null,
-        "为汇报准备的新旧metric不能为null");
+  public static Communication getReportCommunication(
+          Communication now,
+          Communication old,
+          int totalStage) {
+    Validate.isTrue(
+            now != null && old != null,
+            "为汇报准备的新旧metric不能为null");
 
     long totalReadRecords = getTotalReadRecords(now);
     long totalReadBytes = getTotalReadBytes(now);
@@ -60,9 +64,9 @@ public final class CommunicationTool {
     long timeInterval = now.getTimestamp() - old.getTimestamp();
     long sec = timeInterval <= 1000 ? 1 : timeInterval / 1000;
     long bytesSpeed = (totalReadBytes
-        - getTotalReadBytes(old)) / sec;
+            - getTotalReadBytes(old)) / sec;
     long recordsSpeed = (totalReadRecords
-        - getTotalReadRecords(old)) / sec;
+            - getTotalReadRecords(old)) / sec;
 
     now.setLongCounter(BYTE_SPEED, bytesSpeed < 0 ? 0 : bytesSpeed);
     now.setLongCounter(RECORD_SPEED, recordsSpeed < 0 ? 0 : recordsSpeed);
@@ -77,32 +81,32 @@ public final class CommunicationTool {
 
   public static long getTotalReadRecords(final Communication communication) {
     return communication.getLongCounter(READ_SUCCEED_RECORDS) +
-        communication.getLongCounter(READ_FAILED_RECORDS);
+            communication.getLongCounter(READ_FAILED_RECORDS);
   }
 
   public static long getTotalReadBytes(final Communication communication) {
     return communication.getLongCounter(READ_SUCCEED_BYTES) +
-        communication.getLongCounter(READ_FAILED_BYTES);
+            communication.getLongCounter(READ_FAILED_BYTES);
   }
 
   public static long getTotalErrorRecords(final Communication communication) {
     return communication.getLongCounter(READ_FAILED_RECORDS) +
-        communication.getLongCounter(WRITE_FAILED_RECORDS);
+            communication.getLongCounter(WRITE_FAILED_RECORDS);
   }
 
   public static long getTotalErrorBytes(final Communication communication) {
     return communication.getLongCounter(READ_FAILED_BYTES) +
-        communication.getLongCounter(WRITE_FAILED_BYTES);
+            communication.getLongCounter(WRITE_FAILED_BYTES);
   }
 
   public static long getWriteSucceedRecords(final Communication communication) {
     return communication.getLongCounter(WRITE_RECEIVED_RECORDS) -
-        communication.getLongCounter(WRITE_FAILED_RECORDS);
+            communication.getLongCounter(WRITE_FAILED_RECORDS);
   }
 
   public static long getWriteSucceedBytes(final Communication communication) {
     return communication.getLongCounter(WRITE_RECEIVED_BYTES) -
-        communication.getLongCounter(WRITE_FAILED_BYTES);
+            communication.getLongCounter(WRITE_FAILED_BYTES);
   }
 
   public static class Stringify {
@@ -126,17 +130,23 @@ public final class CommunicationTool {
       sb.append(PerfTrace.unitTime(communication.getLongCounter(WAIT_READER_TIME)));
       sb.append(" | ");
       if (communication.getLongCounter(CommunicationTool.TRANSFORMER_USED_TIME) > 0
-          || communication.getLongCounter(CommunicationTool.TRANSFORMER_SUCCEED_RECORDS) > 0
-          || communication.getLongCounter(CommunicationTool.TRANSFORMER_FAILED_RECORDS) > 0
-          || communication.getLongCounter(CommunicationTool.TRANSFORMER_FILTER_RECORDS) > 0) {
+              || communication.getLongCounter(CommunicationTool.TRANSFORMER_SUCCEED_RECORDS) > 0
+              || communication.getLongCounter(CommunicationTool.TRANSFORMER_FAILED_RECORDS) > 0
+              || communication.getLongCounter(CommunicationTool.TRANSFORMER_FILTER_RECORDS) > 0) {
         sb.append("Transfermor Success ");
-        sb.append(String.format("%d records", communication.getLongCounter(CommunicationTool.TRANSFORMER_SUCCEED_RECORDS)));
+        sb.append(String.format(
+                "%d records",
+                communication.getLongCounter(CommunicationTool.TRANSFORMER_SUCCEED_RECORDS)));
         sb.append(" | ");
         sb.append("Transformer Error ");
-        sb.append(String.format("%d records", communication.getLongCounter(CommunicationTool.TRANSFORMER_FAILED_RECORDS)));
+        sb.append(String.format(
+                "%d records",
+                communication.getLongCounter(CommunicationTool.TRANSFORMER_FAILED_RECORDS)));
         sb.append(" | ");
         sb.append("Transformer Filter ");
-        sb.append(String.format("%d records", communication.getLongCounter(CommunicationTool.TRANSFORMER_FILTER_RECORDS)));
+        sb.append(String.format(
+                "%d records",
+                communication.getLongCounter(CommunicationTool.TRANSFORMER_FILTER_RECORDS)));
         sb.append(" | ");
         sb.append("Transformer usedTime ");
         sb.append(PerfTrace.unitTime(communication.getLongCounter(CommunicationTool.TRANSFORMER_USED_TIME)));
@@ -148,21 +158,24 @@ public final class CommunicationTool {
     }
 
     private static String getTotal(final Communication communication) {
-      return String.format("%d records, %d bytes",
-          communication.getLongCounter(TOTAL_READ_RECORDS),
-          communication.getLongCounter(TOTAL_READ_BYTES));
+      return String.format(
+              "%d records, %d bytes",
+              communication.getLongCounter(TOTAL_READ_RECORDS),
+              communication.getLongCounter(TOTAL_READ_BYTES));
     }
 
     private static String getSpeed(final Communication communication) {
-      return String.format("%s/s, %d records/s",
-          StrUtil.stringify(communication.getLongCounter(BYTE_SPEED)),
-          communication.getLongCounter(RECORD_SPEED));
+      return String.format(
+              "%s/s, %d records/s",
+              StrUtil.stringify(communication.getLongCounter(BYTE_SPEED)),
+              communication.getLongCounter(RECORD_SPEED));
     }
 
     private static String getError(final Communication communication) {
-      return String.format("%d records, %d bytes",
-          communication.getLongCounter(TOTAL_ERROR_RECORDS),
-          communication.getLongCounter(TOTAL_ERROR_BYTES));
+      return String.format(
+              "%d records, %d bytes",
+              communication.getLongCounter(TOTAL_ERROR_RECORDS),
+              communication.getLongCounter(TOTAL_ERROR_BYTES));
     }
 
     private static String getPercentage(final Communication communication) {
@@ -218,7 +231,9 @@ public final class CommunicationTool {
     }
 
     private static Pair<String, Long> getTotalRecords(final Communication communication) {
-      return new Pair<String, Long>("totalRecords", communication.getLongCounter(TOTAL_READ_RECORDS));
+      return new Pair<String, Long>(
+              "totalRecords",
+              communication.getLongCounter(TOTAL_READ_RECORDS));
     }
 
     private static Pair<String, Long> getSpeedByte(final Communication communication) {
@@ -230,7 +245,9 @@ public final class CommunicationTool {
     }
 
     private static Pair<String, Long> getErrorRecords(final Communication communication) {
-      return new Pair<String, Long>("errorRecords", communication.getLongCounter(TOTAL_ERROR_RECORDS));
+      return new Pair<String, Long>(
+              "errorRecords",
+              communication.getLongCounter(TOTAL_ERROR_RECORDS));
     }
 
     private static Pair<String, Long> getErrorBytes(final Communication communication) {
@@ -250,11 +267,15 @@ public final class CommunicationTool {
     }
 
     private static Pair<String, Long> getWaitReaderTime(final Communication communication) {
-      return new Pair<String, Long>("waitReaderTime", communication.getLongCounter(CommunicationTool.WAIT_READER_TIME));
+      return new Pair<String, Long>(
+              "waitReaderTime",
+              communication.getLongCounter(CommunicationTool.WAIT_READER_TIME));
     }
 
     private static Pair<String, Long> getWaitWriterTime(final Communication communication) {
-      return new Pair<String, Long>("waitWriterTime", communication.getLongCounter(CommunicationTool.WAIT_WRITER_TIME));
+      return new Pair<String, Long>(
+              "waitWriterTime",
+              communication.getLongCounter(CommunicationTool.WAIT_WRITER_TIME));
     }
 
     static class Pair<K, V> {

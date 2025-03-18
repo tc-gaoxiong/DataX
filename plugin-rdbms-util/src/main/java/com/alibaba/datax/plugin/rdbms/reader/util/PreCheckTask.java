@@ -26,11 +26,12 @@ public class PreCheckTask implements Callable<Boolean> {
   private Configuration connection;
   private DataBaseType dataBaseType;
 
-  public PreCheckTask(String userName,
-                      String password,
-                      Configuration connection,
-                      DataBaseType dataBaseType,
-                      String splitPkId) {
+  public PreCheckTask(
+          String userName,
+          String password,
+          Configuration connection,
+          DataBaseType dataBaseType,
+          String splitPkId) {
     this.connection = connection;
     this.userName = userName;
     this.password = password;
@@ -44,8 +45,9 @@ public class PreCheckTask implements Callable<Boolean> {
     List<Object> querySqls = this.connection.getList(Key.QUERY_SQL, Object.class);
     List<Object> splitPkSqls = this.connection.getList(Key.SPLIT_PK_SQL, Object.class);
     List<Object> tables = this.connection.getList(Key.TABLE, Object.class);
-    Connection conn = DBUtil.getConnectionWithoutRetry(this.dataBaseType, jdbcUrl,
-        this.userName, password);
+    Connection conn = DBUtil.getConnectionWithoutRetry(
+            this.dataBaseType, jdbcUrl,
+            this.userName, password);
     int fetchSize = 1;
     if (DataBaseType.MySql.equals(dataBaseType) || DataBaseType.DRDS.equals(dataBaseType)) {
       fetchSize = Integer.MIN_VALUE;
@@ -89,7 +91,11 @@ public class PreCheckTask implements Callable<Boolean> {
         } catch (DataXException e) {
           throw e;
         } catch (Exception e) {
-          throw RdbmsException.asSplitPKException(this.dataBaseType, e, splitPkSql, this.splitPkId.trim());
+          throw RdbmsException.asSplitPKException(
+                  this.dataBaseType,
+                  e,
+                  splitPkSql,
+                  this.splitPkId.trim());
         }
       }
     } finally {

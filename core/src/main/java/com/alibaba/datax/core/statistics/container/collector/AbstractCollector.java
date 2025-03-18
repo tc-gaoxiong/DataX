@@ -29,7 +29,7 @@ public abstract class AbstractCollector {
   public void registerTGCommunication(List<Configuration> taskGroupConfigurationList) {
     for (Configuration config : taskGroupConfigurationList) {
       int taskGroupId = config.getInt(
-          CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID);
+              CoreConstant.DATAX_CORE_CONTAINER_TASKGROUP_ID);
       LocalTGCommunicationManager.registerTaskGroupCommunication(taskGroupId, new Communication());
     }
   }
@@ -46,7 +46,7 @@ public abstract class AbstractCollector {
     communication.setState(State.SUCCEEDED);
 
     for (Communication taskCommunication :
-        this.taskCommunicationMap.values()) {
+            this.taskCommunicationMap.values()) {
       communication.mergeFrom(taskCommunication);
     }
 

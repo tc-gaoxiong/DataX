@@ -1,6 +1,12 @@
 package com.alibaba.datax.plugin.rdbms.reader;
 
-import com.alibaba.datax.common.element.*;
+import com.alibaba.datax.common.element.BoolColumn;
+import com.alibaba.datax.common.element.BytesColumn;
+import com.alibaba.datax.common.element.DateColumn;
+import com.alibaba.datax.common.element.DoubleColumn;
+import com.alibaba.datax.common.element.LongColumn;
+import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.StringColumn;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.plugin.RecordSender;
 import com.alibaba.datax.common.plugin.TaskPluginCollector;
@@ -15,15 +21,16 @@ import java.sql.Types;
 
 public class ResultSetReadProxy {
   private static final Logger LOG = LoggerFactory
-      .getLogger(ResultSetReadProxy.class);
+          .getLogger(ResultSetReadProxy.class);
 
   private static final boolean IS_DEBUG = LOG.isDebugEnabled();
   private static final byte[] EMPTY_CHAR_ARRAY = new byte[0];
 
   //TODO
-  public static void transportOneRecord(RecordSender recordSender, ResultSet rs,
-                                        ResultSetMetaData metaData, int columnNumber, String mandatoryEncoding,
-                                        TaskPluginCollector taskPluginCollector) {
+  public static void transportOneRecord(
+          RecordSender recordSender, ResultSet rs,
+          ResultSetMetaData metaData, int columnNumber, String mandatoryEncoding,
+          TaskPluginCollector taskPluginCollector) {
     Record record = recordSender.createRecord();
 
     try {
@@ -40,8 +47,9 @@ public class ResultSetReadProxy {
             if (StringUtils.isBlank(mandatoryEncoding)) {
               rawData = rs.getString(i);
             } else {
-              rawData = new String((rs.getBytes(i) == null ? EMPTY_CHAR_ARRAY :
-                  rs.getBytes(i)), mandatoryEncoding);
+              rawData = new String(
+                      (rs.getBytes(i) == null ? EMPTY_CHAR_ARRAY :
+                              rs.getBytes(i)), mandatoryEncoding);
             }
             record.addColumn(new StringColumn(rawData));
             break;
@@ -111,19 +119,20 @@ public class ResultSetReadProxy {
           // TODO 添加BASIC_MESSAGE
           default:
             throw DataXException
-                .asDataXException(
-                    DBUtilErrorCode.UNSUPPORTED_TYPE,
-                    String.format(
-                        "您的配置文件中的列配置信息有误. 因为DataX 不支持数据库读取这种字段类型. 字段名:[%s], 字段名称:[%s], 字段Java类型:[%s]. 请尝试使用数据库函数将其转换datax支持的类型 或者不同步该字段 .",
-                        metaData.getColumnName(i),
-                        metaData.getColumnType(i),
-                        metaData.getColumnClassName(i)));
+                    .asDataXException(
+                            DBUtilErrorCode.UNSUPPORTED_TYPE,
+                            String.format(
+                                    "您的配置文件中的列配置信息有误. 因为DataX 不支持数据库读取这种字段类型. 字段名:[%s], 字段名称:[%s], 字段Java类型:[%s]. 请尝试使用数据库函数将其转换datax支持的类型 或者不同步该字段 .",
+                                    metaData.getColumnName(i),
+                                    metaData.getColumnType(i),
+                                    metaData.getColumnClassName(i)));
         }
       }
     } catch (Exception e) {
       if (IS_DEBUG) {
-        LOG.debug("read data " + record.toString()
-            + " occur exception:", e);
+        LOG.debug(
+                "read data " + record.toString()
+                        + " occur exception:", e);
       }
 
       //TODO 这里识别为脏数据靠谱吗？

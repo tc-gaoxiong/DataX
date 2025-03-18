@@ -17,18 +17,24 @@ import java.util.List;
 
 public class TextCsvWriterManager {
 
-  public static UnstructuredWriter produceTextWriter(Writer writer, String fieldDelimiter, Configuration config) {
+  public static UnstructuredWriter produceTextWriter(
+          Writer writer,
+          String fieldDelimiter,
+          Configuration config) {
     return new TextWriterImpl(writer, fieldDelimiter, config);
   }
 
-  public static UnstructuredWriter produceCsvWriter(Writer writer, char fieldDelimiter, Configuration config) {
+  public static UnstructuredWriter produceCsvWriter(
+          Writer writer,
+          char fieldDelimiter,
+          Configuration config) {
     return new CsvWriterImpl(writer, fieldDelimiter, config);
   }
 }
 
 class CsvWriterImpl implements UnstructuredWriter {
   private static final Logger LOG = LoggerFactory
-      .getLogger(CsvWriterImpl.class);
+          .getLogger(CsvWriterImpl.class);
   // csv 严格符合csv语法, 有标准的转义等处理
   private char fieldDelimiter;
   private String lineDelimiter;
@@ -46,9 +52,10 @@ class CsvWriterImpl implements UnstructuredWriter {
     String csvWriterConfig = config.getString(Key.CSV_WRITER_CONFIG);
     if (StringUtils.isNotBlank(csvWriterConfig)) {
       try {
-        HashMap<String, Object> csvWriterConfigMap = JSON.parseObject(csvWriterConfig,
-            new TypeReference<HashMap<String, Object>>() {
-            });
+        HashMap<String, Object> csvWriterConfigMap = JSON.parseObject(
+                csvWriterConfig,
+                new TypeReference<HashMap<String, Object>>() {
+                });
         if (!csvWriterConfigMap.isEmpty()) {
           // this.csvWriter.setComment(var1);
           // this.csvWriter.setDelimiter(var1);
@@ -58,11 +65,16 @@ class CsvWriterImpl implements UnstructuredWriter {
           // this.csvWriter.setTextQualifier(var1);
           // this.csvWriter.setUseTextQualifier(var1);
           BeanUtils.populate(this.csvWriter, csvWriterConfigMap);
-          LOG.info(String.format("csvwriterConfig is set successfully. After setting, csvwriter:%s", JSON.toJSONString(this.csvWriter)));
+          LOG.info(String.format(
+                  "csvwriterConfig is set successfully. After setting, csvwriter:%s",
+                  JSON.toJSONString(this.csvWriter)));
         }
       } catch (Exception e) {
-        LOG.warn(String.format("invalid csvWriterConfig config: %s, DataX will ignore it.", csvWriterConfig),
-            e);
+        LOG.warn(
+                String.format(
+                        "invalid csvWriterConfig config: %s, DataX will ignore it.",
+                        csvWriterConfig),
+                e);
       }
     }
   }
@@ -89,7 +101,7 @@ class CsvWriterImpl implements UnstructuredWriter {
 
 class TextWriterImpl implements UnstructuredWriter {
   private static final Logger LOG = LoggerFactory
-      .getLogger(TextWriterImpl.class);
+          .getLogger(TextWriterImpl.class);
   // text StringUtils的join方式, 简单的字符串拼接
   private String fieldDelimiter;
   private Writer textWriter;
@@ -106,9 +118,10 @@ class TextWriterImpl implements UnstructuredWriter {
     if (splitedRows.isEmpty()) {
       LOG.info("Found one record line which is empty.");
     }
-    this.textWriter.write(String.format("%s%s",
-        StringUtils.join(splitedRows, this.fieldDelimiter),
-        this.lineDelimiter));
+    this.textWriter.write(String.format(
+            "%s%s",
+            StringUtils.join(splitedRows, this.fieldDelimiter),
+            this.lineDelimiter));
   }
 
   @Override

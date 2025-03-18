@@ -30,8 +30,12 @@ public class ColumnTypeUtil {
     }
 
     if (typeName.contains(LEFT_BRACKETS) && typeName.contains(RIGHT_BRACKETS)) {
-      int precision = Integer.parseInt(typeName.substring(typeName.indexOf(LEFT_BRACKETS) + 1, typeName.indexOf(DELIM)).trim());
-      int scale = Integer.parseInt(typeName.substring(typeName.indexOf(DELIM) + 1, typeName.indexOf(RIGHT_BRACKETS)).trim());
+      int precision = Integer.parseInt(typeName
+              .substring(typeName.indexOf(LEFT_BRACKETS) + 1, typeName.indexOf(DELIM))
+              .trim());
+      int scale = Integer.parseInt(typeName
+              .substring(typeName.indexOf(DELIM) + 1, typeName.indexOf(RIGHT_BRACKETS))
+              .trim());
       return new DecimalInfo(precision, scale);
     } else {
       return defaultInfo;
@@ -39,7 +43,7 @@ public class ColumnTypeUtil {
   }
 
   public static List<ColumnEntry> getListColumnEntry(
-      Configuration configuration, final String path) {
+          Configuration configuration, final String path) {
     List<JSONObject> lists = configuration.getList(path, JSONObject.class);
     if (lists == null) {
       return null;

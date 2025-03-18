@@ -13,17 +13,18 @@ public abstract class TaskPluginCollector implements PluginCollector {
   /**
    * 收集脏数据
    *
-   * @param dirtyRecord  脏数据信息
-   * @param t            异常信息
+   * @param dirtyRecord 脏数据信息
+   * @param t 异常信息
    * @param errorMessage 错误的提示信息
    */
-  public abstract void collectDirtyRecord(final Record dirtyRecord,
-                                          final Throwable t, final String errorMessage);
+  public abstract void collectDirtyRecord(
+          final Record dirtyRecord,
+          final Throwable t, final String errorMessage);
 
   /**
    * 收集脏数据
    *
-   * @param dirtyRecord  脏数据信息
+   * @param dirtyRecord 脏数据信息
    * @param errorMessage 错误的提示信息
    */
   public void collectDirtyRecord(final Record dirtyRecord, final String errorMessage) {
@@ -34,7 +35,7 @@ public abstract class TaskPluginCollector implements PluginCollector {
    * 收集脏数据
    *
    * @param dirtyRecord 脏数据信息
-   * @param t           异常信息
+   * @param t 异常信息
    */
   public void collectDirtyRecord(final Record dirtyRecord, final Throwable t) {
     this.collectDirtyRecord(dirtyRecord, t, "");

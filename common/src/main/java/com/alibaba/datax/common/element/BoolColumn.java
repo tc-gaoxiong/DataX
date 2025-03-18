@@ -88,19 +88,19 @@ public class BoolColumn extends Column {
   @Override
   public Date asDate() {
     throw DataXException.asDataXException(
-        CommonErrorCode.CONVERT_NOT_SUPPORT, "Bool类型不能转为Date .");
+            CommonErrorCode.CONVERT_NOT_SUPPORT, "Bool类型不能转为Date .");
   }
 
   @Override
   public Date asDate(String dateFormat) {
     throw DataXException.asDataXException(
-        CommonErrorCode.CONVERT_NOT_SUPPORT, "Bool类型不能转为Date .");
+            CommonErrorCode.CONVERT_NOT_SUPPORT, "Bool类型不能转为Date .");
   }
 
   @Override
   public byte[] asBytes() {
     throw DataXException.asDataXException(
-        CommonErrorCode.CONVERT_NOT_SUPPORT, "Boolean类型不能转为Bytes .");
+            CommonErrorCode.CONVERT_NOT_SUPPORT, "Boolean类型不能转为Bytes .");
   }
 
   private void validate(final String data) {
@@ -113,6 +113,6 @@ public class BoolColumn extends Column {
     }
 
     throw DataXException.asDataXException(
-        CommonErrorCode.CONVERT_NOT_SUPPORT, String.format("String[%s]不能转为Bool .", data));
+            CommonErrorCode.CONVERT_NOT_SUPPORT, String.format("String[%s]不能转为Bool .", data));
   }
 }

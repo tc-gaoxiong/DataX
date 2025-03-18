@@ -8,20 +8,20 @@ import java.math.BigInteger;
 
 public final class OverFlowUtil {
   public static final BigInteger MAX_LONG = BigInteger
-      .valueOf(Long.MAX_VALUE);
+          .valueOf(Long.MAX_VALUE);
 
   public static final BigInteger MIN_LONG = BigInteger
-      .valueOf(Long.MIN_VALUE);
+          .valueOf(Long.MIN_VALUE);
 
   public static final BigDecimal MIN_DOUBLE_POSITIVE = new BigDecimal(
-      String.valueOf(Double.MIN_VALUE));
+          String.valueOf(Double.MIN_VALUE));
 
   public static final BigDecimal MAX_DOUBLE_POSITIVE = new BigDecimal(
-      String.valueOf(Double.MAX_VALUE));
+          String.valueOf(Double.MAX_VALUE));
 
   public static boolean isLongOverflow(final BigInteger integer) {
     return (integer.compareTo(OverFlowUtil.MAX_LONG) > 0 || integer
-        .compareTo(OverFlowUtil.MIN_LONG) < 0);
+            .compareTo(OverFlowUtil.MIN_LONG) < 0);
 
   }
 
@@ -30,8 +30,8 @@ public final class OverFlowUtil {
 
     if (isOverFlow) {
       throw DataXException.asDataXException(
-          CommonErrorCode.CONVERT_OVER_FLOW,
-          String.format("[%s] 转为Long类型出现溢出 .", integer.toString()));
+              CommonErrorCode.CONVERT_OVER_FLOW,
+              String.format("[%s] 转为Long类型出现溢出 .", integer.toString()));
     }
   }
 
@@ -47,16 +47,17 @@ public final class OverFlowUtil {
     }
 
     return (newDecimal.compareTo(MIN_DOUBLE_POSITIVE) < 0 || newDecimal
-        .compareTo(MAX_DOUBLE_POSITIVE) > 0);
+            .compareTo(MAX_DOUBLE_POSITIVE) > 0);
   }
 
   public static void validateDoubleNotOverFlow(final BigDecimal decimal) {
     boolean isOverFlow = OverFlowUtil.isDoubleOverFlow(decimal);
     if (isOverFlow) {
       throw DataXException.asDataXException(
-          CommonErrorCode.CONVERT_OVER_FLOW,
-          String.format("[%s]转为Double类型出现溢出 .",
-              decimal.toPlainString()));
+              CommonErrorCode.CONVERT_OVER_FLOW,
+              String.format(
+                      "[%s]转为Double类型出现溢出 .",
+                      decimal.toPlainString()));
     }
   }
 }

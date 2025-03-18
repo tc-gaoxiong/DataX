@@ -22,7 +22,11 @@ import java.util.Map;
 public class BinaryFileReaderUtil {
   private static final Logger LOG = LoggerFactory.getLogger(BinaryFileReaderUtil.class);
 
-  public static void readFromStream(InputStream inputStream, String filePath, RecordSender recordSender, int blockSizeInByte) {
+  public static void readFromStream(
+          InputStream inputStream,
+          String filePath,
+          RecordSender recordSender,
+          int blockSizeInByte) {
     try {
       Map<String, String> meta = UnstructuredStorageReaderUtil.buildRecordMeta(filePath);
       byte[] tmp = new byte[blockSizeInByte];
@@ -44,11 +48,16 @@ public class BinaryFileReaderUtil {
       recordSenderBytesColumn(recordSender, byteUtils.getBuffer(), meta);
       LOG.info("End read!!!");
     } catch (IOException e) {
-      throw DataXException.asDataXException(UnstructuredStorageReaderErrorCode.READ_FILE_IO_ERROR, e);
+      throw DataXException.asDataXException(
+              UnstructuredStorageReaderErrorCode.READ_FILE_IO_ERROR,
+              e);
     }
   }
 
-  private static void recordSenderBytesColumn(RecordSender recordSender, byte[] tmp, Map<String, String> meta) {
+  private static void recordSenderBytesColumn(
+          RecordSender recordSender,
+          byte[] tmp,
+          Map<String, String> meta) {
     Record record = recordSender.createRecord();
     Column column = new BytesColumn(tmp);
     record.addColumn(column);

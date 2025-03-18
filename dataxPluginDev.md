@@ -11,7 +11,8 @@
 
 ### `DataX`为什么要使用插件机制？
 
-从设计之初，`DataX`就把异构数据源同步作为自身的使命，为了应对不同数据源的差异、同时提供一致的同步原语和扩展能力，`DataX`
+从设计之初，`DataX`就把异构数据源同步作为自身的使命，为了应对不同数据源的差异、同时提供一致的同步原语和扩展能力，
+`DataX`
 自然而然地采用了`框架` + `插件` 的模式：
 
 - 插件只需关心数据的读取或者写入本身。
@@ -33,9 +34,11 @@
 插件开发者不用关心太多，基本只需要关注特定系统读和写，以及自己的代码在逻辑上是怎样被执行的，哪一个方法是在什么时候被调用的。在此之前，需要明确以下概念：
 
 - `Job`: `Job`是DataX用以描述从一个源头到一个目的端的同步作业，是DataX数据同步的最小业务单元。比如：从一张mysql的表同步到odps的一个表的特定分区。
-- `Task`: `Task`是为最大化而把`Job`拆分得到的最小执行单元。比如：读一张有1024个分表的mysql分库分表的`Job`，拆分成1024个读
+- `Task`: `Task`是为最大化而把`Job`拆分得到的最小执行单元。比如：读一张有1024个分表的mysql分库分表的
+  `Job`，拆分成1024个读
   `Task`，用若干个并发执行。
-- `TaskGroup`:  描述的是一组`Task`集合。在同一个`TaskGroupContainer`执行下的`Task`集合称之为`TaskGroup`
+- `TaskGroup`:  描述的是一组`Task`集合。在同一个`TaskGroupContainer`执行下的`Task`集合称之为
+  `TaskGroup`
 - `JobContainer`:  `Job`执行器，负责`Job`全局拆分、调度、前置语句和后置语句等工作的工作单元。类似Yarn中的JobTracker
 - `TaskGroupContainer`: `TaskGroup`执行器，负责执行一组`Task`的工作单元，类似Yarn中的TaskTracker。
 
@@ -50,7 +53,8 @@
 - `Distrubuted`: 分布式多进程运行，依赖`DataX Service`服务。
 
 当然，上述三种模式对插件的编写而言没有什么区别，你只需要避开一些小错误，插件就能够在单机/分布式之间无缝切换了。
-当`JobContainer`和`TaskGroupContainer`运行在同一个进程内时，就是单机模式（`Standalone`和`Local`）；当它们分布在不同的进程中执行时，就是分布式（
+当`JobContainer`和`TaskGroupContainer`运行在同一个进程内时，就是单机模式（`Standalone`和`Local`
+）；当它们分布在不同的进程中执行时，就是分布式（
 `Distributed`）模式。
 
 是不是很简单？
@@ -59,7 +63,8 @@
 
 那么，`Job`和`Task`的逻辑应是怎么对应到具体的代码中的？
 
-首先，插件的入口类必须扩展`Reader`或`Writer`抽象类，并且实现分别实现`Job`和`Task`两个内部抽象类，`Job`和`Task`的实现必须是
+首先，插件的入口类必须扩展`Reader`或`Writer`抽象类，并且实现分别实现`Job`和`Task`两个内部抽象类，`Job`和
+`Task`的实现必须是
 **内部类** 的形式，原因见 **加载原理** 一节。以Reader为例：
 
 ```java
@@ -116,20 +121,24 @@ public class SomeReader extends Reader {
 
 `Job`接口功能如下：
 
-- `init`: Job对象初始化工作，此时可以通过`super.getPluginJobConf()`获取与本插件相关的配置。读插件获得配置中`reader`
+- `init`: Job对象初始化工作，此时可以通过`super.getPluginJobConf()`获取与本插件相关的配置。读插件获得配置中
+  `reader`
   部分，写插件获得`writer`部分。
 - `prepare`: 全局准备工作，比如odpswriter清空目标表。
-- `split`: 拆分`Task`。参数`adviceNumber`框架建议的拆分数，一般是运行时所配置的并发度。值返回的是`Task`的配置列表。
+- `split`: 拆分`Task`。参数`adviceNumber`框架建议的拆分数，一般是运行时所配置的并发度。值返回的是`Task`
+  的配置列表。
 - `post`: 全局的后置工作，比如mysqlwriter同步完影子表后的rename操作。
 - `destroy`: Job对象自身的销毁工作。
 
 `Task`接口功能如下：
 
-- `init`：Task对象的初始化。此时可以通过`super.getPluginJobConf()`获取与本`Task`相关的配置。这里的配置是`Job`的`split`
+- `init`：Task对象的初始化。此时可以通过`super.getPluginJobConf()`获取与本`Task`相关的配置。这里的配置是
+  `Job`的`split`
   方法返回的配置列表中的其中一个。
 - `prepare`：局部的准备工作。
 - `startRead`: 从数据源读数据，写入到`RecordSender`中。`RecordSender`会把数据写入连接Reader和Writer的缓存队列。
-- `startWrite`：从`RecordReceiver`中读取数据，写入目标数据源。`RecordReceiver`中的数据来自Reader和Writer之间的缓存队列。
+- `startWrite`：从`RecordReceiver`中读取数据，写入目标数据源。`RecordReceiver`
+  中的数据来自Reader和Writer之间的缓存队列。
 - `post`: 局部的后置工作。
 - `destroy`: Task象自身的销毁工作。
 
@@ -321,7 +330,8 @@ ${DATAX_HOME}
 
 为了简化对json的操作，`DataX`提供了简单的DSL配合`Configuration`类使用。
 
-`Configuration`提供了常见的`get`, `带类型get`，`带默认值get`，`set`等读写配置项的操作，以及`clone`, `toJSON`
+`Configuration`提供了常见的`get`, `带类型get`，`带默认值get`，`set`等读写配置项的操作，以及`clone`,
+`toJSON`
 等方法。配置项读写操作都需要传入一个`path`做为参数，这个`path`就是`DataX`定义的DSL。语法有两条：
 
 1. 子map用`.key`表示，`path`的第一个点省略。
@@ -363,8 +373,10 @@ ${DATAX_HOME}
 
 ### 插件数据传输
 
-跟一般的`生产者-消费者`模式一样，`Reader`插件和`Writer`插件之间也是通过`channel`来实现数据的传输的。`channel`
-可以是内存的，也可能是持久化的，插件不必关心。插件通过`RecordSender`往`channel`写入数据，通过`RecordReceiver`从`channel`
+跟一般的`生产者-消费者`模式一样，`Reader`插件和`Writer`插件之间也是通过`channel`来实现数据的传输的。
+`channel`
+可以是内存的，也可能是持久化的，插件不必关心。插件通过`RecordSender`往`channel`写入数据，通过
+`RecordReceiver`从`channel`
 读取数据。
 
 `channel`中的一条数据为一个`Record`的对象，`Record`中可以放多个`Column`对象，这可以简单理解为数据库中的记录和列。
@@ -388,10 +400,12 @@ public interface Record {
 }
 ```
 
-因为`Record`是一个接口，`Reader`插件首先调用`RecordSender.createRecord()`创建一个`Record`实例，然后把`Column`一个个添加到
+因为`Record`是一个接口，`Reader`插件首先调用`RecordSender.createRecord()`创建一个`Record`实例，然后把
+`Column`一个个添加到
 `Record`中。
 
-`Writer`插件调用`RecordReceiver.getFromReader()`方法获取`Record`，然后把`Column`遍历出来，写入目标存储中。当`Reader`
+`Writer`插件调用`RecordReceiver.getFromReader()`方法获取`Record`，然后把`Column`遍历出来，写入目标存储中。当
+`Reader`
 尚未退出，传输还在进行时，如果暂时没有数据`RecordReceiver.getFromReader()`方法会阻塞直到有数据。如果传输已经结束，会返回
 `null`，`Writer`插件可以据此判断是否结束`startWrite`方法。
 
@@ -408,7 +422,8 @@ public interface Record {
 - `Bool`：布尔值。
 - `Bytes`：二进制，可以存放诸如MP3等非结构化数据。
 
-对应地，有`DateColumn`、`LongColumn`、`DoubleColumn`、`BytesColumn`、`StringColumn`和`BoolColumn`六种`Column`的实现。
+对应地，有`DateColumn`、`LongColumn`、`DoubleColumn`、`BytesColumn`、`StringColumn`和`BoolColumn`六种
+`Column`的实现。
 
 `Column`除了提供数据相关的方法外，还提供一系列以`as`开头的数据类型转换转换方法。
 
@@ -448,8 +463,10 @@ DataX的内部类型在实现上会选用不同的java类型：
 
 #### 如何处理脏数据
 
-在`Reader.Task`和`Writer.Task`中，通过`AbstractTaskPlugin.getTaskPluginCollector()`可以拿到一个`TaskPluginCollector`
-，它提供了一系列`collectDirtyRecord`的方法。当脏数据出现时，只需要调用合适的`collectDirtyRecord`方法，把被认为是脏数据的
+在`Reader.Task`和`Writer.Task`中，通过`AbstractTaskPlugin.getTaskPluginCollector()`可以拿到一个
+`TaskPluginCollector`
+，它提供了一系列`collectDirtyRecord`的方法。当脏数据出现时，只需要调用合适的`collectDirtyRecord`
+方法，把被认为是脏数据的
 `Record`传入即可。
 
 用户可以在任务的配置中指定脏数据限制条数或者百分比限制，当脏数据超出限制时，框架会结束同步任务，退出。插件需要保证脏数据都被收集到，其他工作交给框架就好。
@@ -474,7 +491,8 @@ DataX的内部类型在实现上会选用不同的java类型：
 每个插件都必须在`DataX`官方wiki中有一篇文档，文档需要包括但不限于以下内容：
 
 1. **快速介绍**：介绍插件的使用场景，特点等。
-2. **实现原理**：介绍插件实现的底层原理，比如`mysqlwriter`通过`insert into`和`replace into`来实现插入，`tair`
+2. **实现原理**：介绍插件实现的底层原理，比如`mysqlwriter`通过`insert into`和`replace into`来实现插入，
+   `tair`
    插件通过tair客户端实现写入。
 3. **配置说明**
     - 给出典型场景下的同步任务的json配置文件。

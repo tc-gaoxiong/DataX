@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractTaskPluginCollector extends TaskPluginCollector {
   private static final Logger LOG = LoggerFactory
-      .getLogger(AbstractTaskPluginCollector.class);
+          .getLogger(AbstractTaskPluginCollector.class);
 
   private Communication communication;
 
@@ -24,8 +24,9 @@ public abstract class AbstractTaskPluginCollector extends TaskPluginCollector {
 
   private PluginType pluginType;
 
-  public AbstractTaskPluginCollector(Configuration conf, Communication communication,
-                                     PluginType type) {
+  public AbstractTaskPluginCollector(
+          Configuration conf, Communication communication,
+          PluginType type) {
     this.configuration = conf;
     this.communication = communication;
     this.pluginType = type;
@@ -49,8 +50,9 @@ public abstract class AbstractTaskPluginCollector extends TaskPluginCollector {
   }
 
   @Override
-  public void collectDirtyRecord(Record dirtyRecord, Throwable t,
-                                 String errorMessage) {
+  public void collectDirtyRecord(
+          Record dirtyRecord, Throwable t,
+          String errorMessage) {
 
     if (null == dirtyRecord) {
       LOG.warn("脏数据record=null.");
@@ -59,18 +61,18 @@ public abstract class AbstractTaskPluginCollector extends TaskPluginCollector {
 
     if (this.pluginType.equals(PluginType.READER)) {
       this.communication.increaseCounter(
-          CommunicationTool.READ_FAILED_RECORDS, 1);
+              CommunicationTool.READ_FAILED_RECORDS, 1);
       this.communication.increaseCounter(
-          CommunicationTool.READ_FAILED_BYTES, dirtyRecord.getByteSize());
+              CommunicationTool.READ_FAILED_BYTES, dirtyRecord.getByteSize());
     } else if (this.pluginType.equals(PluginType.WRITER)) {
       this.communication.increaseCounter(
-          CommunicationTool.WRITE_FAILED_RECORDS, 1);
+              CommunicationTool.WRITE_FAILED_RECORDS, 1);
       this.communication.increaseCounter(
-          CommunicationTool.WRITE_FAILED_BYTES, dirtyRecord.getByteSize());
+              CommunicationTool.WRITE_FAILED_BYTES, dirtyRecord.getByteSize());
     } else {
       throw DataXException.asDataXException(
-          FrameworkErrorCode.RUNTIME_ERROR,
-          String.format("不知道的插件类型[%s].", this.pluginType));
+              FrameworkErrorCode.RUNTIME_ERROR,
+              String.format("不知道的插件类型[%s].", this.pluginType));
     }
   }
 }
