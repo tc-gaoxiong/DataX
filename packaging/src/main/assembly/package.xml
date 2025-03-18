@@ -30,9 +30,37 @@
       </includes>
       <outputDirectory>/datax</outputDirectory>
     </fileSet>
+    <fileSet>
+      <directory>../hdfsreader/target/datax-hdfsreader/</directory>
+      <includes>
+        <include>**/*.*</include>
+      </includes>
+      <outputDirectory>/datax</outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>../clickhousereader/target/datax-clickhousereader/</directory>
+      <includes>
+        <include>**/*.*</include>
+      </includes>
+      <outputDirectory>/datax</outputDirectory>
+    </fileSet>
     <!-- writer -->
     <fileSet>
       <directory>../streamwriter/target/datax-streamwriter/</directory>
+      <includes>
+        <include>**/*.*</include>
+      </includes>
+      <outputDirectory>/datax</outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>../hdfswriter/target/datax-hdfswriter/</directory>
+      <includes>
+        <include>**/*.*</include>
+      </includes>
+      <outputDirectory>/datax</outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>../clickhousewriter/target/datax-clickhousewriter/</directory>
       <includes>
         <include>**/*.*</include>
       </includes>
