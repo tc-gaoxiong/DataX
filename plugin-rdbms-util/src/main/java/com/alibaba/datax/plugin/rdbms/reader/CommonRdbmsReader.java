@@ -39,10 +39,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class CommonRdbmsReader {
-
   public static class Job {
-    private static final Logger LOG = LoggerFactory
-            .getLogger(Job.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Job.class);
 
     public Job(DataBaseType dataBaseType) {
       OriginalConfPretreatmentUtil.DATABASE_TYPE = dataBaseType;
@@ -50,16 +48,12 @@ public class CommonRdbmsReader {
     }
 
     public void init(Configuration originalConfig) {
-
       OriginalConfPretreatmentUtil.doPretreatment(originalConfig);
-
-      LOG.debug(
-              "After job init(), job config now is:[\n{}\n]",
-              originalConfig.toJSON());
+      LOG.debug("After job init(), job config now is:[\n{}\n]", originalConfig.toJSON());
     }
 
     public void preCheck(Configuration originalConfig, DataBaseType dataBaseType) {
-      /*检查每个表是否有读权限，以及querySql跟splik Key是否正确*/
+      // 检查每个表是否有读权限，以及 querySql 跟 split Key 是否正确
       Configuration queryConf = ReaderSplitUtil.doPreCheckSplit(originalConfig);
       String splitPK = queryConf.getString(Key.SPLIT_PK);
       List<Object> connList = queryConf.getList(Constant.CONN_MARK, Object.class);
@@ -72,8 +66,8 @@ public class CommonRdbmsReader {
         exec = Executors.newFixedThreadPool(10);
       }
       Collection<PreCheckTask> taskList = new ArrayList<PreCheckTask>();
-      for (int i = 0, len = connList.size(); i < len; i++) {
-        Configuration connConf = Configuration.from(connList.get(i).toString());
+      for (Object o : connList) {
+        Configuration connConf = Configuration.from(o.toString());
         PreCheckTask t = new PreCheckTask(username, password, connConf, dataBaseType, splitPK);
         taskList.add(t);
       }
@@ -88,19 +82,17 @@ public class CommonRdbmsReader {
         try {
           result.get();
         } catch (ExecutionException e) {
-          DataXException de = (DataXException) e.getCause();
-          throw de;
+          throw (DataXException) e.getCause();
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
         }
       }
+
       exec.shutdownNow();
     }
 
 
-    public List<Configuration> split(
-            Configuration originalConfig,
-            int adviceNumber) {
+    public List<Configuration> split(Configuration originalConfig, int adviceNumber) {
       return ReaderSplitUtil.doSplit(originalConfig, adviceNumber);
     }
 
@@ -115,8 +107,7 @@ public class CommonRdbmsReader {
   }
 
   public static class Task {
-    private static final Logger LOG = LoggerFactory
-            .getLogger(Task.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Task.class);
     private static final boolean IS_DEBUG = LOG.isDebugEnabled();
     protected final byte[] EMPTY_CHAR_ARRAY = new byte[0];
 
@@ -136,9 +127,9 @@ public class CommonRdbmsReader {
       this(dataBaseType, -1, -1);
     }
 
-    public Task(DataBaseType dataBaseType, int taskGropuId, int taskId) {
+    public Task(DataBaseType dataBaseType, int taskGroupId, int taskId) {
       this.dataBaseType = dataBaseType;
-      this.taskGroupId = taskGropuId;
+      this.taskGroupId = taskGroupId;
       this.taskId = taskId;
     }
 
@@ -155,21 +146,18 @@ public class CommonRdbmsReader {
               && this.dataBaseType == DataBaseType.MySql) {
         String[] ss = this.jdbcUrl.split(com.alibaba.datax.plugin.rdbms.writer.Constant.OB10_SPLIT_STRING_PATTERN);
         if (ss.length != 3) {
-          throw DataXException
-                  .asDataXException(
-                          DBUtilErrorCode.JDBC_OB10_ADDRESS_ERROR,
-                          "JDBC OB10格式错误，请联系askdatax");
+          throw DataXException.asDataXException(
+                  DBUtilErrorCode.JDBC_OB10_ADDRESS_ERROR, "JDBC OB10格式错误，请联系askdatax");
         }
         LOG.info("this is ob1_0 jdbc url.");
         this.username = ss[1].trim() + ":" + this.username;
         this.jdbcUrl = ss[2];
-        LOG.info("this is ob1_0 jdbc url. user=" + this.username + " :url=" + this.jdbcUrl);
+        LOG.info("this is ob1_0 jdbc url. user={} :url={}", this.username, this.jdbcUrl);
       }
 
       this.mandatoryEncoding = readerSliceConfig.getString(Key.MANDATORY_ENCODING, "");
 
       basicMsg = String.format("jdbcUrl:[%s]", this.jdbcUrl);
-
     }
 
     public void startRead(
@@ -181,20 +169,13 @@ public class CommonRdbmsReader {
 
       PerfTrace.getInstance().addTaskDetails(taskId, table + "," + basicMsg);
 
-      LOG.info(
-              "Begin to read record by Sql: [{}\n] {}.",
-              querySql, basicMsg);
+      LOG.info("Begin to read record by Sql: [{}\n] {}.", querySql, basicMsg);
       PerfRecord queryPerfRecord = new PerfRecord(taskGroupId, taskId, PerfRecord.PHASE.SQL_QUERY);
       queryPerfRecord.start();
 
-      Connection conn = DBUtil.getConnection(
-              this.dataBaseType, jdbcUrl,
-              username, password);
+      Connection conn = DBUtil.getConnection(this.dataBaseType, jdbcUrl, username, password);
 
-      // session config .etc related
-      DBUtil.dealWithSessionConfig(
-              conn, readerSliceConfig,
-              this.dataBaseType, basicMsg);
+      DBUtil.dealWithSessionConfig(conn, readerSliceConfig, this.dataBaseType, basicMsg);
 
       int columnNumber = 0;
       ResultSet rs = null;
@@ -216,17 +197,14 @@ public class CommonRdbmsReader {
         long lastTime = System.nanoTime();
         while (rs.next()) {
           rsNextUsedTime += (System.nanoTime() - lastTime);
-          this.transportOneRecord(
-                  recordSender, rs,
+          this.transportOneRecord(recordSender, rs,
                   metaData, columnNumber, mandatoryEncoding, taskPluginCollector);
           lastTime = System.nanoTime();
         }
 
         allResultPerfRecord.end(rsNextUsedTime);
-        //目前大盘是依赖这个打印，而之前这个Finish read record是包含了sql查询和result next的全部时间
-        LOG.info(
-                "Finished read record by Sql: [{}\n] {}.",
-                querySql, basicMsg);
+        // 目前大盘是依赖这个打印，而之前这个 Finish read record 是包含了 sql 查询和 result next 的全部时间
+        LOG.info("Finished read record by Sql: [{}\n] {}.", querySql, basicMsg);
 
       } catch (Exception e) {
         throw RdbmsException.asQueryException(this.dataBaseType, e, querySql, table, username);
@@ -281,8 +259,7 @@ public class CommonRdbmsReader {
               if (StringUtils.isBlank(mandatoryEncoding)) {
                 rawData = rs.getString(i);
               } else {
-                rawData = new String(
-                        (rs.getBytes(i) == null ? EMPTY_CHAR_ARRAY :
+                rawData = new String((rs.getBytes(i) == null ? EMPTY_CHAR_ARRAY :
                                 rs.getBytes(i)), mandatoryEncoding);
               }
               record.addColumn(new StringColumn(rawData));
@@ -363,11 +340,9 @@ public class CommonRdbmsReader {
         }
       } catch (Exception e) {
         if (IS_DEBUG) {
-          LOG.debug(
-                  "read data " + record.toString()
-                          + " occur exception:", e);
+          LOG.debug("read data {} occur exception:", record.toString(), e);
         }
-        //TODO 这里识别为脏数据靠谱吗？
+        // TODO 这里识别为脏数据靠谱吗？
         taskPluginCollector.collectDirtyRecord(record, e);
         if (e instanceof DataXException) {
           throw (DataXException) e;
@@ -376,5 +351,4 @@ public class CommonRdbmsReader {
       return record;
     }
   }
-
 }

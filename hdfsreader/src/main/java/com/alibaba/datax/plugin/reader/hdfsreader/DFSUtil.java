@@ -130,7 +130,7 @@ public class DFSUtil {
     this.kerberosAuthentication(this.kerberosPrincipal, this.kerberosKeytabFilePath);
     this.skipEmptyOrcFile = taskConfig.getBool(Key.SKIP_EMPTY_ORCFILE, false);
 
-    LOG.info(String.format("hadoopConfig details:%s", JSON.toJSONString(this.hadoopConf)));
+    LOG.debug(String.format("hadoopConfig details:%s", JSON.toJSONString(this.hadoopConf)));
   }
 
   private void kerberosAuthentication(String kerberosPrincipal, String kerberosKeytabFilePath) {

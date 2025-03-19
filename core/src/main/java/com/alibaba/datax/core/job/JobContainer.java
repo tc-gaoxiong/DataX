@@ -25,6 +25,7 @@ import com.alibaba.datax.core.util.ErrorRecordChecker;
 import com.alibaba.datax.core.util.FrameworkErrorCode;
 import com.alibaba.datax.core.util.container.ClassLoaderSwapper;
 import com.alibaba.datax.core.util.container.CoreConstant;
+import com.alibaba.datax.core.util.container.JarLoader;
 import com.alibaba.datax.core.util.container.LoadUtil;
 import com.alibaba.datax.dataxservice.face.domain.enums.ExecuteMode;
 import com.alibaba.fastjson2.JSON;
@@ -670,28 +671,36 @@ public class JobContainer extends AbstractContainer {
 
   /**
    * writer job 的初始化，返回 Writer.Job
+   *
+   * @param jobPluginCollector 作业插件收集器，用于收集作业相关的信息
+   *
+   * @return 初始化后的 Writer.Job 实例
    */
   private Writer.Job initJobWriter(JobPluginCollector jobPluginCollector) {
+    // 从配置中获取 writer 插件的名称
     this.writerPluginName = this.configuration.getString(CoreConstant.DATAX_JOB_CONTENT_WRITER_NAME);
+    // 设置当前线程的类加载器为 writer 插件的类加载器
     classLoaderSwapper.setCurrentThreadClassLoader(
             LoadUtil.getJarLoader(PluginType.WRITER, this.writerPluginName));
-
+    // 加载 writer 插件的作业实例
     Writer.Job jobWriter = (Writer.Job) LoadUtil.loadJobPlugin(
             PluginType.WRITER, this.writerPluginName);
-
     // 设置 writer 的 jobConfig
     jobWriter.setPluginJobConf(this.configuration.getConfiguration(
             CoreConstant.DATAX_JOB_CONTENT_WRITER_PARAMETER));
-
     // 设置 reader 的 readerConfig
     jobWriter.setPeerPluginJobConf(this.configuration.getConfiguration(
             CoreConstant.DATAX_JOB_CONTENT_READER_PARAMETER));
-
+    // 设置 writer 的对等插件名称（即 reader 插件名称）
     jobWriter.setPeerPluginName(this.readerPluginName);
-    jobWriter.setJobPluginCollector(jobPluginCollector);
-    jobWriter.init();
-    classLoaderSwapper.restoreCurrentThreadClassLoader();
 
+    // 设置作业插件收集器
+    jobWriter.setJobPluginCollector(jobPluginCollector);
+
+    // 初始化 writer 作业
+    jobWriter.init();
+
+    classLoaderSwapper.restoreCurrentThreadClassLoader();
     return jobWriter;
   }
 

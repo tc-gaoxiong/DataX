@@ -22,7 +22,7 @@ import java.util.List;
 public final class WriterUtil {
   private static final Logger LOG = LoggerFactory.getLogger(WriterUtil.class);
 
-  //TODO 切分报错
+  // TODO 切分报错
   public static List<Configuration> doSplit(
           Configuration simplifiedConf,
           int adviceNumber) {
@@ -31,9 +31,9 @@ public final class WriterUtil {
 
     int tableNumber = simplifiedConf.getInt(Constant.TABLE_NUMBER_MARK);
 
-    //处理单表的情况
+    // 处理单表的情况
     if (tableNumber == 1) {
-      //由于在之前的  master prepare 中已经把 table,jdbcUrl 提取出来，所以这里处理十分简单
+      // 由于在之前的  master prepare 中已经把 table,jdbcUrl 提取出来，所以这里处理十分简单
       for (int j = 0; j < adviceNumber; j++) {
         splitResultConfigs.add(simplifiedConf.clone());
       }
@@ -50,14 +50,14 @@ public final class WriterUtil {
     }
 
     String jdbcUrl;
-    List<String> preSqls = simplifiedConf.getList(Key.PRE_SQL, String.class);
-    List<String> postSqls = simplifiedConf.getList(Key.POST_SQL, String.class);
+    List<String> preSQLs = simplifiedConf.getList(Key.PRE_SQL, String.class);
+    List<String> postSQLs = simplifiedConf.getList(Key.POST_SQL, String.class);
 
-    List<Object> conns = simplifiedConf.getList(
+    List<Object> connes = simplifiedConf.getList(
             Constant.CONN_MARK,
             Object.class);
 
-    for (Object conn : conns) {
+    for (Object conn : connes) {
       Configuration sliceConfig = simplifiedConf.clone();
 
       Configuration connConf = Configuration.from(conn.toString());
@@ -71,8 +71,8 @@ public final class WriterUtil {
       for (String table : tables) {
         Configuration tempSlice = sliceConfig.clone();
         tempSlice.set(Key.TABLE, table);
-        tempSlice.set(Key.PRE_SQL, renderPreOrPostSqls(preSqls, table));
-        tempSlice.set(Key.POST_SQL, renderPreOrPostSqls(postSqls, table));
+        tempSlice.set(Key.PRE_SQL, renderPreOrPostSQLs(preSQLs, table));
+        tempSlice.set(Key.POST_SQL, renderPreOrPostSQLs(postSQLs, table));
 
         splitResultConfigs.add(tempSlice);
       }
@@ -82,32 +82,32 @@ public final class WriterUtil {
     return splitResultConfigs;
   }
 
-  public static List<String> renderPreOrPostSqls(List<String> preOrPostSqls, String tableName) {
+  public static List<String> renderPreOrPostSQLs(List<String> preOrPostSqls, String tableName) {
     if (null == preOrPostSqls) {
       return Collections.emptyList();
     }
 
-    List<String> renderedSqls = new ArrayList<String>();
+    List<String> renderedSQLs = new ArrayList<String>();
     for (String sql : preOrPostSqls) {
-      //preSql为空时，不加入执行队列
+      // preSql为空时，不加入执行队列
       if (StringUtils.isNotBlank(sql)) {
-        renderedSqls.add(sql.replace(Constant.TABLE_NAME_PLACEHOLDER, tableName));
+        renderedSQLs.add(sql.replace(Constant.TABLE_NAME_PLACEHOLDER, tableName));
       }
     }
 
-    return renderedSqls;
+    return renderedSQLs;
   }
 
-  public static void executeSqls(
+  public static void executeSQLs(
           Connection conn,
-          List<String> sqls,
+          List<String> sqlS,
           String basicMessage,
           DataBaseType dataBaseType) {
     Statement stmt = null;
     String currentSql = null;
     try {
       stmt = conn.createStatement();
-      for (String sql : sqls) {
+      for (String sql : sqlS) {
         currentSql = sql;
         DBUtil.executeSqlWithoutResultSet(stmt, sql);
       }
@@ -138,7 +138,8 @@ public final class WriterUtil {
     // && writeMode.trim().toLowerCase().startsWith("replace")
     String writeDataSqlTemplate;
     if (forceUseUpdate ||
-            ((dataBaseType == DataBaseType.MySql || dataBaseType == DataBaseType.Tddl) && writeMode
+            ((dataBaseType == DataBaseType.MySql || dataBaseType == DataBaseType.Tddl) &&
+                    writeMode
                     .trim()
                     .toLowerCase()
                     .startsWith("update"))
@@ -167,7 +168,7 @@ public final class WriterUtil {
   }
 
   public static String onDuplicateKeyUpdateString(List<String> columnHolders) {
-    if (columnHolders == null || columnHolders.size() < 1) {
+    if (columnHolders == null || columnHolders.isEmpty()) {
       return "";
     }
     StringBuilder sb = new StringBuilder();
@@ -189,21 +190,18 @@ public final class WriterUtil {
   }
 
   public static void preCheckPrePareSQL(Configuration originalConfig, DataBaseType type) {
-    List<Object> conns = originalConfig.getList(Constant.CONN_MARK, Object.class);
-    Configuration connConf = Configuration.from(conns.get(0).toString());
+    List<Object> connes = originalConfig.getList(Constant.CONN_MARK, Object.class);
+    Configuration connConf = Configuration.from(connes.get(0).toString());
     String table = connConf.getList(Key.TABLE, String.class).get(0);
 
-    List<String> preSqls = originalConfig.getList(
-            Key.PRE_SQL,
-            String.class);
-    List<String> renderedPreSqls = WriterUtil.renderPreOrPostSqls(
-            preSqls, table);
+    List<String> preSQLs = originalConfig.getList(Key.PRE_SQL, String.class);
+    List<String> renderedPreSQLs = WriterUtil.renderPreOrPostSQLs(preSQLs, table);
 
-    if (null != renderedPreSqls && !renderedPreSqls.isEmpty()) {
+    if (!renderedPreSQLs.isEmpty()) {
       LOG.info(
-              "Begin to preCheck preSqls:[{}].",
-              StringUtils.join(renderedPreSqls, ";"));
-      for (String sql : renderedPreSqls) {
+              "Begin to preCheck preSQLs:[{}].",
+              StringUtils.join(renderedPreSQLs, ";"));
+      for (String sql : renderedPreSQLs) {
         try {
           DBUtil.sqlValid(sql, type);
         } catch (ParserException e) {
@@ -214,30 +212,23 @@ public final class WriterUtil {
   }
 
   public static void preCheckPostSQL(Configuration originalConfig, DataBaseType type) {
-    List<Object> conns = originalConfig.getList(Constant.CONN_MARK, Object.class);
-    Configuration connConf = Configuration.from(conns.get(0).toString());
+    List<Object> connes = originalConfig.getList(Constant.CONN_MARK, Object.class);
+    Configuration connConf = Configuration.from(connes.get(0).toString());
     String table = connConf.getList(Key.TABLE, String.class).get(0);
 
-    List<String> postSqls = originalConfig.getList(
-            Key.POST_SQL,
-            String.class);
-    List<String> renderedPostSqls = WriterUtil.renderPreOrPostSqls(
-            postSqls, table);
-    if (null != renderedPostSqls && !renderedPostSqls.isEmpty()) {
-
+    List<String> postSQLs = originalConfig.getList(Key.POST_SQL, String.class);
+    List<String> renderedPostSQLs = WriterUtil.renderPreOrPostSQLs(postSQLs, table);
+    if (!renderedPostSQLs.isEmpty()) {
       LOG.info(
-              "Begin to preCheck postSqls:[{}].",
-              StringUtils.join(renderedPostSqls, ";"));
-      for (String sql : renderedPostSqls) {
+              "Begin to preCheck postSQLs:[{}].",
+              StringUtils.join(renderedPostSQLs, ";"));
+      for (String sql : renderedPostSQLs) {
         try {
           DBUtil.sqlValid(sql, type);
         } catch (ParserException e) {
           throw RdbmsException.asPostSQLParserException(type, e, sql);
         }
-
       }
     }
   }
-
-
 }

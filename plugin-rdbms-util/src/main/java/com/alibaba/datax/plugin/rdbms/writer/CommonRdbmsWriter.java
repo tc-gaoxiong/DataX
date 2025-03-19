@@ -102,18 +102,15 @@ public class CommonRdbmsWriter {
       }
     }
 
-    // 一般来说，是需要推迟到 task 中进行pre 的执行（单表情况例外）
+    // 一般来说，是需要推迟到 task 中进行 pre 的执行（单表情况例外）
     public void prepare(Configuration originalConfig) {
       int tableNumber = originalConfig.getInt(Constant.TABLE_NUMBER_MARK);
       if (tableNumber == 1) {
         String username = originalConfig.getString(Key.USERNAME);
         String password = originalConfig.getString(Key.PASSWORD);
 
-        List<Object> conns = originalConfig.getList(
-                Constant.CONN_MARK,
-                Object.class);
-        Configuration connConf = Configuration.from(conns.get(0)
-                .toString());
+        List<Object> conns = originalConfig.getList(Constant.CONN_MARK, Object.class);
+        Configuration connConf = Configuration.from(conns.get(0).toString());
 
         // 这里的 jdbcUrl 已经 append 了合适后缀参数
         String jdbcUrl = connConf.getString(Key.JDBC_URL);
@@ -125,11 +122,11 @@ public class CommonRdbmsWriter {
         List<String> preSqls = originalConfig.getList(
                 Key.PRE_SQL,
                 String.class);
-        List<String> renderedPreSqls = WriterUtil.renderPreOrPostSqls(
+        List<String> renderedPreSqls = WriterUtil.renderPreOrPostSQLs(
                 preSqls, table);
 
         originalConfig.remove(Constant.CONN_MARK);
-        if (null != renderedPreSqls && !renderedPreSqls.isEmpty()) {
+        if (!renderedPreSqls.isEmpty()) {
           // 说明有 preSql 配置，则此处删除掉
           originalConfig.remove(Key.PRE_SQL);
 
@@ -140,7 +137,7 @@ public class CommonRdbmsWriter {
                   "Begin to execute preSqls:[{}]. context info:{}.",
                   StringUtils.join(renderedPreSqls, ";"), jdbcUrl);
 
-          WriterUtil.executeSqls(conn, renderedPreSqls, jdbcUrl, dataBaseType);
+          WriterUtil.executeSQLs(conn, renderedPreSqls, jdbcUrl, dataBaseType);
           DBUtil.closeDBResources(null, null, conn);
         }
       }
@@ -171,7 +168,7 @@ public class CommonRdbmsWriter {
         List<String> postSqls = originalConfig.getList(
                 Key.POST_SQL,
                 String.class);
-        List<String> renderedPostSqls = WriterUtil.renderPreOrPostSqls(
+        List<String> renderedPostSqls = WriterUtil.renderPreOrPostSQLs(
                 postSqls, table);
 
         if (null != renderedPostSqls && !renderedPostSqls.isEmpty()) {
@@ -185,7 +182,7 @@ public class CommonRdbmsWriter {
           LOG.info(
                   "Begin to execute postSqls:[{}]. context info:{}.",
                   StringUtils.join(renderedPostSqls, ";"), jdbcUrl);
-          WriterUtil.executeSqls(conn, renderedPostSqls, jdbcUrl, dataBaseType);
+          WriterUtil.executeSQLs(conn, renderedPostSqls, jdbcUrl, dataBaseType);
           DBUtil.closeDBResources(null, null, conn);
         }
       }
@@ -284,7 +281,7 @@ public class CommonRdbmsWriter {
         LOG.info(
                 "Begin to execute preSqls:[{}]. context info:{}.",
                 StringUtils.join(this.preSqls, ";"), BASIC_MESSAGE);
-        WriterUtil.executeSqls(connection, this.preSqls, BASIC_MESSAGE, dataBaseType);
+        WriterUtil.executeSQLs(connection, this.preSqls, BASIC_MESSAGE, dataBaseType);
       }
 
       DBUtil.closeDBResources(null, null, connection);
@@ -374,7 +371,7 @@ public class CommonRdbmsWriter {
       LOG.info(
               "Begin to execute postSqls:[{}]. context info:{}.",
               StringUtils.join(this.postSqls, ";"), BASIC_MESSAGE);
-      WriterUtil.executeSqls(connection, this.postSqls, BASIC_MESSAGE, dataBaseType);
+      WriterUtil.executeSQLs(connection, this.postSqls, BASIC_MESSAGE, dataBaseType);
       DBUtil.closeDBResources(null, null, connection);
     }
 

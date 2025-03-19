@@ -71,17 +71,17 @@ public class ClickhouseWriter extends Writer {
         protected PreparedStatement fillPreparedStatementColumnType(
                 PreparedStatement preparedStatement,
                 int columnIndex,
-                int columnSqltype,
+                int columnSqlType,
                 String typeName,
                 Column column) throws SQLException {
           try {
             if (column.getRawData() == null) {
-              preparedStatement.setNull(columnIndex + 1, columnSqltype);
+              preparedStatement.setNull(columnIndex + 1, columnSqlType);
               return preparedStatement;
             }
 
             java.util.Date utilDate;
-            switch (columnSqltype) {
+            switch (columnSqlType) {
               case Types.CHAR:
               case Types.NCHAR:
               case Types.CLOB:
@@ -105,9 +105,9 @@ public class ClickhouseWriter extends Writer {
               case Types.DOUBLE:
                 String strValue = column.asString();
                 if (emptyAsNull && "".equals(strValue)) {
-                  preparedStatement.setNull(columnIndex + 1, columnSqltype);
+                  preparedStatement.setNull(columnIndex + 1, columnSqlType);
                 } else {
-                  switch (columnSqltype) {
+                  switch (columnSqlType) {
                     case Types.TINYINT:
                     case Types.SMALLINT:
                     case Types.INTEGER:
@@ -159,8 +159,7 @@ public class ClickhouseWriter extends Writer {
                 try {
                   utilDate = column.asDate();
                 } catch (DataXException e) {
-                  throw new SQLException(String.format(
-                          "Date 类型转换错误：[%s]", column));
+                  throw new SQLException(String.format("Date 类型转换错误：[%s]", column));
                 }
 
                 if (null != utilDate) {
@@ -185,13 +184,11 @@ public class ClickhouseWriter extends Writer {
                 try {
                   utilDate = column.asDate();
                 } catch (DataXException e) {
-                  throw new SQLException(String.format(
-                          "Date 类型转换错误：[%s]", column));
+                  throw new SQLException(String.format("Date 类型转换错误：[%s]", column));
                 }
 
                 if (null != utilDate) {
-                  sqlTimestamp = new Timestamp(
-                          utilDate.getTime());
+                  sqlTimestamp = new Timestamp(utilDate.getTime());
                 }
                 preparedStatement.setTimestamp(columnIndex + 1, sqlTimestamp);
                 break;
@@ -200,13 +197,12 @@ public class ClickhouseWriter extends Writer {
               case Types.VARBINARY:
               case Types.BLOB:
               case Types.LONGVARBINARY:
-                preparedStatement.setBytes(
-                        columnIndex + 1, column
-                                .asBytes());
+                preparedStatement.setBytes(columnIndex + 1, column.asBytes());
                 break;
 
               case Types.BOOLEAN:
-                preparedStatement.setInt(columnIndex + 1, column.asBigInteger().intValue());
+                preparedStatement.setInt(columnIndex + 1,
+                        column.asBigInteger().intValue());
                 break;
 
               // warn: bit(1) -> Types.BIT 可使用setBoolean
@@ -226,8 +222,7 @@ public class ClickhouseWriter extends Writer {
 
               default:
                 boolean isHandled = fillPreparedStatementColumnType4CustomType(
-                        preparedStatement,
-                        columnIndex, columnSqltype, column);
+                        preparedStatement, columnIndex, columnSqlType, column);
                 if (isHandled) {
                   break;
                 }
@@ -236,16 +231,14 @@ public class ClickhouseWriter extends Writer {
                                 DBUtilErrorCode.UNSUPPORTED_TYPE,
                                 String.format(
                                         "您的配置文件中的列配置信息有误. 因为DataX 不支持数据库写入这种字段类型. 字段名:[%s], 字段类型:[%d], 字段Java类型:[%s]. 请修改表中该字段的类型或者不同步该字段.",
-                                        this.resultSetMetaData.getLeft()
-                                                .get(columnIndex),
-                                        this.resultSetMetaData.getMiddle()
-                                                .get(columnIndex),
-                                        this.resultSetMetaData.getRight()
-                                                .get(columnIndex)));
+                                        this.resultSetMetaData.getLeft().get(columnIndex),
+                                        this.resultSetMetaData.getMiddle().get(columnIndex),
+                                        this.resultSetMetaData.getRight().get(columnIndex)));
             }
+
             return preparedStatement;
           } catch (DataXException e) {
-            // fix类型转换或者溢出失败时，将具体哪一列打印出来
+            // fix 类型转换或者溢出失败时，将具体哪一列打印出来
             if (e.getErrorCode() == CommonErrorCode.CONVERT_NOT_SUPPORT ||
                     e.getErrorCode() == CommonErrorCode.CONVERT_OVER_FLOW) {
               throw DataXException
@@ -253,12 +246,9 @@ public class ClickhouseWriter extends Writer {
                               e.getErrorCode(),
                               String.format(
                                       "类型转化错误. 字段名:[%s], 字段类型:[%d], 字段Java类型:[%s]. 请修改表中该字段的类型或者不同步该字段.",
-                                      this.resultSetMetaData.getLeft()
-                                              .get(columnIndex),
-                                      this.resultSetMetaData.getMiddle()
-                                              .get(columnIndex),
-                                      this.resultSetMetaData.getRight()
-                                              .get(columnIndex)));
+                                      this.resultSetMetaData.getLeft().get(columnIndex),
+                                      this.resultSetMetaData.getMiddle().get(columnIndex),
+                                      this.resultSetMetaData.getRight().get(columnIndex)));
             } else {
               throw e;
             }
@@ -339,5 +329,4 @@ public class ClickhouseWriter extends Writer {
       this.commonRdbmsWriterSlave.destroy(this.writerSliceConfig);
     }
   }
-
 }

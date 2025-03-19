@@ -11,6 +11,8 @@ import com.alibaba.datax.core.taskgroup.runner.ReaderRunner;
 import com.alibaba.datax.core.taskgroup.runner.WriterRunner;
 import com.alibaba.datax.core.util.FrameworkErrorCode;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,10 +24,12 @@ import java.util.Map;
  * reader和writer在执行时又可能出现Job和Task两种运行时（加载的类不同）
  */
 public class LoadUtil {
+  private static final Logger LOG = LoggerFactory.getLogger(LoadUtil.class);
+
   private static final String pluginTypeNameFormat = "plugin.%s.%s";
   /**
    * 所有插件配置放置在 pluginRegisterCenter 中，为区别 reader、transformer 和 writer，还能区别
-   * 具体pluginName，故使用pluginType.pluginName作为key放置在该map中
+   * 具体 pluginName，故使用 pluginType.pluginName 作为 key 放置在该 map 中
    */
   private static Configuration pluginRegisterCenter;
   /**
@@ -155,23 +159,42 @@ public class LoadUtil {
     }
   }
 
+  /**
+   * 获取指定类型和名称的插件的 JarLoader 实例。
+   * 如果该插件的 JarLoader 实例不存在，则创建一个新的实例并缓存起来。
+   *
+   * @param pluginType 插件类型，如 READER、WRITER 等
+   * @param pluginName 插件名称
+   *
+   * @return 对应的 JarLoader 实例
+   */
   public static synchronized JarLoader getJarLoader(PluginType pluginType, String pluginName) {
+    // 获取指定插件的配置信息
     Configuration pluginConf = getPluginConf(pluginType, pluginName);
 
+    // 从缓存中获取插件的 JarLoader 实例
     JarLoader jarLoader = jarLoaderCenter.get(generatePluginKey(pluginType, pluginName));
+    // 如果缓存中不存在该插件的 JarLoader 实例
     if (jarLoader == null) {
+      // 从插件配置中获取插件的路径
       String pluginPath = pluginConf.getString("path");
+      // 检查插件路径是否为空或无效
       if (StringUtils.isBlank(pluginPath)) {
+        // 如果路径无效，抛出运行时错误异常
         throw DataXException.asDataXException(
                 FrameworkErrorCode.RUNTIME_ERROR,
                 String.format("%s插件[%s]路径非法!", pluginType, pluginName));
       }
+      // 创建一个新的 JarLoader 实例
       jarLoader = new JarLoader(new String[]{pluginPath});
+      // 将新创建的 JarLoader 实例存入缓存
       jarLoaderCenter.put(generatePluginKey(pluginType, pluginName), jarLoader);
     }
 
+    // 返回插件的 JarLoader 实例
     return jarLoader;
   }
+
 
   private enum ContainerType {
     Job("Job"), Task("Task");

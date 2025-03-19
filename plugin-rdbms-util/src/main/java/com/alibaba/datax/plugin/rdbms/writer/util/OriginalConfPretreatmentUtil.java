@@ -132,8 +132,7 @@ public final class OriginalConfPretreatmentUtil {
                 connectionFactory.getConnectionInfo());
       }
 
-      LOG.info(
-              "table:[{}] all columns:[\n{}\n].", oneTable,
+      LOG.info("table:[{}] all columns:[\n{}\n].", oneTable,
               StringUtils.join(allColumns, ","));
 
       if (1 == userConfiguredColumns.size() && "*".equals(userConfiguredColumns.get(0))) {
@@ -162,26 +161,35 @@ public final class OriginalConfPretreatmentUtil {
         } finally {
           DBUtil.closeDBResources(null, connection);
         }
-
       }
     }
   }
 
+    /**
+   * 处理列配置信息，此方法是对重载方法 dealColumnConf 的包装，用于简化调用
+   *
+   * @param originalConfig 原始配置信息
+   */
   public static void dealColumnConf(Configuration originalConfig) {
+    // 从原始配置中获取第一个连接的 JDBC URL
     String jdbcUrl = originalConfig.getString(String.format(
-            "%s[0].%s",
-            Constant.CONN_MARK, Key.JDBC_URL));
+            "%s[0].%s", Constant.CONN_MARK, Key.JDBC_URL));
 
+    // 从原始配置中获取数据库用户名
     String username = originalConfig.getString(Key.USERNAME);
+    // 从原始配置中获取数据库密码
     String password = originalConfig.getString(Key.PASSWORD);
+    // 从原始配置中获取第一个连接的第一个表名
     String oneTable = originalConfig.getString(String.format(
             "%s[0].%s[0]", Constant.CONN_MARK, Key.TABLE));
 
+    // 创建 JdbcConnectionFactory 对象，用于建立数据库连接
     JdbcConnectionFactory jdbcConnectionFactory = new JdbcConnectionFactory(
             DATABASE_TYPE,
             jdbcUrl,
             username,
             password);
+    // 调用重载的 dealColumnConf 方法，处理列配置信息
     dealColumnConf(originalConfig, jdbcConnectionFactory, oneTable);
   }
 

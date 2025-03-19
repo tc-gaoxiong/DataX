@@ -11,13 +11,27 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 提供 Jar 隔离的加载机制，会把传入的路径、及其子路径、以及路径中的 jar 文件加入到 class path
  */
 public class JarLoader extends URLClassLoader {
+  private final List<String> loadedClasses = new ArrayList<>();
+
   public JarLoader(String[] paths) {
     this(paths, JarLoader.class.getClassLoader());
+  }
+
+  @Override
+  public Class<?> loadClass(String name) throws ClassNotFoundException {
+    Class<?> clazz = super.loadClass(name);
+    loadedClasses.add(name);
+    return clazz;
+  }
+
+  public List<String> getLoadedClasses() {
+    return loadedClasses;
   }
 
   public JarLoader(String[] paths, ClassLoader parent) {
@@ -25,7 +39,7 @@ public class JarLoader extends URLClassLoader {
   }
 
   private static URL[] getURLs(String[] paths) {
-    Validate.isTrue(null != paths && 0 != paths.length, "jar包路径不能为空.");
+    Validate.isTrue(null != paths && 0 != paths.length, "jar 包路径不能为空.");
 
     List<String> dirs = new ArrayList<>();
     for (String path : paths) {
@@ -47,7 +61,7 @@ public class JarLoader extends URLClassLoader {
     File current = new File(path);
     if (!current.exists() || !current.isDirectory()) return;
 
-    for (File child : current.listFiles()) {
+    for (File child : Objects.requireNonNull(current.listFiles())) {
       if (!child.isDirectory()) continue;
 
       collector.add(child.getAbsolutePath());
@@ -74,8 +88,7 @@ public class JarLoader extends URLClassLoader {
         jarURLs.add(allJar.toURI().toURL());
       } catch (Exception e) {
         throw DataXException.asDataXException(
-                FrameworkErrorCode.PLUGIN_INIT_ERROR,
-                "系统加载jar包出错", e);
+                FrameworkErrorCode.PLUGIN_INIT_ERROR, "系统加载jar包出错", e);
       }
     }
 

@@ -17,7 +17,7 @@ public final class ClassLoaderSwapper {
   }
 
   /**
-   * 保存当前classLoader，并将当前线程的classLoader设置为所给classLoader
+   * 保存当前 classLoader，并将当前线程的 classLoader 设置为所给 classLoader
    */
   public ClassLoader setCurrentThreadClassLoader(ClassLoader classLoader) {
     this.storeClassLoader = Thread.currentThread().getContextClassLoader();
