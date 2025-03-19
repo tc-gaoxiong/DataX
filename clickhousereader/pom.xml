@@ -15,9 +15,10 @@
 
   <dependencies>
     <dependency>
-      <groupId>ru.yandex.clickhouse</groupId>
+      <groupId>com.clickhouse</groupId>
       <artifactId>clickhouse-jdbc</artifactId>
-      <version>0.2.4</version>
+      <version>0.8.2</version>
+      <classifier>shaded-all</classifier>
     </dependency>
     <dependency>
       <groupId>com.alibaba.datax</groupId>

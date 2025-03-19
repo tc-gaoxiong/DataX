@@ -5,10 +5,6 @@ import com.alibaba.datax.common.exception.DataXException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * refer:http://blog.csdn.net/ring0hx/article/details/6152528
- * <p/>
- */
 public enum DataBaseType {
   MySql("mysql", "com.mysql.jdbc.Driver"),
   Tddl("mysql", "com.mysql.jdbc.Driver"),
@@ -20,7 +16,9 @@ public enum DataBaseType {
   DB2("db2", "com.ibm.db2.jcc.DB2Driver"),
   ADB("adb", "com.mysql.jdbc.Driver"),
   ADS("ads", "com.mysql.jdbc.Driver"),
-  ClickHouse("clickhouse", "ru.yandex.clickhouse.ClickHouseDriver"),
+//  ClickHouse("clickhouse", "ru.yandex.clickhouse.ClickHouseDriver"),
+//  ClickHouse("clickhouse", "com.clickhouse.jdbc.ClickHouseDriver"),
+  ClickHouse("clickhouse", "com.clickhouse.jdbc.Driver"),
   KingbaseES("kingbasees", "com.kingbase8.Driver"),
   Oscar("oscar", "com.oscar.Driver"),
   OceanBase("oceanbase", "com.alipay.oceanbase.jdbc.Driver"),
@@ -93,8 +91,7 @@ public enum DataBaseType {
         break;
       default:
         throw DataXException.asDataXException(
-                DBUtilErrorCode.UNSUPPORTED_TYPE,
-                "unsupported database type.");
+                DBUtilErrorCode.UNSUPPORTED_TYPE, "unsupported database type.");
     }
 
     return result;
@@ -158,8 +155,7 @@ public enum DataBaseType {
         break;
       default:
         throw DataXException.asDataXException(
-                DBUtilErrorCode.UNSUPPORTED_TYPE,
-                "unsupported database type.");
+                DBUtilErrorCode.UNSUPPORTED_TYPE, "unsupported database type.");
     }
 
     return result;
@@ -217,8 +213,7 @@ public enum DataBaseType {
         break;
       default:
         throw DataXException.asDataXException(
-                DBUtilErrorCode.UNSUPPORTED_TYPE,
-                "unsupported database type");
+                DBUtilErrorCode.UNSUPPORTED_TYPE, "unsupported database type");
     }
 
     return result;
@@ -247,8 +242,7 @@ public enum DataBaseType {
         break;
       default:
         throw DataXException.asDataXException(
-                DBUtilErrorCode.UNSUPPORTED_TYPE,
-                "unsupported database type");
+                DBUtilErrorCode.UNSUPPORTED_TYPE, "unsupported database type");
     }
 
     return result;
@@ -261,5 +255,4 @@ public enum DataBaseType {
   public void setTypeName(String typeName) {
     this.typeName = typeName;
   }
-
 }
