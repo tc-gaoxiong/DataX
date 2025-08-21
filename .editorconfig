@@ -12,10 +12,10 @@ max_line_length = 100
 # ij_wrap_on_typing = false
 
 [*.java]
-indent_size = 4
+indent_size = 2
 indent_style = space
-tab_width = 4
-ij_continuation_indent_size = 8
+tab_width = 2
+ij_continuation_indent_size = 4
 # ij_java_align_consecutive_assignments = false
 # ij_java_align_consecutive_variable_declarations = false
 # ij_java_align_group_field_declarations = false
@@ -268,8 +268,8 @@ insert_final_newline = false
 
 [*.xml]
 indent_style = tab
-indent_size = 4
+indent_size = 2
 
 [*.py]
 indent_style = space
-indent_size = 4
+indent_size = 2
