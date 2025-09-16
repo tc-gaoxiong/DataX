@@ -1,7 +1,7 @@
 package com.alibaba.datax.core.transport.record;
 
 import com.alibaba.datax.common.element.Column;
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.core.util.ClassSize;
 import com.alibaba.datax.core.util.FrameworkErrorCode;
@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  * Created by jingxing on 14-8-24.
  */
-public class DefaultRecord implements Record {
+public class DefaultRecord implements DataRecord {
     private static final int RECORD_AVERGAE_COLUMN_NUMBER = 16;
 
     private List<Column> columns;

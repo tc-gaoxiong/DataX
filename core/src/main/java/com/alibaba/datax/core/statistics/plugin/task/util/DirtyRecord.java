@@ -1,7 +1,7 @@
 package com.alibaba.datax.core.statistics.plugin.task.util;
 
 import com.alibaba.datax.common.element.Column;
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.core.util.FrameworkErrorCode;
 import com.alibaba.fastjson2.JSON;
@@ -13,11 +13,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class DirtyRecord implements Record {
+public class DirtyRecord implements DataRecord {
   private List<Column> columns = new ArrayList<Column>();
   private Map<String, String> meta;
 
-  public static DirtyRecord asDirtyRecord(final Record record) {
+  public static DirtyRecord asDirtyRecord(final DataRecord record) {
     DirtyRecord result = new DirtyRecord();
     for (int i = 0; i < record.getColumnNumber(); i++) {
       result.addColumn(record.getColumn(i));

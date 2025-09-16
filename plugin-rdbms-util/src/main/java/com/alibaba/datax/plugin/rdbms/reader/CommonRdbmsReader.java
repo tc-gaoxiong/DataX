@@ -224,17 +224,17 @@ public class CommonRdbmsReader {
       // do nothing
     }
 
-    protected Record transportOneRecord(RecordSender recordSender, ResultSet rs,
-                                        ResultSetMetaData metaData, int columnNumber, String mandatoryEncoding,
-                                        TaskPluginCollector taskPluginCollector) {
-      Record record = buildRecord(recordSender, rs, metaData, columnNumber, mandatoryEncoding, taskPluginCollector);
+    protected DataRecord transportOneRecord(RecordSender recordSender, ResultSet rs,
+                                            ResultSetMetaData metaData, int columnNumber, String mandatoryEncoding,
+                                            TaskPluginCollector taskPluginCollector) {
+      DataRecord record = buildRecord(recordSender, rs, metaData, columnNumber, mandatoryEncoding, taskPluginCollector);
       recordSender.sendToWriter(record);
       return record;
     }
 
-    protected Record buildRecord(RecordSender recordSender, ResultSet rs, ResultSetMetaData metaData, int columnNumber, String mandatoryEncoding,
-                                 TaskPluginCollector taskPluginCollector) {
-      Record record = recordSender.createRecord();
+    protected DataRecord buildRecord(RecordSender recordSender, ResultSet rs, ResultSetMetaData metaData, int columnNumber, String mandatoryEncoding,
+                                     TaskPluginCollector taskPluginCollector) {
+      DataRecord record = recordSender.createRecord();
 
       try {
         for (int i = 1; i <= columnNumber; i++) {

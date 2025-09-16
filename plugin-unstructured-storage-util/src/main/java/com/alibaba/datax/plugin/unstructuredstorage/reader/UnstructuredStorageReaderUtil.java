@@ -307,10 +307,10 @@ public class UnstructuredStorageReaderUtil {
     }
   }
 
-  public static Record transportOneRecord(RecordSender recordSender,
-                                          Configuration configuration,
-                                          TaskPluginCollector taskPluginCollector,
-                                          String line) {
+  public static DataRecord transportOneRecord(RecordSender recordSender,
+                                              Configuration configuration,
+                                              TaskPluginCollector taskPluginCollector,
+                                              String line) {
     List<ColumnEntry> column = UnstructuredStorageReaderUtil
         .getListColumnEntry(configuration, Key.COLUMN);
     // 注意: nullFormat 没有默认值
@@ -335,10 +335,10 @@ public class UnstructuredStorageReaderUtil {
     return transportOneRecord(recordSender, column, sourceLine, nullFormat, taskPluginCollector);
   }
 
-  public static Record transportOneRecord(RecordSender recordSender,
-                                          List<ColumnEntry> columnConfigs, String[] sourceLine,
-                                          String nullFormat, TaskPluginCollector taskPluginCollector) {
-    Record record = recordSender.createRecord();
+  public static DataRecord transportOneRecord(RecordSender recordSender,
+                                              List<ColumnEntry> columnConfigs, String[] sourceLine,
+                                              String nullFormat, TaskPluginCollector taskPluginCollector) {
+    DataRecord record = recordSender.createRecord();
     Column columnGenerated = null;
 
     // 创建都为String类型column的record

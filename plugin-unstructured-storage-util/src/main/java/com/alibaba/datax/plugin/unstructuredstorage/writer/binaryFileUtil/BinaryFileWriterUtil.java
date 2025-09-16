@@ -1,7 +1,7 @@
 package com.alibaba.datax.plugin.unstructuredstorage.writer.binaryFileUtil;
 
 import com.alibaba.datax.common.element.Column;
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.plugin.RecordReceiver;
 import com.alibaba.datax.common.util.Configuration;
@@ -40,7 +40,7 @@ public class BinaryFileWriterUtil {
    */
   public static void writeFileFromRecordReceiver(OutputStream outputStream, RecordReceiver recordReceiver) {
     try {
-      Record record;
+      DataRecord record;
       while ((record = recordReceiver.getFromReader()) != null) {
         Column column = record.getColumn(0);
         outputStream.write(column.asBytes());

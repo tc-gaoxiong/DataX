@@ -1,6 +1,6 @@
 package com.alibaba.datax.core.transport.transformer;
 
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.transformer.Transformer;
 import groovy.lang.GroovyClassLoader;
@@ -22,7 +22,7 @@ public class GroovyTransformer extends Transformer {
     }
 
     @Override
-    public Record evaluate(Record record, Object... paras) {
+    public DataRecord evaluate(DataRecord record, Object... paras) {
         if (groovyTransformer == null) {
             // 全局唯一
             if (paras.length < 1 || paras.length > 2) {

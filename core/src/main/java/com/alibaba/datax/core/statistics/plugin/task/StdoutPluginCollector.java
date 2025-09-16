@@ -1,7 +1,7 @@
 package com.alibaba.datax.core.statistics.plugin.task;
 
 import com.alibaba.datax.common.constant.PluginType;
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.core.statistics.communication.Communication;
 import com.alibaba.datax.core.statistics.plugin.task.util.DirtyRecord;
@@ -37,7 +37,7 @@ public class StdoutPluginCollector extends AbstractTaskPluginCollector {
             DEFAULT_MAX_DIRTYNUM));
   }
 
-  private String formatDirty(final Record dirty, final Throwable t,
+  private String formatDirty(final DataRecord dirty, final Throwable t,
                              final String msg) {
     Map<String, Object> msgGroup = new HashMap<String, Object>();
 
@@ -57,7 +57,7 @@ public class StdoutPluginCollector extends AbstractTaskPluginCollector {
   }
 
   @Override
-  public void collectDirtyRecord(Record dirtyRecord, Throwable t,
+  public void collectDirtyRecord(DataRecord dirtyRecord, Throwable t,
                                  String errorMessage) {
     int logNum = currentLogNum.getAndIncrement();
     if (logNum == 0 && t != null) {

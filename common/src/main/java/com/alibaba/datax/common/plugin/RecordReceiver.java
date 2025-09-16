@@ -16,10 +16,10 @@
 
 package com.alibaba.datax.common.plugin;
 
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 
 public interface RecordReceiver {
-  public Record getFromReader();
+  public DataRecord getFromReader();
 
   public void shutdown();
 }

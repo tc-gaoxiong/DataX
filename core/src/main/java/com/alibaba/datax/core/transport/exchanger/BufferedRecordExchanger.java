@@ -1,6 +1,6 @@
 package com.alibaba.datax.core.transport.exchanger;
 
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.exception.CommonErrorCode;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.plugin.RecordReceiver;
@@ -18,11 +18,11 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
-    private static Class<? extends Record> RECORD_CLASS;
+    private static Class<? extends DataRecord> RECORD_CLASS;
     protected final int byteCapacity;
     private final Channel channel;
     private final Configuration configuration;
-    private final List<Record> buffer;
+    private final List<DataRecord> buffer;
     private final AtomicInteger memoryBytes = new AtomicInteger(0);
     private final TaskPluginCollector pluginCollector;
     private int bufferSize;
@@ -42,14 +42,14 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
 
         this.bufferSize = configuration
                 .getInt(CoreConstant.DATAX_CORE_TRANSPORT_EXCHANGER_BUFFERSIZE);
-        this.buffer = new ArrayList<Record>(bufferSize);
+        this.buffer = new ArrayList<DataRecord>(bufferSize);
 
         // channel 的 queue 默认大小为 8M，原来为 64M
         this.byteCapacity = configuration.getInt(
                 CoreConstant.DATAX_CORE_TRANSPORT_CHANNEL_CAPACITY_BYTE, 8 * 1024 * 1024);
 
         try {
-            BufferedRecordExchanger.RECORD_CLASS = ((Class<? extends Record>) Class
+            BufferedRecordExchanger.RECORD_CLASS = ((Class<? extends DataRecord>) Class
                     .forName(configuration.getString(
                             CoreConstant.DATAX_CORE_TRANSPORT_RECORD_CLASS,
                             "com.alibaba.datax.core.transport.record.DefaultRecord")));
@@ -59,7 +59,7 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
     }
 
     @Override
-    public Record createRecord() {
+    public DataRecord createRecord() {
         try {
             return BufferedRecordExchanger.RECORD_CLASS.newInstance();
         } catch (Exception e) {
@@ -68,7 +68,7 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
     }
 
     @Override
-    public void sendToWriter(Record record) {
+    public void sendToWriter(DataRecord record) {
         if (shutdown) {
             throw DataXException.asDataXException(CommonErrorCode.SHUT_DOWN_TASK, "");
         }
@@ -117,7 +117,7 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
     }
 
     @Override
-    public Record getFromReader() {
+    public DataRecord getFromReader() {
         if (shutdown) {
             throw DataXException.asDataXException(CommonErrorCode.SHUT_DOWN_TASK, "");
         }
@@ -126,7 +126,7 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
             receive();
         }
 
-        Record record = this.buffer.get(this.bufferIndex++);
+        DataRecord record = this.buffer.get(this.bufferIndex++);
         if (record instanceof TerminateRecord) {
             record = null;
         }

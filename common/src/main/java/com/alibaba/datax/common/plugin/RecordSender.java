@@ -16,12 +16,12 @@
 
 package com.alibaba.datax.common.plugin;
 
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 
 public interface RecordSender {
-  public Record createRecord();
+  public DataRecord createRecord();
 
-  public void sendToWriter(Record record);
+  public void sendToWriter(DataRecord record);
 
   public void flush();
 

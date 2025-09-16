@@ -1,6 +1,6 @@
 package com.alibaba.datax.core.transport.channel.memory;
 
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.core.transport.channel.Channel;
@@ -23,7 +23,7 @@ public class MemoryChannel extends Channel {
 
     private AtomicInteger memoryBytes = new AtomicInteger(0);
 
-    private ArrayBlockingQueue<Record> queue = null;
+    private ArrayBlockingQueue<DataRecord> queue = null;
 
     private ReentrantLock lock;
 
@@ -31,7 +31,7 @@ public class MemoryChannel extends Channel {
 
     public MemoryChannel(final Configuration configuration) {
         super(configuration);
-        this.queue = new ArrayBlockingQueue<Record>(this.getCapacity());
+        this.queue = new ArrayBlockingQueue<DataRecord>(this.getCapacity());
         this.bufferSize = configuration.getInt(CoreConstant.DATAX_CORE_TRANSPORT_EXCHANGER_BUFFERSIZE);
 
         lock = new ReentrantLock();
@@ -55,7 +55,7 @@ public class MemoryChannel extends Channel {
     }
 
     @Override
-    protected void doPush(Record r) {
+    protected void doPush(DataRecord r) {
         try {
             long startTime = System.nanoTime();
             this.queue.put(r);
@@ -67,7 +67,7 @@ public class MemoryChannel extends Channel {
     }
 
     @Override
-    protected void doPushAll(Collection<Record> rs) {
+    protected void doPushAll(Collection<DataRecord> rs) {
         try {
             long startTime = System.nanoTime();
             lock.lockInterruptibly();
@@ -89,10 +89,10 @@ public class MemoryChannel extends Channel {
     }
 
     @Override
-    protected Record doPull() {
+    protected DataRecord doPull() {
         try {
             long startTime = System.nanoTime();
-            Record r = this.queue.take();
+            DataRecord r = this.queue.take();
             waitReaderTime += System.nanoTime() - startTime;
             memoryBytes.addAndGet(-r.getMemorySize());
             return r;
@@ -103,7 +103,7 @@ public class MemoryChannel extends Channel {
     }
 
     @Override
-    protected void doPullAll(Collection<Record> rs) {
+    protected void doPullAll(Collection<DataRecord> rs) {
         assert rs != null;
         rs.clear();
         try {
@@ -124,9 +124,9 @@ public class MemoryChannel extends Channel {
         }
     }
 
-    private int getRecordBytes(Collection<Record> rs) {
+    private int getRecordBytes(Collection<DataRecord> rs) {
         int bytes = 0;
-        for (Record r : rs) {
+        for (DataRecord r : rs) {
             bytes += r.getMemorySize();
         }
 

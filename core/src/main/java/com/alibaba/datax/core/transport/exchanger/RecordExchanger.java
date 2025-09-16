@@ -16,7 +16,7 @@
 
 package com.alibaba.datax.core.transport.exchanger;
 
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.exception.CommonErrorCode;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.plugin.RecordReceiver;
@@ -33,7 +33,7 @@ import com.alibaba.datax.core.util.container.CoreConstant;
 import java.util.List;
 
 public class RecordExchanger extends TransformerExchanger implements RecordSender, RecordReceiver {
-    private static Class<? extends Record> RECORD_CLASS;
+    private static Class<? extends DataRecord> RECORD_CLASS;
     private Channel channel;
     private Configuration configuration;
     private volatile boolean shutdown = false;
@@ -51,7 +51,7 @@ public class RecordExchanger extends TransformerExchanger implements RecordSende
         this.channel = channel;
         this.configuration = channel.getConfiguration();
         try {
-            RecordExchanger.RECORD_CLASS = (Class<? extends Record>) Class
+            RecordExchanger.RECORD_CLASS = (Class<? extends DataRecord>) Class
                     .forName(configuration.getString(
                             CoreConstant.DATAX_CORE_TRANSPORT_RECORD_CLASS,
                             "com.alibaba.datax.core.transport.record.DefaultRecord"));
@@ -61,16 +61,16 @@ public class RecordExchanger extends TransformerExchanger implements RecordSende
     }
 
     @Override
-    public Record getFromReader() {
+    public DataRecord getFromReader() {
         if (shutdown) {
             throw DataXException.asDataXException(CommonErrorCode.SHUT_DOWN_TASK, "");
         }
-        Record record = this.channel.pull();
+        DataRecord record = this.channel.pull();
         return (record instanceof TerminateRecord ? null : record);
     }
 
     @Override
-    public Record createRecord() {
+    public DataRecord createRecord() {
         try {
             return RECORD_CLASS.newInstance();
         } catch (Exception e) {
@@ -79,7 +79,7 @@ public class RecordExchanger extends TransformerExchanger implements RecordSende
     }
 
     @Override
-    public void sendToWriter(Record record) {
+    public void sendToWriter(DataRecord record) {
         if (shutdown) {
             throw DataXException.asDataXException(CommonErrorCode.SHUT_DOWN_TASK, "");
         }

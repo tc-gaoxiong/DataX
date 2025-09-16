@@ -1,6 +1,6 @@
 package com.alibaba.datax.common.plugin;
 
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 
 /**
  * 该接口提供给 Task Plugin 用来记录脏数据和自定义信息。 <br >
@@ -17,7 +17,7 @@ public abstract class TaskPluginCollector implements PluginCollector {
    * @param t            异常信息
    * @param errorMessage 错误的提示信息
    */
-  public abstract void collectDirtyRecord(final Record dirtyRecord,
+  public abstract void collectDirtyRecord(final DataRecord dirtyRecord,
                                           final Throwable t, final String errorMessage);
 
   /**
@@ -26,7 +26,7 @@ public abstract class TaskPluginCollector implements PluginCollector {
    * @param dirtyRecord  脏数据信息
    * @param errorMessage 错误的提示信息
    */
-  public void collectDirtyRecord(final Record dirtyRecord, final String errorMessage) {
+  public void collectDirtyRecord(final DataRecord dirtyRecord, final String errorMessage) {
     this.collectDirtyRecord(dirtyRecord, null, errorMessage);
   }
 
@@ -36,7 +36,7 @@ public abstract class TaskPluginCollector implements PluginCollector {
    * @param dirtyRecord 脏数据信息
    * @param t           异常信息
    */
-  public void collectDirtyRecord(final Record dirtyRecord, final Throwable t) {
+  public void collectDirtyRecord(final DataRecord dirtyRecord, final Throwable t) {
     this.collectDirtyRecord(dirtyRecord, t, "");
   }
 

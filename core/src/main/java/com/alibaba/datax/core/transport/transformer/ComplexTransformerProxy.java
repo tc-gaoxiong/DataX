@@ -1,6 +1,6 @@
 package com.alibaba.datax.core.transport.transformer;
 
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.transformer.ComplexTransformer;
 import com.alibaba.datax.transformer.Transformer;
 
@@ -19,7 +19,7 @@ public class ComplexTransformerProxy extends ComplexTransformer {
   }
 
   @Override
-  public Record evaluate(Record record, Map<String, Object> tContext, Object... paras) {
+  public DataRecord evaluate(DataRecord record, Map<String, Object> tContext, Object... paras) {
     return this.realTransformer.evaluate(record, paras);
   }
 

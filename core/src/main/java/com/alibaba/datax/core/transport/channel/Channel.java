@@ -1,6 +1,6 @@
 package com.alibaba.datax.core.transport.channel;
 
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.core.statistics.communication.Communication;
 import com.alibaba.datax.core.statistics.communication.CommunicationTool;
@@ -103,7 +103,7 @@ public abstract class Channel {
         this.lastCommunication.reset();
     }
 
-    public void push(final Record r) {
+    public void push(final DataRecord r) {
         Validate.notNull(r, "record不能为空.");
         this.doPush(r);
         this.statPush(1L, r.getByteSize());
@@ -118,32 +118,32 @@ public abstract class Channel {
 //                currentCommunication.getLongCounter(CommunicationTool.STAGE) + 1);
     }
 
-    public void pushAll(final Collection<Record> rs) {
+    public void pushAll(final Collection<DataRecord> rs) {
         Validate.notNull(rs);
         Validate.noNullElements(rs);
         this.doPushAll(rs);
         this.statPush(rs.size(), this.getByteSize(rs));
     }
 
-    public Record pull() {
-        Record record = this.doPull();
+    public DataRecord pull() {
+        DataRecord record = this.doPull();
         this.statPull(1L, record.getByteSize());
         return record;
     }
 
-    public void pullAll(final Collection<Record> rs) {
+    public void pullAll(final Collection<DataRecord> rs) {
         Validate.notNull(rs);
         this.doPullAll(rs);
         this.statPull(rs.size(), this.getByteSize(rs));
     }
 
-    protected abstract void doPush(Record r);
+    protected abstract void doPush(DataRecord r);
 
-    protected abstract void doPushAll(Collection<Record> rs);
+    protected abstract void doPushAll(Collection<DataRecord> rs);
 
-    protected abstract Record doPull();
+    protected abstract DataRecord doPull();
 
-    protected abstract void doPullAll(Collection<Record> rs);
+    protected abstract void doPullAll(Collection<DataRecord> rs);
 
     public abstract int size();
 
@@ -151,9 +151,9 @@ public abstract class Channel {
 
     public abstract void clear();
 
-    private long getByteSize(final Collection<Record> rs) {
+    private long getByteSize(final Collection<DataRecord> rs) {
         long size = 0;
-        for (final Record each : rs) {
+        for (final DataRecord each : rs) {
             size += each.getByteSize();
         }
         return size;

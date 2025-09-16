@@ -227,7 +227,7 @@ public class StreamReader extends Reader {
 
     @Override
     public void startRead(RecordSender recordSender) {
-      Record oneRecord = buildOneRecord(recordSender, this.columns);
+      DataRecord oneRecord = buildOneRecord(recordSender, this.columns);
       while (this.sliceRecordCount > 0) {
         if (this.haveMixupFunction) {
           oneRecord = buildOneRecord(recordSender, this.columns);
@@ -310,7 +310,7 @@ public class StreamReader extends Reader {
       }
     }
 
-    private Record buildOneRecord(RecordSender recordSender, List<String> columns) {
+    private DataRecord buildOneRecord(RecordSender recordSender, List<String> columns) {
       if (null == recordSender) {
         throw new IllegalArgumentException("参数[recordSender]不能为空.");
       }
@@ -319,7 +319,7 @@ public class StreamReader extends Reader {
         throw new IllegalArgumentException("参数[column]不能为空.");
       }
 
-      Record record = recordSender.createRecord();
+      DataRecord record = recordSender.createRecord();
       try {
         for (String eachColumn : columns) {
           Configuration eachColumnConfig = Configuration.from(eachColumn);

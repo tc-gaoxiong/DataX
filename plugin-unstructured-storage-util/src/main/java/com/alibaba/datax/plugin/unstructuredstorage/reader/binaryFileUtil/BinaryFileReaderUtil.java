@@ -2,7 +2,7 @@ package com.alibaba.datax.plugin.unstructuredstorage.reader.binaryFileUtil;
 
 import com.alibaba.datax.common.element.BytesColumn;
 import com.alibaba.datax.common.element.Column;
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.plugin.RecordSender;
 import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredStorageReaderErrorCode;
@@ -49,7 +49,7 @@ public class BinaryFileReaderUtil {
   }
 
   private static void recordSenderBytesColumn(RecordSender recordSender, byte[] tmp, Map<String, String> meta) {
-    Record record = recordSender.createRecord();
+    DataRecord record = recordSender.createRecord();
     Column column = new BytesColumn(tmp);
     record.addColumn(column);
     record.setMeta(meta);

@@ -3,7 +3,7 @@ package com.alibaba.datax.plugin.unstructuredstorage.writer;
 import com.alibaba.datax.common.element.BytesColumn;
 import com.alibaba.datax.common.element.Column;
 import com.alibaba.datax.common.element.DateColumn;
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.plugin.RecordReceiver;
 import com.alibaba.datax.common.plugin.TaskPluginCollector;
@@ -239,7 +239,7 @@ public class UnstructuredStorageWriterUtil {
       unstructuredWriter.writeOneRecord(headers);
     }
 
-    Record record = null;
+    DataRecord record = null;
     int receivedCount = 0;
     String byteEncoding = config.getString(Key.BYTE_ENCODING);
     while ((record = lineReceiver.getFromReader()) != null) {
@@ -286,7 +286,7 @@ public class UnstructuredStorageWriterUtil {
   /**
    * 异常表示脏数据
    */
-  public static void transportOneRecord(Record record, String nullFormat,
+  public static void transportOneRecord(DataRecord record, String nullFormat,
                                         DateFormat dateParse, TaskPluginCollector taskPluginCollector,
                                         UnstructuredWriter unstructuredWriter, String byteEncoding) {
     // warn: default is null

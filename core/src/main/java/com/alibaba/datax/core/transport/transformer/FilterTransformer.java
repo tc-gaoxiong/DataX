@@ -6,7 +6,7 @@ import com.alibaba.datax.common.element.Column;
 import com.alibaba.datax.common.element.DateColumn;
 import com.alibaba.datax.common.element.DoubleColumn;
 import com.alibaba.datax.common.element.LongColumn;
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.element.StringColumn;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.transformer.Transformer;
@@ -24,7 +24,7 @@ public class FilterTransformer extends Transformer {
     }
 
     @Override
-    public Record evaluate(Record record, Object... paras) {
+    public DataRecord evaluate(DataRecord record, Object... paras) {
         int columnIndex;
         String code;
         String value;
@@ -77,7 +77,7 @@ public class FilterTransformer extends Transformer {
         }
     }
 
-    private Record doGreat(Record record, String value, Column column, boolean hasEqual) {
+    private DataRecord doGreat(DataRecord record, String value, Column column, boolean hasEqual) {
         // 如果字段为空，直接不参与比较。即空也属于无穷小
         if (column.getRawData() == null) {
             return record;
@@ -138,7 +138,7 @@ public class FilterTransformer extends Transformer {
         }
     }
 
-    private Record doLess(Record record, String value, Column column, boolean hasEqual) {
+    private DataRecord doLess(DataRecord record, String value, Column column, boolean hasEqual) {
         // 如果字段为空，直接不参与比较。即空也属于无穷大
         if (column.getRawData() == null) {
             return record;
@@ -205,7 +205,7 @@ public class FilterTransformer extends Transformer {
      *
      * @return 如果相等，则过滤。
      */
-    private Record doEqual(Record record, String value, Column column) {
+    private DataRecord doEqual(DataRecord record, String value, Column column) {
         // 如果字段为空，只比较目标字段为 null，否则 null 字段均不过滤
         if (column.getRawData() == null) {
             if (value.equalsIgnoreCase("null")) {
@@ -252,7 +252,7 @@ public class FilterTransformer extends Transformer {
      *
      * @return 如果不相等，则过滤。
      */
-    private Record doNotEqual(Record record, String value, Column column) {
+    private DataRecord doNotEqual(DataRecord record, String value, Column column) {
         // 如果字段为空，只比较目标字段为 null, 否则 null 字段均过滤。
         if (column.getRawData() == null) {
             if (value.equalsIgnoreCase("null")) {
@@ -294,7 +294,7 @@ public class FilterTransformer extends Transformer {
         }
     }
 
-    private Record doLike(Record record, String value, Column column) {
+    private DataRecord doLike(DataRecord record, String value, Column column) {
         String orivalue = column.asString();
         if (orivalue != null && orivalue.matches(value)) {
             return null;
@@ -303,7 +303,7 @@ public class FilterTransformer extends Transformer {
         }
     }
 
-    private Record doNotLike(Record record, String value, Column column) {
+    private DataRecord doNotLike(DataRecord record, String value, Column column) {
         String orivalue = column.asString();
         if (orivalue != null && orivalue.matches(value)) {
             return record;

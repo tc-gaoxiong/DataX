@@ -1,7 +1,7 @@
 package com.alibaba.datax.core.transport.transformer;
 
 import com.alibaba.datax.common.element.Column;
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.element.StringColumn;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.transformer.Transformer;
@@ -18,7 +18,7 @@ public class PadTransformer extends Transformer {
     }
 
     @Override
-    public Record evaluate(Record record, Object... paras) {
+    public DataRecord evaluate(DataRecord record, Object... paras) {
         int columnIndex;
         String padType;
         int length;

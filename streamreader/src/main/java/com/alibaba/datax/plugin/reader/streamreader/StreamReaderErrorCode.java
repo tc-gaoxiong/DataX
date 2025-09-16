@@ -12,7 +12,7 @@ public enum StreamReaderErrorCode implements ErrorCode {
   private final String code;
   private final String description;
 
-  private StreamReaderErrorCode(String code, String description) {
+  StreamReaderErrorCode(String code, String description) {
     this.code = code;
     this.description = description;
   }

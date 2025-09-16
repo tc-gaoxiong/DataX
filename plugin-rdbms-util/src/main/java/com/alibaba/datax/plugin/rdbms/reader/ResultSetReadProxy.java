@@ -24,7 +24,7 @@ public class ResultSetReadProxy {
   public static void transportOneRecord(RecordSender recordSender, ResultSet rs,
                                         ResultSetMetaData metaData, int columnNumber, String mandatoryEncoding,
                                         TaskPluginCollector taskPluginCollector) {
-    Record record = recordSender.createRecord();
+    DataRecord record = recordSender.createRecord();
 
     try {
       for (int i = 1; i <= columnNumber; i++) {

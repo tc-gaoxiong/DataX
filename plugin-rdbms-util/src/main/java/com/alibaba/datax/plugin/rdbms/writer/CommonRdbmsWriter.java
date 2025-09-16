@@ -1,7 +1,7 @@
 package com.alibaba.datax.plugin.rdbms.writer;
 
 import com.alibaba.datax.common.element.Column;
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.plugin.RecordReceiver;
 import com.alibaba.datax.common.plugin.TaskPluginCollector;
@@ -266,10 +266,10 @@ public class CommonRdbmsWriter {
       // 写数据库的SQL语句
       calcWriteRecordSql();
 
-      List<Record> writeBuffer = new ArrayList<Record>(this.batchSize);
+      List<DataRecord> writeBuffer = new ArrayList<DataRecord>(this.batchSize);
       int bufferBytes = 0;
       try {
-        Record record;
+        DataRecord record;
         while ((record = recordReceiver.getFromReader()) != null) {
           if (record.getColumnNumber() != this.columnNumber) {
             // 源头读取字段列数与目的表字段写入列数不相等，直接报错
@@ -339,7 +339,7 @@ public class CommonRdbmsWriter {
     public void destroy(Configuration writerSliceConfig) {
     }
 
-    protected void doBatchInsert(Connection connection, List<Record> buffer)
+    protected void doBatchInsert(Connection connection, List<DataRecord> buffer)
         throws SQLException {
       PreparedStatement preparedStatement = null;
       try {
@@ -347,7 +347,7 @@ public class CommonRdbmsWriter {
         preparedStatement = connection
             .prepareStatement(this.writeRecordSql);
 
-        for (Record record : buffer) {
+        for (DataRecord record : buffer) {
           preparedStatement = fillPreparedStatement(
               preparedStatement, record);
           preparedStatement.addBatch();
@@ -370,14 +370,14 @@ public class CommonRdbmsWriter {
       return dumpRecordCount.incrementAndGet() <= dumpRecordLimit;
     }
 
-    public void doOneInsert(Connection connection, List<Record> buffer) {
+    public void doOneInsert(Connection connection, List<DataRecord> buffer) {
       PreparedStatement preparedStatement = null;
       try {
         connection.setAutoCommit(true);
         preparedStatement = connection
             .prepareStatement(this.writeRecordSql);
 
-        for (Record record : buffer) {
+        for (DataRecord record : buffer) {
           try {
             preparedStatement = fillPreparedStatement(
                 preparedStatement, record);
@@ -403,7 +403,7 @@ public class CommonRdbmsWriter {
     }
 
     // 直接使用了两个类变量：columnNumber,resultSetMetaData
-    protected PreparedStatement fillPreparedStatement(PreparedStatement preparedStatement, Record record)
+    protected PreparedStatement fillPreparedStatement(PreparedStatement preparedStatement, DataRecord record)
         throws SQLException {
       for (int i = 0; i < this.columnNumber; i++) {
         int columnSqltype = this.resultSetMetaData.getMiddle().get(i);

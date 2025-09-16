@@ -1,6 +1,6 @@
 package com.alibaba.datax.core.transport.exchanger;
 
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 import com.alibaba.datax.common.exception.CommonErrorCode;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.plugin.RecordReceiver;
@@ -20,11 +20,11 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class BufferedRecordTransformerExchanger extends TransformerExchanger implements RecordSender, RecordReceiver {
-    private static Class<? extends Record> RECORD_CLASS;
+    private static Class<? extends DataRecord> RECORD_CLASS;
     protected final int byteCapacity;
     private final Channel channel;
     private final Configuration configuration;
-    private final List<Record> buffer;
+    private final List<DataRecord> buffer;
     private final AtomicInteger memoryBytes = new AtomicInteger(0);
     private int bufferSize;
     private int bufferIndex = 0;
@@ -52,7 +52,7 @@ public class BufferedRecordTransformerExchanger extends TransformerExchanger imp
                 CoreConstant.DATAX_CORE_TRANSPORT_CHANNEL_CAPACITY_BYTE, 8 * 1024 * 1024);
 
         try {
-            BufferedRecordTransformerExchanger.RECORD_CLASS = ((Class<? extends Record>) Class
+            BufferedRecordTransformerExchanger.RECORD_CLASS = ((Class<? extends DataRecord>) Class
                     .forName(configuration.getString(
                             CoreConstant.DATAX_CORE_TRANSPORT_RECORD_CLASS,
                             "com.alibaba.datax.core.transport.record.DefaultRecord")));
@@ -62,7 +62,7 @@ public class BufferedRecordTransformerExchanger extends TransformerExchanger imp
     }
 
     @Override
-    public Record createRecord() {
+    public DataRecord createRecord() {
         try {
             return BufferedRecordTransformerExchanger.RECORD_CLASS.newInstance();
         } catch (Exception e) {
@@ -71,7 +71,7 @@ public class BufferedRecordTransformerExchanger extends TransformerExchanger imp
     }
 
     @Override
-    public void sendToWriter(Record record) {
+    public void sendToWriter(DataRecord record) {
         if (shutdown) {
             throw DataXException.asDataXException(CommonErrorCode.SHUT_DOWN_TASK, "");
         }
@@ -126,7 +126,7 @@ public class BufferedRecordTransformerExchanger extends TransformerExchanger imp
     }
 
     @Override
-    public Record getFromReader() {
+    public DataRecord getFromReader() {
         if (shutdown) {
             throw DataXException.asDataXException(CommonErrorCode.SHUT_DOWN_TASK, "");
         }
@@ -135,7 +135,7 @@ public class BufferedRecordTransformerExchanger extends TransformerExchanger imp
             receive();
         }
 
-        Record record = this.buffer.get(this.bufferIndex++);
+        DataRecord record = this.buffer.get(this.bufferIndex++);
         if (record instanceof TerminateRecord) {
             record = null;
         }

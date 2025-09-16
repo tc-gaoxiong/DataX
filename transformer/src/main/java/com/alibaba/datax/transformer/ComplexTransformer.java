@@ -1,6 +1,6 @@
 package com.alibaba.datax.transformer;
 
-import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.DataRecord;
 
 import java.util.Map;
 
@@ -26,5 +26,5 @@ public abstract class ComplexTransformer {
    * @param tContext transformer运行的配置项
    * @param paras    transformer函数参数
    */
-  abstract public Record evaluate(Record record, Map<String, Object> tContext, Object... paras);
+  abstract public DataRecord evaluate(DataRecord record, Map<String, Object> tContext, Object... paras);
 }
