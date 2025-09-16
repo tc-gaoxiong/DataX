@@ -4,7 +4,7 @@
 
 todo:
 
-1. datax on k8s (本来计划 on yarn 的，但是干脆一步到位吧)
+1. datax operator 实现
 
 打包：
 
