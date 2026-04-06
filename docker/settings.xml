@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+  <!--
+  <localRepository>/mnt/c/Users/tcgao/.m2/repository</localRepository>
+  -->
+
+  <pluginGroups>
+  </pluginGroups>
+
+  <proxies>
+    <!-- <proxy>
+        <id>forHttp</id>
+        <active>true</active>
+        <protocol>http</protocol>
+        <host>127.0.0.1</host>
+        <port>15732</port>
+        <nonProxyHosts>localhost.com|127.0.0.1</nonProxyHosts>
+    </proxy>
+    <proxy>
+        <id>forHttps</id>
+        <active>true</active>
+        <protocol>https</protocol>
+        <host>127.0.0.1</host>
+        <port>15732</port>
+        <nonProxyHosts>localhost.com|127.0.0.1</nonProxyHosts>
+    </proxy> -->
+  </proxies>
+
+  <servers>
+  </servers>
+
+  <mirrors>
+    <mirror>
+      <id>maven-default-http-blocker</id>
+      <mirrorOf>external:http:*</mirrorOf>
+      <name>Pseudo repository to mirror external repositories initially using HTTP.</name>
+      <url>http://0.0.0.0/</url>
+      <blocked>true</blocked>
+    </mirror>
+  </mirrors>
+
+  <profiles>
+    <profile>
+      <id>data-dev</id>
+      <repositories>
+        <repository>
+          <id>aliyunmaven</id>
+          <url>https://maven.aliyun.com/repository/public</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+        <repository>
+          <id>huaweicloud</id>
+          <url>https://repo.huaweicloud.com/repository/maven/</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+        <repository>
+          <id>confluent</id>
+          <name>confluent</name>
+          <url>https://packages.confluent.io/maven/</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+        <repository>
+          <id>apache.snapshots-aliyun</id>
+          <url>https://maven.aliyun.com/repository/apache-snapshots</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+        <repository>
+          <id>conjars</id>
+          <url>https://conjars.wensel.net/repo/</url>
+          <!-- <url>https://orig.conjars.org/repo/</url> -->
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+        <!-- <repository>
+          <id>central</id>
+          <url>https://repo1.maven.org/maven2</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+        </repository> -->
+        <!-- <repository>
+          <id>spring</id>
+          <url>https://maven.aliyun.com/repository/spring</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository> -->
+        <repository>
+          <id>apache.snapshots</id>
+          <name>Apache Development Snapshot Repository</name>
+          <url>https://repository.apache.org/content/repositories/snapshots/</url>
+          <releases>
+            <enabled>false</enabled>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+        <repository>
+            <id>jindodata</id>
+            <url>https://jindodata-binary.oss-cn-shanghai.aliyuncs.com/mvn-repo/</url>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <!-- <pluginRepository>
+          <id>central</id>
+          <url>https://repo1.maven.org/maven2</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+        </pluginRepository> -->
+        <!-- <pluginRepository>
+          <id>spring-plugin</id>
+          <url>https://maven.aliyun.com/repository/spring-plugin</url>
+          <releases>
+            <enabled>false</enabled>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </pluginRepository> -->
+        <pluginRepository>
+          <id>aliyun-plugin</id>
+          <url>https://maven.aliyun.com/repository/public</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+  </profiles>
+
+  <activeProfiles>
+    <activeProfile>data-dev</activeProfile>
+  </activeProfiles>
+</settings>

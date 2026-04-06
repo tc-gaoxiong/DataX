@@ -1,0 +1,11 @@
+target/
+.idea/
+*.iml
+.git/
+*.class
+*.jar
+*.log
+*.zip
+*.tar.gz
+docker/*.md
+docker/Dockerfile
